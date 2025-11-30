@@ -1,0 +1,47 @@
+{
+  "common": {
+    "home": "Accueil",
+    "categories": "Catégories",
+    "products": "Produits",
+    "cart": "Panier",
+    "account": "Mon compte",
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "search": "Rechercher",
+    "contact": "Contact",
+    "about": "À propos"
+  },
+  "product": {
+    "addToCart": "Ajouter au panier",
+    "outOfStock": "Rupture de stock",
+    "inStock": "En stock",
+    "price": "Prix",
+    "quantity": "Quantité",
+    "description": "Description",
+    "reviews": "Avis"
+  },
+  "cart": {
+    "title": "Votre panier",
+    "empty": "Votre panier est vide",
+    "subtotal": "Sous-total",
+    "shipping": "Livraison",
+    "total": "Total",
+    "checkout": "Commander"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Pas encore de compte ?",
+    "haveAccount": "Déjà un compte ?"
+  },
+  "footer": {
+    "rights": "Tous droits réservés",
+    "legal": "Mentions légales",
+    "terms": "CGU"
+  }
+}

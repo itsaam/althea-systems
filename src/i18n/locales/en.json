@@ -1,0 +1,47 @@
+{
+  "common": {
+    "home": "Home",
+    "categories": "Categories",
+    "products": "Products",
+    "cart": "Cart",
+    "account": "My Account",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "search": "Search",
+    "contact": "Contact",
+    "about": "About"
+  },
+  "product": {
+    "addToCart": "Add to Cart",
+    "outOfStock": "Out of Stock",
+    "inStock": "In Stock",
+    "price": "Price",
+    "quantity": "Quantity",
+    "description": "Description",
+    "reviews": "Reviews"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "checkout": "Checkout"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "legal": "Legal Notice",
+    "terms": "Terms of Service"
+  }
+}

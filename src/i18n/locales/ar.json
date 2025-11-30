@@ -1,0 +1,47 @@
+{
+  "common": {
+    "home": "الرئيسية",
+    "categories": "الفئات",
+    "products": "المنتجات",
+    "cart": "السلة",
+    "account": "حسابي",
+    "login": "تسجيل الدخول",
+    "register": "التسجيل",
+    "logout": "تسجيل الخروج",
+    "search": "بحث",
+    "contact": "اتصل بنا",
+    "about": "عنا"
+  },
+  "product": {
+    "addToCart": "أضف إلى السلة",
+    "outOfStock": "نفذ من المخزون",
+    "inStock": "متوفر",
+    "price": "السعر",
+    "quantity": "الكمية",
+    "description": "الوصف",
+    "reviews": "التقييمات"
+  },
+  "cart": {
+    "title": "سلة التسوق",
+    "empty": "سلتك فارغة",
+    "subtotal": "المجموع الفرعي",
+    "shipping": "الشحن",
+    "total": "المجموع",
+    "checkout": "إتمام الشراء"
+  },
+  "auth": {
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "firstName": "الاسم الأول",
+    "lastName": "الاسم الأخير",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟",
+    "haveAccount": "لديك حساب بالفعل؟"
+  },
+  "footer": {
+    "rights": "جميع الحقوق محفوظة",
+    "legal": "الإشعار القانوني",
+    "terms": "شروط الخدمة"
+  }
+}
