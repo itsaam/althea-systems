@@ -9,7 +9,6 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
 # testing
 /coverage
 
@@ -45,3 +44,7 @@ next-env.d.ts
 # Logs
 logs/
 *.log
+docker/docker-compose.yml
+docker/docker-compose.yml
+docker/docker-compose.yml
+docker/docker-compose.yml
