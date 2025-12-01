@@ -10,7 +10,18 @@
     "logout": "Déconnexion",
     "search": "Rechercher",
     "contact": "Contact",
-    "about": "À propos"
+    "about": "À propos",
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "confirm": "Confirmer",
+    "close": "Fermer"
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -19,7 +30,10 @@
     "price": "Prix",
     "quantity": "Quantité",
     "description": "Description",
-    "reviews": "Avis"
+    "reviews": "Avis",
+    "relatedProducts": "Produits similaires",
+    "newProduct": "Nouveau",
+    "onSale": "En promotion"
   },
   "cart": {
     "title": "Votre panier",
@@ -27,7 +41,10 @@
     "subtotal": "Sous-total",
     "shipping": "Livraison",
     "total": "Total",
-    "checkout": "Commander"
+    "checkout": "Commander",
+    "continueShopping": "Continuer vos achats",
+    "removeItem": "Retirer du panier",
+    "updateQuantity": "Modifier la quantité"
   },
   "auth": {
     "email": "Email",
@@ -37,11 +54,77 @@
     "lastName": "Nom",
     "forgotPassword": "Mot de passe oublié ?",
     "noAccount": "Pas encore de compte ?",
-    "haveAccount": "Déjà un compte ?"
+    "haveAccount": "Déjà un compte ?",
+    "loginTitle": "Connexion",
+    "registerTitle": "Créer un compte",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "verifyEmail": "Vérifier votre email",
+    "verifyEmailSent": "Un email de vérification a été envoyé",
+    "twoFactorTitle": "Authentification à deux facteurs",
+    "twoFactorCode": "Code de vérification",
+    "twoFactorSetup": "Configurer la 2FA",
+    "continueWith": "Continuer avec"
+  },
+  "admin": {
+    "dashboard": "Tableau de bord",
+    "products": "Produits",
+    "categories": "Catégories",
+    "orders": "Commandes",
+    "users": "Utilisateurs",
+    "invoices": "Factures",
+    "credits": "Avoirs",
+    "homepage": "Page d'accueil",
+    "messages": "Messages",
+    "settings": "Paramètres",
+    "stats": "Statistiques",
+    "totalSales": "Ventes totales",
+    "totalOrders": "Total commandes",
+    "totalUsers": "Total utilisateurs",
+    "recentOrders": "Commandes récentes"
+  },
+  "orders": {
+    "title": "Mes commandes",
+    "orderNumber": "Commande n°",
+    "status": "Statut",
+    "date": "Date",
+    "total": "Total",
+    "pending": "En attente",
+    "confirmed": "Confirmée",
+    "processing": "En préparation",
+    "shipped": "Expédiée",
+    "delivered": "Livrée",
+    "cancelled": "Annulée",
+    "refunded": "Remboursée"
   },
   "footer": {
     "rights": "Tous droits réservés",
     "legal": "Mentions légales",
-    "terms": "CGU"
+    "terms": "CGU",
+    "privacy": "Politique de confidentialité",
+    "contact": "Contact",
+    "followUs": "Suivez-nous"
+  },
+  "errors": {
+    "required": "Ce champ est requis",
+    "invalidEmail": "Email invalide",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "invalidCredentials": "Email ou mot de passe incorrect",
+    "emailExists": "Cet email est déjà utilisé",
+    "serverError": "Erreur serveur, veuillez réessayer",
+    "notFound": "Page non trouvée",
+    "unauthorized": "Accès non autorisé",
+    "sessionExpired": "Session expirée, veuillez vous reconnecter"
+  },
+  "success": {
+    "accountCreated": "Compte créé avec succès",
+    "loginSuccess": "Connexion réussie",
+    "passwordReset": "Mot de passe réinitialisé avec succès",
+    "emailVerified": "Email vérifié avec succès",
+    "profileUpdated": "Profil mis à jour",
+    "orderPlaced": "Commande passée avec succès",
+    "itemAdded": "Article ajouté au panier",
+    "itemRemoved": "Article retiré du panier"
   }
 }

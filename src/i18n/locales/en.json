@@ -10,7 +10,18 @@
     "logout": "Logout",
     "search": "Search",
     "contact": "Contact",
-    "about": "About"
+    "about": "About",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "close": "Close"
   },
   "product": {
     "addToCart": "Add to Cart",
@@ -19,7 +30,10 @@
     "price": "Price",
     "quantity": "Quantity",
     "description": "Description",
-    "reviews": "Reviews"
+    "reviews": "Reviews",
+    "relatedProducts": "Related Products",
+    "newProduct": "New",
+    "onSale": "On Sale"
   },
   "cart": {
     "title": "Your Cart",
@@ -27,7 +41,10 @@
     "subtotal": "Subtotal",
     "shipping": "Shipping",
     "total": "Total",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "continueShopping": "Continue Shopping",
+    "removeItem": "Remove from cart",
+    "updateQuantity": "Update quantity"
   },
   "auth": {
     "email": "Email",
@@ -37,11 +54,77 @@
     "lastName": "Last Name",
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
-    "haveAccount": "Already have an account?"
+    "haveAccount": "Already have an account?",
+    "loginTitle": "Login",
+    "registerTitle": "Create an account",
+    "resetPassword": "Reset password",
+    "newPassword": "New password",
+    "verifyEmail": "Verify your email",
+    "verifyEmailSent": "A verification email has been sent",
+    "twoFactorTitle": "Two-factor authentication",
+    "twoFactorCode": "Verification code",
+    "twoFactorSetup": "Setup 2FA",
+    "continueWith": "Continue with"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "categories": "Categories",
+    "orders": "Orders",
+    "users": "Users",
+    "invoices": "Invoices",
+    "credits": "Credits",
+    "homepage": "Homepage",
+    "messages": "Messages",
+    "settings": "Settings",
+    "stats": "Statistics",
+    "totalSales": "Total Sales",
+    "totalOrders": "Total Orders",
+    "totalUsers": "Total Users",
+    "recentOrders": "Recent Orders"
+  },
+  "orders": {
+    "title": "My Orders",
+    "orderNumber": "Order #",
+    "status": "Status",
+    "date": "Date",
+    "total": "Total",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded"
   },
   "footer": {
     "rights": "All rights reserved",
     "legal": "Legal Notice",
-    "terms": "Terms of Service"
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "contact": "Contact",
+    "followUs": "Follow us"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "invalidCredentials": "Invalid email or password",
+    "emailExists": "This email is already in use",
+    "serverError": "Server error, please try again",
+    "notFound": "Page not found",
+    "unauthorized": "Unauthorized access",
+    "sessionExpired": "Session expired, please log in again"
+  },
+  "success": {
+    "accountCreated": "Account created successfully",
+    "loginSuccess": "Login successful",
+    "passwordReset": "Password reset successfully",
+    "emailVerified": "Email verified successfully",
+    "profileUpdated": "Profile updated",
+    "orderPlaced": "Order placed successfully",
+    "itemAdded": "Item added to cart",
+    "itemRemoved": "Item removed from cart"
   }
 }
