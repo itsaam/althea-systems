@@ -13,18 +13,20 @@ datasource db {
 // ==================== MODÈLES ====================
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String?
-  name          String?   // Requis par NextAuth PrismaAdapter
-  firstName     String?
-  lastName      String?
-  phone         String?
-  role          Role      @default(USER)
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String?
+  name             String?   // Requis par NextAuth PrismaAdapter
+  firstName        String?
+  lastName         String?
+  phone            String?
+  role             Role      @default(USER)
+  emailVerified    DateTime?
+  image            String?
+  twoFactorSecret  String?   // Secret TOTP pour 2FA
+  twoFactorEnabled Boolean   @default(false) // 2FA activé ou non
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   addresses     Address[]
   orders        Order[]
