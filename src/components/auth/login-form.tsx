@@ -72,7 +72,14 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        setFormError("Email ou mot de passe incorrect");
+        // Décoder le code d'erreur et afficher un message explicite
+        const errorMessages: Record<string, string> = {
+          INVALID_CREDENTIALS: "Email ou mot de passe incorrect",
+          EMAIL_NOT_VERIFIED:
+            "Veuillez vérifier votre email avant de vous connecter. Consultez votre boîte de réception.",
+          CredentialsSignin: "Email ou mot de passe incorrect",
+        };
+        setFormError(errorMessages[result.error] || result.error);
       } else if (result?.ok) {
         router.push(callbackUrl);
         router.refresh();
@@ -91,12 +98,16 @@ export default function LoginForm() {
 
   return (
     <div className="space-y-6">
-      {/* Erreur OAuth */}
-      {error && (
+      {/* Erreur OAuth ou URL */}
+      {error && !formError && (
         <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
           {error === "OAuthAccountNotLinked"
             ? "Cet email est déjà utilisé avec une autre méthode de connexion"
-            : "Erreur de connexion"}
+            : error === "CredentialsSignin"
+            ? "Email ou mot de passe incorrect"
+            : error === "EmailNotVerified"
+            ? "Veuillez vérifier votre email avant de vous connecter. Consultez votre boîte de réception."
+            : error}
         </div>
       )}
 
