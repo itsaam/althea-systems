@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { authLogger, LogMessages } from "@/lib/logger/exports";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,11 +53,33 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Générer un token de vérification
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
+
+    // Sauvegarder le token
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token: verificationToken,
+        expires,
+      },
+    });
+
+    // Envoyer l'email de vérification
+    try {
+      await sendVerificationEmail(email, verificationToken);
+      authLogger.info(`Email de vérification envoyé à ${email}`);
+    } catch (emailError) {
+      authLogger.error(`Erreur envoi email: ${emailError}`);
+      // On continue même si l'email échoue - l'utilisateur peut le renvoyer
+    }
+
     authLogger.info(LogMessages.auth.inscriptionReussie(email));
 
     return NextResponse.json(
       {
-        message: "Compte créé avec succès",
+        message: "Compte créé avec succès. Vérifiez votre email.",
         user: {
           id: user.id,
           email: user.email,

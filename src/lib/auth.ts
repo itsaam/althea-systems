@@ -19,10 +19,13 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
       role?: string;
+      twoFactorEnabled?: boolean;
+      twoFactorVerified?: boolean;
     };
   }
   interface User {
     role?: string;
+    twoFactorEnabled?: boolean;
   }
 }
 
@@ -30,6 +33,8 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     role?: string;
+    twoFactorEnabled?: boolean;
+    twoFactorVerified?: boolean;
   }
 }
 
@@ -69,7 +74,7 @@ export const authOptions: NextAuthOptions = {
           authLogger.warn(
             LogMessages.auth.connexionEchouee("email/password manquant")
           );
-          return null;
+          throw new Error("Email et mot de passe requis");
         }
 
         const user = await prisma.user.findUnique({
@@ -80,7 +85,7 @@ export const authOptions: NextAuthOptions = {
           authLogger.warn(
             LogMessages.auth.connexionEchouee(credentials.email as string)
           );
-          return null;
+          throw new Error("INVALID_CREDENTIALS");
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -92,7 +97,15 @@ export const authOptions: NextAuthOptions = {
           authLogger.warn(
             LogMessages.auth.connexionEchouee(credentials.email as string)
           );
-          return null;
+          throw new Error("INVALID_CREDENTIALS");
+        }
+
+        // Vérifier si l'email est vérifié
+        if (!user.emailVerified) {
+          authLogger.warn(
+            `Tentative de connexion avec email non vérifié: ${user.email}`
+          );
+          throw new Error("EMAIL_NOT_VERIFIED");
         }
 
         authLogger.info(LogMessages.auth.connexionReussie(user.email));
@@ -106,6 +119,7 @@ export const authOptions: NextAuthOptions = {
               : user.email,
           image: user.image,
           role: user.role,
+          twoFactorEnabled: user.twoFactorEnabled,
         };
       },
     }),
@@ -144,10 +158,18 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.twoFactorEnabled = user.twoFactorEnabled || false;
+        token.twoFactorVerified = false; // Toujours false à la connexion
       }
-      // Mise à jour de la session si demandée
+      // Mise à jour de la session si demandée (ex: après vérification 2FA)
       if (trigger === "update" && session) {
-        token.name = session.user?.name;
+        if (session.user?.name) token.name = session.user.name;
+        if (session.user?.twoFactorVerified !== undefined) {
+          token.twoFactorVerified = session.user.twoFactorVerified;
+        }
+        if (session.user?.twoFactorEnabled !== undefined) {
+          token.twoFactorEnabled = session.user.twoFactorEnabled;
+        }
       }
       return token;
     },
@@ -155,6 +177,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.twoFactorEnabled = token.twoFactorEnabled as boolean;
+        session.user.twoFactorVerified = token.twoFactorVerified as boolean;
       }
       return session;
     },

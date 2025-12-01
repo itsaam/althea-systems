@@ -10,7 +10,18 @@
     "logout": "تسجيل الخروج",
     "search": "بحث",
     "contact": "اتصل بنا",
-    "about": "عنا"
+    "about": "عنا",
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "create": "إنشاء",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "confirm": "تأكيد",
+    "close": "إغلاق"
   },
   "product": {
     "addToCart": "أضف إلى السلة",
@@ -19,7 +30,10 @@
     "price": "السعر",
     "quantity": "الكمية",
     "description": "الوصف",
-    "reviews": "التقييمات"
+    "reviews": "التقييمات",
+    "relatedProducts": "منتجات مشابهة",
+    "newProduct": "جديد",
+    "onSale": "تخفيضات"
   },
   "cart": {
     "title": "سلة التسوق",
@@ -27,7 +41,10 @@
     "subtotal": "المجموع الفرعي",
     "shipping": "الشحن",
     "total": "المجموع",
-    "checkout": "إتمام الشراء"
+    "checkout": "إتمام الشراء",
+    "continueShopping": "متابعة التسوق",
+    "removeItem": "إزالة من السلة",
+    "updateQuantity": "تحديث الكمية"
   },
   "auth": {
     "email": "البريد الإلكتروني",
@@ -37,11 +54,77 @@
     "lastName": "الاسم الأخير",
     "forgotPassword": "نسيت كلمة المرور؟",
     "noAccount": "ليس لديك حساب؟",
-    "haveAccount": "لديك حساب بالفعل؟"
+    "haveAccount": "لديك حساب بالفعل؟",
+    "loginTitle": "تسجيل الدخول",
+    "registerTitle": "إنشاء حساب",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "newPassword": "كلمة المرور الجديدة",
+    "verifyEmail": "تحقق من بريدك الإلكتروني",
+    "verifyEmailSent": "تم إرسال بريد التحقق",
+    "twoFactorTitle": "التحقق بخطوتين",
+    "twoFactorCode": "رمز التحقق",
+    "twoFactorSetup": "إعداد التحقق بخطوتين",
+    "continueWith": "المتابعة مع"
+  },
+  "admin": {
+    "dashboard": "لوحة التحكم",
+    "products": "المنتجات",
+    "categories": "الفئات",
+    "orders": "الطلبات",
+    "users": "المستخدمون",
+    "invoices": "الفواتير",
+    "credits": "الائتمانات",
+    "homepage": "الصفحة الرئيسية",
+    "messages": "الرسائل",
+    "settings": "الإعدادات",
+    "stats": "الإحصائيات",
+    "totalSales": "إجمالي المبيعات",
+    "totalOrders": "إجمالي الطلبات",
+    "totalUsers": "إجمالي المستخدمين",
+    "recentOrders": "الطلبات الأخيرة"
+  },
+  "orders": {
+    "title": "طلباتي",
+    "orderNumber": "طلب رقم",
+    "status": "الحالة",
+    "date": "التاريخ",
+    "total": "المجموع",
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "processing": "قيد التحضير",
+    "shipped": "تم الشحن",
+    "delivered": "تم التسليم",
+    "cancelled": "ملغي",
+    "refunded": "مسترد"
   },
   "footer": {
     "rights": "جميع الحقوق محفوظة",
     "legal": "الإشعار القانوني",
-    "terms": "شروط الخدمة"
+    "terms": "شروط الخدمة",
+    "privacy": "سياسة الخصوصية",
+    "contact": "اتصل بنا",
+    "followUs": "تابعنا"
+  },
+  "errors": {
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "بريد إلكتروني غير صالح",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
+    "passwordMismatch": "كلمات المرور غير متطابقة",
+    "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صحيحة",
+    "emailExists": "هذا البريد الإلكتروني مستخدم بالفعل",
+    "serverError": "خطأ في الخادم، يرجى المحاولة مرة أخرى",
+    "notFound": "الصفحة غير موجودة",
+    "unauthorized": "غير مصرح بالوصول",
+    "sessionExpired": "انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى"
+  },
+  "success": {
+    "accountCreated": "تم إنشاء الحساب بنجاح",
+    "loginSuccess": "تم تسجيل الدخول بنجاح",
+    "passwordReset": "تم إعادة تعيين كلمة المرور بنجاح",
+    "emailVerified": "تم التحقق من البريد الإلكتروني بنجاح",
+    "profileUpdated": "تم تحديث الملف الشخصي",
+    "orderPlaced": "تم تقديم الطلب بنجاح",
+    "itemAdded": "تمت إضافة العنصر إلى السلة",
+    "itemRemoved": "تمت إزالة العنصر من السلة"
   }
 }

@@ -1,4 +1,29 @@
 services:
+  # ==================== APPLICATION ====================
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: althea-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://althea:Kx9mP2vL8nQwR4tY@postgres:5432/althea_db
+      - MONGODB_URI=mongodb://althea:Jh7sN3bF6mWcX1zV@mongodb:27017/althea?authSource=admin
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - althea-network
+    restart: unless-stopped
+
+  # ==================== POSTGRESQL ====================
   postgres:
     image: postgres:16-alpine
     container_name: althea-postgres
@@ -10,12 +35,17 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts/postgres:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U althea -d althea_db"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - althea-network
+    restart: unless-stopped
 
+  # ==================== MONGODB ====================
   mongodb:
     image: mongo:7
     container_name: althea-mongodb
@@ -26,15 +56,21 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+      - ./init-scripts/mongo:/docker-entrypoint-initdb.d
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - althea-network
+    restart: unless-stopped
 
+  # ==================== REDIS ====================
   redis:
     image: redis:7-alpine
     container_name: althea-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
     volumes:
@@ -44,8 +80,60 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - althea-network
+    restart: unless-stopped
 
+  # ==================== REDIS COMMANDER (Dev) ====================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: althea-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - althea-network
+    profiles:
+      - dev
+
+  # ==================== ADMINER (Dev) ====================
+  adminer:
+    image: adminer:latest
+    container_name: althea-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - althea-network
+    profiles:
+      - dev
+
+  # ==================== MAILHOG (Dev) ====================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: althea-mailhog
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - althea-network
+    profiles:
+      - dev
+
+# ==================== VOLUMES ====================
 volumes:
   postgres_data:
+    driver: local
   mongodb_data:
+    driver: local
   redis_data:
+    driver: local
+
+# ==================== NETWORKS ====================
+networks:
+  althea-network:
+    driver: bridge
