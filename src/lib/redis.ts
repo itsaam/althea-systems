@@ -10,7 +10,6 @@ const getRedisUrl = () => {
 // Configuration Redis optimisée
 export const redis = new Redis(getRedisUrl(), {
   maxRetriesPerRequest: 3,
-  retryDelayOnFailover: 100,
   enableReadyCheck: true,
   lazyConnect: true,
 });

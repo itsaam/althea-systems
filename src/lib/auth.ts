@@ -10,34 +10,6 @@ import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
 import { authLogger, LogMessages } from "@/lib/logger/exports";
 
-// Extension des types NextAuth
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      role?: string;
-      twoFactorEnabled?: boolean;
-      twoFactorVerified?: boolean;
-    };
-  }
-  interface User {
-    role?: string;
-    twoFactorEnabled?: boolean;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id?: string;
-    role?: string;
-    twoFactorEnabled?: boolean;
-    twoFactorVerified?: boolean;
-  }
-}
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
   providers: [
