@@ -13,7 +13,8 @@ function getResend(): Resend {
 }
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Althea Systems";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+// Utiliser NEXTAUTH_URL en priorité (défini en prod), sinon fallback sur localhost
+const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 // ==================== TYPES ====================

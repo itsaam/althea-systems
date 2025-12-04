@@ -48,6 +48,8 @@ export default function RegisterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string>("");
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,14 +92,10 @@ export default function RegisterForm() {
         return;
       }
 
-      toast.success("Compte créé avec succès !");
-
-      // Connexion automatique après inscription
-      await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        callbackUrl: "/",
-      });
+      // Afficher le message de vérification d'email
+      setRegisteredEmail(data.email);
+      setEmailSent(true);
+      toast.success("Vérifiez votre boîte mail pour activer votre compte !");
     } catch {
       setFormError("Une erreur est survenue");
     } finally {
@@ -109,6 +107,44 @@ export default function RegisterForm() {
     setIsLoading(true);
     signIn(provider, { callbackUrl: "/" });
   };
+
+  // Si l'email a été envoyé, afficher le message de confirmation
+  if (emailSent) {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="p-6 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="text-4xl mb-4">📧</div>
+          <h2 className="text-xl font-semibold text-green-800 dark:text-green-200 mb-2">
+            Vérifiez votre boîte mail !
+          </h2>
+          <p className="text-green-700 dark:text-green-300 mb-4">
+            Un email de confirmation a été envoyé à :<br />
+            <strong>{registeredEmail}</strong>
+          </p>
+          <p className="text-sm text-green-600 dark:text-green-400">
+            Cliquez sur le lien dans l&apos;email pour activer votre compte.<br />
+            Le lien expire dans 24 heures.
+          </p>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Vous n&apos;avez pas reçu l&apos;email ?{" "}
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={() => {
+              setEmailSent(false);
+              setFormError(null);
+            }}
+          >
+            Réessayer
+          </button>
+        </p>
+        <Link href="/login" className="text-primary hover:underline text-sm">
+          Retour à la connexion
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
