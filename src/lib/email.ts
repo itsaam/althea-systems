@@ -14,7 +14,10 @@ function getResend(): Resend {
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Althea Systems";
 // Utiliser NEXTAUTH_URL en priorité (défini en prod), sinon fallback sur localhost
-const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL =
+  process.env.NEXTAUTH_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "http://localhost:3000";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 // ==================== TYPES ====================
@@ -39,82 +42,95 @@ function baseEmailTemplate(content: string, title: string): string {
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
+      line-height: 1.7;
+      color: #1a1a1a;
       margin: 0;
       padding: 0;
-      background-color: #f5f5f5;
+      background-color: #ffffff;
     }
     .container {
-      max-width: 600px;
+      max-width: 580px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 40px 20px;
     }
     .email-wrapper {
       background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
+      border: 1px solid #e5e5e5;
     }
     .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 30px;
-      text-align: center;
+      padding: 32px 40px;
+      border-bottom: 1px solid #e5e5e5;
     }
     .header h1 {
-      color: #ffffff;
+      color: #000000;
       margin: 0;
-      font-size: 28px;
-      font-weight: 700;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
     }
     .content {
-      padding: 40px 30px;
+      padding: 40px;
     }
     .content h2 {
-      color: #333;
-      margin-top: 0;
-      font-size: 22px;
+      color: #000000;
+      margin: 0 0 24px 0;
+      font-size: 20px;
+      font-weight: 600;
     }
     .content p {
-      margin: 16px 0;
-      color: #555;
+      margin: 0 0 16px 0;
+      color: #4a4a4a;
+      font-size: 15px;
     }
     .button {
       display: inline-block;
-      padding: 14px 32px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 14px 28px;
+      background-color: #000000;
       color: #ffffff !important;
       text-decoration: none;
-      border-radius: 6px;
-      font-weight: 600;
-      margin: 20px 0;
+      font-weight: 500;
+      font-size: 14px;
+      margin: 24px 0;
+      transition: background-color 0.2s;
     }
     .button:hover {
-      opacity: 0.9;
+      background-color: #333333;
     }
     .footer {
-      background-color: #f8f9fa;
-      padding: 20px 30px;
-      text-align: center;
-      font-size: 12px;
-      color: #888;
+      padding: 24px 40px;
+      border-top: 1px solid #e5e5e5;
+      font-size: 13px;
+      color: #8a8a8a;
     }
     .footer a {
-      color: #667eea;
+      color: #000000;
       text-decoration: none;
     }
+    .footer a:hover {
+      text-decoration: underline;
+    }
     .info-box {
-      background-color: #f8f9fa;
-      border-left: 4px solid #667eea;
-      padding: 15px;
-      margin: 20px 0;
-      border-radius: 0 4px 4px 0;
+      background-color: #fafafa;
+      border-left: 2px solid #000000;
+      padding: 16px 20px;
+      margin: 24px 0;
+    }
+    .info-box p {
+      margin: 0;
+      font-size: 14px;
+      color: #4a4a4a;
+    }
+    .info-box p + p {
+      margin-top: 8px;
+    }
+    .divider {
+      height: 1px;
+      background-color: #e5e5e5;
+      margin: 32px 0;
     }
     .order-summary {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      overflow: hidden;
-      margin: 20px 0;
+      border: 1px solid #e5e5e5;
+      margin: 24px 0;
     }
     .order-summary table {
       width: 100%;
@@ -122,18 +138,30 @@ function baseEmailTemplate(content: string, title: string): string {
     }
     .order-summary th,
     .order-summary td {
-      padding: 12px 15px;
+      padding: 14px 16px;
       text-align: left;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 1px solid #e5e5e5;
+      font-size: 14px;
     }
     .order-summary th {
-      background-color: #f8f9fa;
+      background-color: #fafafa;
       font-weight: 600;
+      color: #000000;
+    }
+    .order-summary tr:last-child td {
+      border-bottom: none;
     }
     .order-summary .total {
-      font-weight: 700;
-      font-size: 18px;
-      background-color: #f8f9fa;
+      font-weight: 600;
+      background-color: #fafafa;
+    }
+    .link-fallback {
+      font-size: 12px;
+      color: #8a8a8a;
+      word-break: break-all;
+    }
+    .link-fallback a {
+      color: #4a4a4a;
     }
   </style>
 </head>
@@ -147,10 +175,10 @@ function baseEmailTemplate(content: string, title: string): string {
         ${content}
       </div>
       <div class="footer">
-        <p>&copy; ${new Date().getFullYear()} ${APP_NAME}. Tous droits réservés.</p>
-        <p>
-          <a href="${APP_URL}">Visiter notre site</a> | 
-          <a href="${APP_URL}/contact">Contact</a> |
+        <p>&copy; ${new Date().getFullYear()} ${APP_NAME}</p>
+        <p style="margin-top: 8px;">
+          <a href="${APP_URL}">Site web</a> &nbsp;&middot;&nbsp;
+          <a href="${APP_URL}/contact">Contact</a> &nbsp;&middot;&nbsp;
           <a href="${APP_URL}/mentions-legales">Mentions légales</a>
         </p>
       </div>

@@ -122,7 +122,8 @@ export default function RegisterForm() {
             <strong>{registeredEmail}</strong>
           </p>
           <p className="text-sm text-green-600 dark:text-green-400">
-            Cliquez sur le lien dans l&apos;email pour activer votre compte.<br />
+            Cliquez sur le lien dans l&apos;email pour activer votre compte.
+            <br />
             Le lien expire dans 24 heures.
           </p>
         </div>
