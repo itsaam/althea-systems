@@ -2,7 +2,15 @@ import { Resend } from "resend";
 
 // ==================== CONFIGURATION ====================
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization pour éviter les erreurs au build
+let resendInstance: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resendInstance) {
+    resendInstance = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendInstance;
+}
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Althea Systems";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -155,7 +163,7 @@ function baseEmailTemplate(content: string, title: string): string {
 // ==================== SEND EMAIL FUNCTION ====================
 
 export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: `${APP_NAME} <${FROM_EMAIL}>`,
     to: [to],
     subject,

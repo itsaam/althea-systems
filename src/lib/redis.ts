@@ -1,17 +1,28 @@
 import Redis from "ioredis";
 
-const getRedisUrl = () => {
-  if (process.env.REDIS_URL) {
-    return process.env.REDIS_URL;
-  }
-  throw new Error("REDIS_URL is not defined");
-};
+// Lazy initialization pour éviter les erreurs au build
+let redisInstance: Redis | null = null;
 
-// Configuration Redis optimisée
-export const redis = new Redis(getRedisUrl(), {
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  lazyConnect: true,
+function getRedisInstance(): Redis {
+  if (!redisInstance) {
+    const url = process.env.REDIS_URL;
+    if (!url) {
+      throw new Error("REDIS_URL is not defined");
+    }
+    redisInstance = new Redis(url, {
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: true,
+      lazyConnect: true,
+    });
+  }
+  return redisInstance;
+}
+
+// Export un proxy qui initialise Redis à la première utilisation
+export const redis = new Proxy({} as Redis, {
+  get(_, prop) {
+    return getRedisInstance()[prop as keyof Redis];
+  },
 });
 
 // ==================== CACHE HELPERS ====================
