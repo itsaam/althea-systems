@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { rateLimitMiddleware } from "@/lib/rate-limit";
 
 // Routes protégées
 const protectedRoutes = {
@@ -23,14 +22,6 @@ const twoFactorPages = ["/admin/settings/2fa", "/admin/verify-2fa"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Rate limiting pour les routes API
-  if (pathname.startsWith("/api")) {
-    const rateLimitResponse = await rateLimitMiddleware(request);
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
-  }
 
   // Récupérer le token JWT
   const token = await getToken({
