@@ -1,9 +1,9 @@
 import Redis from "ioredis";
 
-// Lazy initialization pour éviter les erreurs au build
+// Singleton Redis instance
 let redisInstance: Redis | null = null;
 
-function getRedisInstance(): Redis {
+function getRedis(): Redis {
   if (!redisInstance) {
     const url = process.env.REDIS_URL;
     if (!url) {
@@ -11,19 +11,37 @@ function getRedisInstance(): Redis {
     }
     redisInstance = new Redis(url, {
       maxRetriesPerRequest: 3,
-      enableReadyCheck: true,
-      lazyConnect: true,
+      connectTimeout: 10000,
+      lazyConnect: false,
+    });
+    
+    redisInstance.on("error", (err) => {
+      console.error("Redis connection error:", err.message);
+    });
+    
+    redisInstance.on("connect", () => {
+      console.log("Redis connected successfully");
     });
   }
   return redisInstance;
 }
 
-// Export un proxy qui initialise Redis à la première utilisation
-export const redis = new Proxy({} as Redis, {
-  get(_, prop) {
-    return getRedisInstance()[prop as keyof Redis];
+// Export direct instance getter
+export const redis = {
+  get: async (key: string) => getRedis().get(key),
+  set: async (key: string, value: string, mode?: string, duration?: number) => {
+    if (mode === "EX" && duration) {
+      return getRedis().set(key, value, "EX", duration);
+    }
+    return getRedis().set(key, value);
   },
-});
+  del: async (...keys: string[]) => getRedis().del(...keys),
+  keys: async (pattern: string) => getRedis().keys(pattern),
+  expire: async (key: string, seconds: number) => getRedis().expire(key, seconds),
+  incr: async (key: string) => getRedis().incr(key),
+  ttl: async (key: string) => getRedis().ttl(key),
+  multi: () => getRedis().multi(),
+};
 
 // ==================== CACHE HELPERS ====================
 
