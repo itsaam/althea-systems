@@ -5,7 +5,7 @@ import HomeText from "@/components/home/home-text";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col gap-12 py-8">
+    <div className="flex flex-col">
       <HeroCarousel />
       <CategoriesGrid />
       <FeaturedProducts />
