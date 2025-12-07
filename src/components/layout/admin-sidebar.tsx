@@ -13,7 +13,7 @@ const navItems = [
   { href: "/admin/users", label: "Utilisateurs", icon: "👥" },
   { href: "/admin/invoices", label: "Factures", icon: "📄" },
   { href: "/admin/credits", label: "Avoirs", icon: "💰" },
-  { href: "/admin/homepage", label: "Page accueil", icon: "🏠" },
+  { href: "/admin/homepage/carousel", label: "Carrousel", icon: "🎠" },
   { href: "/admin/messages", label: "Messages", icon: "💬" },
 ];
 
