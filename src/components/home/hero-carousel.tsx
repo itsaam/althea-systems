@@ -8,11 +8,10 @@ import Link from "next/link";
 interface CarouselSlide {
   id: string;
   title: string;
-  subtitle?: string;
-  ctaText?: string;
-  ctaLink?: string;
-  imageUrl?: string;
-  backgroundColor?: string;
+  subtitle?: string | null;
+  image?: string;
+  link?: string | null;
+  active?: boolean;
 }
 
 export default function HeroCarousel() {
@@ -52,8 +51,7 @@ export default function HeroCarousel() {
       id: "1",
       title: "Équipement médical de pointe",
       subtitle: "Des solutions innovantes pour votre cabinet médical",
-      ctaText: "Découvrir nos produits",
-      ctaLink: "/categories",
+      link: "/categories",
     },
   ];
 
@@ -77,16 +75,13 @@ export default function HeroCarousel() {
     <section className="w-full pt-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
-          className="relative h-[500px] md:h-[600px] rounded-2xl overflow-hidden"
-          style={{
-            backgroundColor: slide?.backgroundColor || "#f5f5f5",
-          }}
+          className="relative h-[500px] md:h-[600px] rounded-2xl overflow-hidden bg-neutral-900"
         >
           {/* Background Image */}
-          {slide?.imageUrl && (
+          {slide?.image && (
             <div
               className="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
-              style={{ backgroundImage: `url(${slide.imageUrl})` }}
+              style={{ backgroundImage: `url(${slide.image})` }}
             />
           )}
 
@@ -103,13 +98,13 @@ export default function HeroCarousel() {
                 {slide.subtitle}
               </p>
             )}
-            {slide?.ctaText && slide?.ctaLink && (
-              <Link href={slide.ctaLink} className="mt-8">
+            {slide?.link && (
+              <Link href={slide.link} className="mt-8">
                 <Button
                   size="lg"
                   className="rounded-full px-8 h-12 text-base font-medium bg-white text-black hover:bg-white/90 transition-all duration-200"
                 >
-                  {slide.ctaText}
+                  Découvrir
                 </Button>
               </Link>
             )}
