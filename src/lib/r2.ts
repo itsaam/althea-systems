@@ -1,6 +1,6 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
-const R2_ACCOUNT_ID = "b3f25422b01984631aa3eb99d546873c";
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "althea-images";
@@ -20,7 +20,9 @@ export async function uploadToR2(
   fileName: string,
   contentType: string
 ): Promise<string> {
-  const key = `${Date.now()}-${fileName}`;
+  // Nettoyer le nom de fichier (retirer emojis/caractères spéciaux)
+  const cleanFileName = fileName.replace(/[^\w.-]/g, '_');
+  const key = `${Date.now()}-${cleanFileName}`;
 
   await r2Client.send(
     new PutObjectCommand({
