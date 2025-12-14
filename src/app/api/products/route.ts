@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import {
   productLogger,
   apiLogger,
@@ -22,9 +24,15 @@ export const GET = withApiLogger(async (req: NextRequest) => {
   }
 });
 
-// POST /api/products - Créer un produit
+// POST /api/products - Créer un produit (admin only)
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { name, price, description, categoryId } = body;
 
