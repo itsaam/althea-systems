@@ -61,9 +61,9 @@ export default function HeroCarousel() {
 
   if (isLoading) {
     return (
-      <section className="w-full">
+      <section className="w-full pt-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative h-[500px] md:h-[600px] rounded-2xl bg-muted animate-pulse" />
+          <div className="relative h-[500px] md:h-[600px] rounded-2xl overflow-hidden bg-neutral-900" />
         </div>
       </section>
     );
