@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { Search, ShoppingBag, ChevronLeft, ChevronRight, User, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navLinks = [
   { href: "/categories", label: "Catégories" },
@@ -40,8 +49,19 @@ const defaultSlides: Slide[] = [
 ];
 
 export default function HeroCanvasReveal() {
+  const { data: session, status } = useSession();
   const [slides, setSlides] = useState<Slide[]>(defaultSlides);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const getInitials = (name?: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   useEffect(() => {
     async function fetchSlides() {
@@ -118,18 +138,59 @@ export default function HeroCanvasReveal() {
             </Link>
 
             {/* Auth buttons */}
-            <div className="hidden md:flex items-center gap-2 ml-2">
-              <Link href="/login">
-                <button className="h-8 px-3 rounded-md text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">
-                  Connexion
-                </button>
-              </Link>
-              <Link href="/register">
-                <button className="h-8 px-4 rounded-full text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
-                  S'inscrire
-                </button>
-              </Link>
-            </div>
+            {status === "loading" ? (
+              <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse ml-2" />
+            ) : session?.user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="relative h-9 w-9 rounded-full p-0 ml-2">
+                    <Avatar className="h-8 w-8 border border-white/30">
+                      <AvatarImage
+                        src={session.user.image || ""}
+                        alt={session.user.name || ""}
+                      />
+                      <AvatarFallback className="text-xs font-medium bg-white/20 text-white">
+                        {getInitials(session.user.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{session.user.name}</p>
+                    <p className="text-xs text-muted-foreground">{session.user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Mon profil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer text-destructive focus:text-destructive flex items-center"
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="hidden md:flex items-center gap-2 ml-2">
+                <Link href="/login">
+                  <button className="h-8 px-3 rounded-md text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                    Connexion
+                  </button>
+                </Link>
+                <Link href="/register">
+                  <button className="h-8 px-4 rounded-full text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
+                    S'inscrire
+                  </button>
+                </Link>
+              </div>
+            )}
 
             {/* Mobile menu button */}
             <button className="md:hidden flex items-center justify-center h-9 w-9 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors">
