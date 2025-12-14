@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Search, ShoppingBag, ChevronLeft, ChevronRight, User, LogOut } from "lucide-react";
+import { Search, ShoppingBag, ChevronLeft, ChevronRight, User, LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,7 @@ interface Slide {
   id: string;
   title: string;
   subtitle?: string | null;
+  image?: string | null;
 }
 
 const defaultSlides: Slide[] = [
@@ -35,16 +36,19 @@ const defaultSlides: Slide[] = [
     id: "1",
     title: "Althea",
     subtitle: "Votre partenaire en équipement médical de pointe",
+    image: null,
   },
   {
     id: "2",
     title: "Qualité",
     subtitle: "Des équipements certifiés aux normes les plus strictes",
+    image: null,
   },
   {
     id: "3",
     title: "Innovation",
     subtitle: "Les dernières technologies au service de la santé",
+    image: null,
   },
 ];
 
@@ -96,6 +100,18 @@ export default function HeroCanvasReveal() {
 
   return (
     <section className="relative w-full h-screen overflow-hidden bg-[#1a1a1a]">
+      {/* Background image */}
+      {slide?.image && (
+        <div
+          key={slide.id + "-bg"}
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
+          style={{ backgroundImage: `url(${slide.image})` }}
+        />
+      )}
+      
+      {/* Overlay for readability */}
+      <div className="absolute inset-0 bg-black/60" />
+
       {/* Content layer */}
       <div className="relative z-10 w-full h-full flex flex-col">
         {/* Navigation */}
@@ -167,6 +183,17 @@ export default function HeroCanvasReveal() {
                       Mon profil
                     </Link>
                   </DropdownMenuItem>
+                  {session.user.role === "ADMIN" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer flex items-center">
+                          <Settings className="mr-2 h-4 w-4" />
+                          Administration
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="cursor-pointer text-destructive focus:text-destructive flex items-center"
