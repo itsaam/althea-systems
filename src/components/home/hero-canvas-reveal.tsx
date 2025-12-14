@@ -31,30 +31,13 @@ interface Slide {
   image?: string | null;
 }
 
-const defaultSlides: Slide[] = [
-  {
-    id: "1",
-    title: "Althea",
-    subtitle: "Votre partenaire en équipement médical de pointe",
-    image: null,
-  },
-  {
-    id: "2",
-    title: "Qualité",
-    subtitle: "Des équipements certifiés aux normes les plus strictes",
-    image: null,
-  },
-  {
-    id: "3",
-    title: "Innovation",
-    subtitle: "Les dernières technologies au service de la santé",
-    image: null,
-  },
-];
+interface HeroCanvasRevealProps {
+  initialSlides?: Slide[];
+}
 
-export default function HeroCanvasReveal() {
+export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProps) {
   const { data: session, status } = useSession();
-  const [slides, setSlides] = useState<Slide[]>(defaultSlides);
+  const [slides, setSlides] = useState<Slide[]>(initialSlides || []);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const getInitials = (name?: string | null) => {
@@ -68,6 +51,9 @@ export default function HeroCanvasReveal() {
   };
 
   useEffect(() => {
+    // Ne fetch que si pas de slides initiales
+    if (initialSlides && initialSlides.length > 0) return;
+    
     async function fetchSlides() {
       try {
         const res = await fetch("/api/carousel");
@@ -82,7 +68,7 @@ export default function HeroCanvasReveal() {
       }
     }
     fetchSlides();
-  }, []);
+  }, [initialSlides]);
 
   // Auto-advance carousel
   useEffect(() => {
