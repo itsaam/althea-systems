@@ -127,6 +127,7 @@ model Order {
   userId          String
   addressId       String
   status          OrderStatus @default(PENDING)
+  paymentStatus  PaymentStatus @default(PENDING)
   subtotal        Decimal     @db.Decimal(10, 2)
   shippingCost    Decimal     @db.Decimal(10, 2)
   tax             Decimal     @db.Decimal(10, 2)
@@ -140,7 +141,8 @@ model Order {
   user    User        @relation(fields: [userId], references: [id])
   address Address     @relation(fields: [addressId], references: [id])
   items   OrderItem[]
-  invoice Invoice?
+  invoice     Invoice?
+  creditNotes CreditNote[]
 }
 
 model OrderItem {
@@ -188,19 +190,30 @@ model ContactMessage {
 }
 
 model CreditNote {
-  id          String   @id @default(cuid())
-  creditNumber String  @unique
-  orderId     String
-  amount      Decimal  @db.Decimal(10, 2)
-  reason      String
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  creditNumber String   @unique
+  orderId      String
+  amount       Decimal  @db.Decimal(10, 2)
+  reason       String
+  createdAt    DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
 }
+
 
 // ==================== ENUMS ====================
 
 enum Role {
   USER
   ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
 }
 
 enum OrderStatus {
