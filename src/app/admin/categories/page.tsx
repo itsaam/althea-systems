@@ -53,8 +53,8 @@ export default function AdminCategoriesPage() {
   };
 
   const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cat.slug.toLowerCase().includes(searchTerm.toLowerCase())
+    (cat.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (cat.slug.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleDelete = async (id: string, name: string) => {
