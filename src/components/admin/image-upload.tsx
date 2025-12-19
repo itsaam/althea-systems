@@ -12,6 +12,7 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   disabled?: boolean;
   maxSize?: number;
+  folder?: string;
 }
 
 export default function ImageUpload({
@@ -19,6 +20,7 @@ export default function ImageUpload({
   onChange,
   disabled = false,
   maxSize = 5,
+  folder = "images",
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -48,7 +50,7 @@ export default function ImageUpload({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "categories");
+      formData.append("folder", folder);
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
