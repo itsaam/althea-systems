@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { invalidateCategoryCache } from "@/lib/redis";
 import { deleteFromR2 } from "@/lib/r2";
 
 // GET - Récupérer une catégorie par ID
@@ -107,8 +106,6 @@ export async function PUT(
       },
     });
 
-    await invalidateCategoryCache();
-
     console.log(`[Categories PUT] Catégorie mise à jour: ${category.id} - ${category.name}`);
 
     return NextResponse.json({
@@ -176,8 +173,6 @@ export async function DELETE(
     await prisma.category.delete({
       where: { id },
     });
-
-    await invalidateCategoryCache();
 
     console.log(`[Categories DELETE] Catégorie supprimée: ${id} - ${category.name}`);
 
