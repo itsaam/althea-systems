@@ -3,7 +3,7 @@
 **Projet** : Althea Systems - Plateforme e-commerce B2B  
 **Auteur** : Samy  
 **Role** : DevOps - Auth et Infrastructure  
-**Date** : Decembre 2025
+**Date** : 19 decembre 2025
 
 ---
 
@@ -63,13 +63,14 @@ Le fichier `src/lib/auth.ts` centralise toute la configuration d'authentificatio
 
 #### OAuth Providers
 
-Trois providers OAuth ont ete configures pour offrir une connexion simplifiee :
+Deux providers OAuth ont ete configures pour offrir une connexion simplifiee :
 
 ```
 - Google OAuth 2.0
 - GitHub OAuth
-- Apple Sign In
 ```
+
+Note : Apple Sign In a ete retire car il necessitait un compte Apple Developer payant (99$/an). Cette decision a ete prise pour simplifier la maintenance et eviter des couts inutiles pour un projet de fin d'etudes.
 
 Chaque provider utilise l'option `allowDangerousEmailAccountLinking: true` pour permettre aux utilisateurs de lier plusieurs methodes de connexion au meme compte email. Ce choix a ete fait pour ameliorer l'experience utilisateur tout en acceptant le compromis de securite associe.
 
@@ -658,23 +659,79 @@ La regex `/[^\w.-]/g` remplace tous les caracteres qui ne sont pas des lettres, 
 
 **Lecon apprise** : Toujours sanitizer les noms de fichiers uploades par les utilisateurs avant de les stocker. Les caracteres Unicode (emojis, accents) peuvent causer des problemes d'encodage dans les URLs.
 
+### 11.7 Suppression du provider Apple OAuth
+
+**Probleme** : Le provider Apple Sign In etait configure mais necessitait un compte Apple Developer payant (99$/an) pour fonctionner en production.
+
+**Decision** : Suppression complete du provider Apple pour eviter des erreurs de configuration et simplifier la maintenance.
+
+**Fichiers modifies** :
+- `src/lib/auth.ts` : Suppression du provider Apple de la configuration NextAuth
+- `src/lib/config/env.ts` : Suppression des variables d'environnement Apple (APPLE_ID, APPLE_SECRET)
+- `src/app/(auth)/login/page.tsx` : Suppression du bouton de connexion Apple
+- `src/app/(auth)/register/page.tsx` : Suppression du bouton d'inscription Apple
+
+**Lecon apprise** : Avant d'implementer une integration tierce, verifier les couts et prerequis (compte developer, certificats, etc.).
+
+### 11.8 Correction de l'affichage du nom dans le dropdown profil
+
+**Probleme** : Apres une connexion OAuth (Google), le nom/prenom de l'utilisateur n'apparaissait plus dans le dropdown du header, seul l'email s'affichait.
+
+**Diagnostic** :
+1. Verification du composant `UserDropdown`
+2. Verification que les donnees firstName/lastName etaient bien presentes en session
+
+**Cause racine** : Le composant affichait `session.user.name` qui pouvait etre vide si les champs firstName/lastName etaient remplis separement.
+
+**Solution** : Modification du composant pour construire le nom complet a partir de firstName et lastName :
+
+```typescript
+const fullName = session.user.firstName && session.user.lastName
+  ? `${session.user.firstName} ${session.user.lastName}`
+  : session.user.name;
+```
+
+### 11.9 Nettoyage du code mort
+
+**Probleme** : Plusieurs fonctions dans `src/lib/redis.ts` n'etaient jamais utilisees dans le projet, rendant le code plus difficile a maintenir.
+
+**Analyse** : Utilisation de grep pour identifier les fonctions non appelees :
+- `invalidateAllUserSessions` : 0 usages
+- `getCachedProduct` : 0 usages
+- `setCachedProduct` : 0 usages
+- `invalidateProductCache` : 0 usages
+- `getCachedCategories` : 0 usages
+- `setCachedCategories` : 0 usages
+- `invalidateCategoriesCache` : 0 usages
+- `getCachedSearchResults` : 0 usages
+- `setCachedSearchResults` : 0 usages
+- `invalidateSearchCache` : 0 usages
+
+**Decision** : Suppression de toutes les fonctions non utilisees, en gardant uniquement :
+- `invalidateSession` : Utilisee pour la gestion des sessions
+- Les fonctions de base du cache (getCache, setCache, deleteCache)
+
+**Benefice** : Reduction de ~100 lignes de code, meilleure lisibilite, moins de maintenance.
+
+**Lecon apprise** : Appliquer le principe YAGNI (You Aren't Gonna Need It) - ne pas implementer de fonctionnalites "au cas ou".
+
 ---
 
 ## 12. Pistes d'amelioration
 
-### 11.1 Court terme
+### 12.1 Court terme
 
 - Ajouter un rate limiting compatible Edge Runtime (via Vercel KV ou Upstash)
 - Implementer la rotation des tokens JWT
 - Ajouter des backup codes pour le 2FA
 
-### 11.2 Moyen terme
+### 12.2 Moyen terme
 
 - Mettre en place un monitoring centralise (Sentry, Datadog)
 - Ajouter des tests d'integration pour l'authentification
 - Implementer la detection de connexions suspectes
 
-### 11.3 Long terme
+### 12.3 Long terme
 
 - Migration vers une solution de secrets management (Vault, AWS Secrets Manager)
 - Implementation d'un WAF (Web Application Firewall)
