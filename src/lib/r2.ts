@@ -18,11 +18,17 @@ const r2Client = new S3Client({
 export async function uploadToR2(
   file: Buffer,
   fileName: string,
-  contentType: string
+  contentType: string,
+  folder?: string
 ): Promise<string> {
   // Nettoyer le nom de fichier (retirer emojis/caractères spéciaux)
   const cleanFileName = fileName.replace(/[^\w.-]/g, '_');
-  const key = `${Date.now()}-${cleanFileName}`;
+  const timestamp = Date.now();
+  const key = folder
+    ? `${folder}/${timestamp}-${cleanFileName}`
+    : `${timestamp}-${cleanFileName}`;
+
+  console.log(`[R2] Uploading file to: ${key}`);
 
   await r2Client.send(
     new PutObjectCommand({
@@ -33,7 +39,10 @@ export async function uploadToR2(
     })
   );
 
-  return `${R2_PUBLIC_URL}/${key}`;
+  const url = `${R2_PUBLIC_URL}/${key}`;
+  console.log(`[R2] Upload successful: ${url}`);
+
+  return url;
 }
 
 export async function deleteFromR2(url: string): Promise<void> {

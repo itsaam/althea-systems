@@ -35,11 +35,31 @@ export async function POST(request: NextRequest) {
 
     // Si c'est la configuration initiale
     if (isSetup) {
-      const pendingSecret = await redis.get(`2fa_setup:${user.id}`);
+      let pendingSecret: string | null = null;
+
+      try {
+        pendingSecret = await redis.get(`2fa_setup:${user.id}`);
+      } catch (redisError) {
+        console.error(
+          `[2FA Verify] Redis unavailable while reading 2fa_setup for user ${user.id}:`,
+          redisError
+        );
+
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            `[2FA Verify] Redis indisponible en dev. Vérifiez que REDIS_URL=${process.env.REDIS_URL} est correct et que Redis est démarré.`
+          );
+        }
+
+        return NextResponse.json(
+          { error: "Erreur de connexion au cache. Vérifiez que Redis est démarré et accessible." },
+          { status: 500 }
+        );
+      }
 
       if (!pendingSecret) {
         return NextResponse.json(
-          { error: "Session de configuration expirée" },
+          { error: "Session de configuration expirée ou non trouvée. Veuillez recommencer la configuration." },
           { status: 400 }
         );
       }
@@ -64,7 +84,15 @@ export async function POST(request: NextRequest) {
       });
 
       // Supprimer le secret temporaire
-      await redis.del(`2fa_setup:${user.id}`);
+      try {
+        await redis.del(`2fa_setup:${user.id}`);
+      } catch (redisError) {
+        console.warn(
+          `[2FA Verify] Redis unavailable while deleting 2fa_setup for user ${user.id}:`,
+          redisError
+        );
+        // Ne pas bloquer si la suppression échoue
+      }
 
       return NextResponse.json({
         message: "2FA activé avec succès",
@@ -97,7 +125,16 @@ export async function POST(request: NextRequest) {
       updateSession: true, // Indique au client de mettre à jour la session
     });
   } catch (error) {
-    console.error("Erreur 2FA verify:", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    console.error("[2FA Verify] Erreur critique:", error);
+    // Log plus détaillé pour debug
+    if (error instanceof Error) {
+      console.error("[2FA Verify] Error name:", error.name);
+      console.error("[2FA Verify] Error message:", error.message);
+      console.error("[2FA Verify] Error stack:", error.stack);
+    }
+    return NextResponse.json(
+      { error: "Erreur serveur lors de la vérification 2FA" },
+      { status: 500 }
+    );
   }
 }

@@ -29,7 +29,14 @@ export async function POST() {
     const secret = authenticator.generateSecret();
 
     // Stocker temporairement dans Redis (expire en 10 minutes)
-    await redis.set(`2fa_setup:${user.id}`, secret, "EX", 600);
+    try {
+      await redis.set(`2fa_setup:${user.id}`, secret, "EX", 600);
+    } catch (redisError) {
+      console.warn(
+        `[2FA Setup] Redis unavailable while saving 2FA secret for user ${user.id}:`,
+        redisError
+      );
+    }
 
     // Générer l'URL pour QR code avec otplib
     const appName = process.env.NEXT_PUBLIC_APP_NAME || "Althea Systems";
@@ -41,7 +48,16 @@ export async function POST() {
       message: "Scannez le QR code avec votre application d'authentification",
     });
   } catch (error) {
-    console.error("Erreur 2FA setup:", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    console.error("[2FA Setup] Erreur critique:", error);
+    // Log plus détaillé pour debug
+    if (error instanceof Error) {
+      console.error("[2FA Setup] Error name:", error.name);
+      console.error("[2FA Setup] Error message:", error.message);
+      console.error("[2FA Setup] Error stack:", error.stack);
+    }
+    return NextResponse.json(
+      { error: "Erreur serveur lors de la configuration 2FA" },
+      { status: 500 }
+    );
   }
 }
