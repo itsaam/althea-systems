@@ -6,8 +6,15 @@ Documentation complète de l'API REST de l'application Althea Systems.
 
 ```
 Development: http://localhost:3000/api
-Production: https://???.com/api
+Production: https://althea.vjuya.me/api
 ```
+
+## Statut des APIs
+
+| Symbole | Signification |
+|---------|---------------|
+| ✅ | API fonctionnelle |
+| ⚠️ TODO | API stub, non implémentée |
 
 ## Authentification
 
@@ -179,7 +186,61 @@ Vérifier un code 2FA.
 
 ---
 
-## 👤 Users API
+## 👤 Profile API
+
+### GET /api/profile
+
+Récupérer le profil de l'utilisateur connecté.
+
+**Response (200):**
+
+```json
+{
+  "user": {
+    "id": "clx...",
+    "email": "jean@example.com",
+    "firstName": "Jean",
+    "lastName": "Dupont",
+    "phone": "+33612345678",
+    "image": "url...",
+    "hasPassword": true
+  }
+}
+```
+
+---
+
+### PUT /api/profile
+
+Mettre à jour le profil ou changer le mot de passe.
+
+**Request Body (infos):**
+
+```json
+{
+  "firstName": "Jean",
+  "lastName": "Dupont",
+  "phone": "+33612345678"
+}
+```
+
+**Request Body (mot de passe):**
+
+```json
+{
+  "currentPassword": "AncienMdp123",
+  "newPassword": "NouveauMdp123"
+}
+```
+
+**Errors:**
+
+- `400`: Mot de passe actuel incorrect ou compte OAuth
+- `401`: Non authentifié
+
+---
+
+## 👤 Users API (Admin)
 
 ### GET /api/users
 
@@ -307,6 +368,65 @@ Mettre à jour un produit.
 ### DELETE /api/products/:id (Admin)
 
 Supprimer un produit.
+
+---
+
+## 🎠 Carousel API
+
+### GET /api/carousel
+
+Liste les slides du carrousel (max 3 actifs).
+
+**Response (200):**
+
+```json
+[
+  {
+    "id": "clx...",
+    "title": "Bienvenue",
+    "subtitle": "Découvrez nos produits",
+    "image": "/images/slide1.jpg",
+    "link": "/categories/nouveautes",
+    "order": 0,
+    "active": true
+  }
+]
+```
+
+---
+
+### POST /api/carousel (Admin)
+
+Créer un nouveau slide.
+
+**Request Body:**
+
+```json
+{
+  "title": "Nouveau Slide",
+  "subtitle": "Description optionnelle",
+  "image": "/images/slide.jpg",
+  "link": "/categories/promo",
+  "order": 0,
+  "active": true
+}
+```
+
+**Errors:**
+
+- `400`: Maximum 3 slides actifs autorisés
+
+---
+
+### PUT /api/carousel/:id (Admin)
+
+Mettre à jour un slide.
+
+---
+
+### DELETE /api/carousel/:id (Admin)
+
+Supprimer un slide.
 
 ---
 
@@ -474,31 +594,53 @@ Supprimer une adresse.
 
 ## 💳 Stripe API
 
-### POST /api/stripe/create-payment-intent
+### POST /api/stripe/checkout
 
-Créer un PaymentIntent Stripe.
+> ⚠️ **TODO** - Non implémenté
 
-**Request Body:**
-
-```json
-{
-  "orderId": "clx..."
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "clientSecret": "pi_xxx_secret_xxx"
-}
-```
+Créer une session Stripe Checkout.
 
 ---
 
 ### POST /api/stripe/webhook
 
 Webhook Stripe pour les événements de paiement.
+
+---
+
+## 🧾 Invoices API (Admin)
+
+### GET /api/invoices
+
+> ⚠️ **TODO** - Non implémenté
+
+Liste toutes les factures.
+
+---
+
+### GET /api/invoices/:id/pdf
+
+> ⚠️ **TODO** - Non implémenté
+
+Télécharger une facture en PDF.
+
+---
+
+## 💸 Credits API (Admin)
+
+### GET /api/credits
+
+> ⚠️ **TODO** - Non implémenté
+
+Liste tous les avoirs.
+
+---
+
+### POST /api/credits
+
+> ⚠️ **TODO** - Non implémenté
+
+Créer un avoir.
 
 ---
 
@@ -564,23 +706,25 @@ Uploader une image.
 
 ## 🔍 Search API
 
-### GET /api/search
+### GET /api/products/search
 
-Recherche globale (produits).
+> ⚠️ **TODO** - Non implémenté (stub)
+
+Recherche avancée de produits.
 
 **Query Parameters:**
 
 - `q` (string): Query de recherche
-- `limit` (number): Nombre de résultats
 
-**Response (200):**
+---
 
-```json
-{
-  "results": [...],
-  "total": 10
-}
-```
+## ⭐ Featured Products API
+
+### GET /api/products/featured
+
+> ⚠️ **TODO** - Non implémenté (stub)
+
+Liste les produits vedettes.
 
 ---
 
