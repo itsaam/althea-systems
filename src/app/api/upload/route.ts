@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const folder = formData.get("folder") as string | null;
 
     if (!file) {
       return NextResponse.json({ error: "Fichier requis" }, { status: 400 });
@@ -36,11 +37,14 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadToR2(buffer, file.name, file.type);
+    const url = await uploadToR2(buffer, file.name, file.type, folder || undefined);
 
     return NextResponse.json({ url });
   } catch (error) {
     console.error("Erreur upload:", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erreur serveur" },
+      { status: 500 }
+    );
   }
 }
