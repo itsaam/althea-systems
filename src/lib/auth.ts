@@ -2,7 +2,6 @@ import NextAuth, { type NextAuthOptions, type User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import AppleProvider from "next-auth/providers/apple";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -24,13 +23,6 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID || "",
       clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
-    }),
-
-    // Apple OAuth
-    AppleProvider({
-      clientId: process.env.APPLE_CLIENT_ID || "",
-      clientSecret: process.env.APPLE_CLIENT_SECRET || "",
       allowDangerousEmailAccountLinking: true,
     }),
 
@@ -133,6 +125,23 @@ export const authOptions: NextAuthOptions = {
         token.twoFactorEnabled = user.twoFactorEnabled || false;
         token.twoFactorVerified = false; // Toujours false à la connexion
       }
+      
+      // Recharger le rôle depuis la BDD pour refléter les changements en temps réel
+      if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, twoFactorEnabled: true, name: true, firstName: true, lastName: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.twoFactorEnabled = dbUser.twoFactorEnabled;
+          // Mettre à jour le nom (OAuth = name, Credentials = firstName + lastName)
+          token.name = dbUser.firstName && dbUser.lastName
+            ? `${dbUser.firstName} ${dbUser.lastName}`
+            : dbUser.name || token.name;
+        }
+      }
+      
       // Mise à jour de la session si demandée (ex: après vérification 2FA)
       if (trigger === "update" && session) {
         if (session.user?.name) token.name = session.user.name;
@@ -163,11 +172,4 @@ export const authOptions: NextAuthOptions = {
     },
   },
   debug: process.env.NODE_ENV === "development",
-};
-
-export const { handlers, auth, signIn, signOut } = {
-  handlers: NextAuth(authOptions),
-  auth: () => NextAuth(authOptions),
-  signIn: NextAuth(authOptions).signIn,
-  signOut: NextAuth(authOptions).signOut,
 };

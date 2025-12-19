@@ -1,6 +1,6 @@
 # Suivi du Cahier des Charges - Althea Systems
 
-**Derniere mise a jour** : 7 decembre 2025
+**Derniere mise a jour** : 19 decembre 2025
 
 **Legende** :
 - FAIT : Fonctionnalite implementee et fonctionnelle
@@ -31,7 +31,7 @@
 | Accueil | / | FAIT | Carrousel, categories, produits vedettes |
 | Categories | /categories | FAIT | Liste des categories |
 | Categories/[slug] | /categories/[slug] | FAIT | Produits par categorie |
-| Recherche | /search | FAIT | Recherche avec filtres |
+| Recherche | /search | PARTIEL | Page existe, API stub |
 | Produit | /products/[id] | FAIT | Page produit detaillee |
 | Contact | /contact | FAIT | Formulaire de contact |
 | CGU | /cgu | FAIT | Page statique |
@@ -104,8 +104,8 @@
 | Grille de categories | FAIT | CategoriesGrid component |
 | Categories modifiables back-office | FAIT | /admin/categories |
 | Ordre categories modifiable | PARTIEL | Pas de drag & drop |
-| Top Produits du moment | FAIT | FeaturedProducts component |
-| Produits vedettes modifiables | FAIT | /admin/homepage/featured-products |
+| Top Produits du moment | PARTIEL | Component existe, API stub |
+| Produits vedettes modifiables | PARTIEL | Page existe, API stub |
 
 ---
 
@@ -189,7 +189,7 @@
 | Page confirmation/recapitulatif | FAIT | Resume commande |
 | Bouton "Confirmer l'achat" | FAIT | Validation finale |
 | Email confirmation | FAIT | Envoi automatique |
-| Generation facture PDF | FAIT | /api/orders/[id]/invoice |
+| Generation facture PDF | PARTIEL | API stub, a implementer |
 | Modification facture | A FAIRE | Non implemente |
 | Avoir si suppression facture | FAIT | CreditNote model |
 
@@ -217,7 +217,7 @@
 | Fonctionnalite | Statut | Commentaire |
 |----------------|--------|-------------|
 | Connexion email/password | FAIT | Credentials provider |
-| Connexion OAuth (Google, GitHub, Apple) | FAIT | 3 providers configures |
+| Connexion OAuth (Google, GitHub) | FAIT | 2 providers configures |
 | Mot de passe oublie | FAIT | Email reset |
 | Lien reset expire | FAIT | Token 1h |
 | Gestion sessions securisee | FAIT | JWT 30 jours |
@@ -244,7 +244,11 @@
 | Numero, date, statut, montant | FAIT | Colonnes affichees |
 | Detail commande | FAIT | /orders/[id] |
 | Historique statuts | PARTIEL | Statut actuel, pas historique |
-| Telecharger facture PDF | FAIT | Bouton download |
+| Telecharger facture PDF | PARTIEL | API stub, a implementer |
+| Regroupement par annee | A FAIRE | Non implemente |
+| Filtre par annee | A FAIRE | Non implemente |
+| Filtre par type produit | A FAIRE | Non implemente |
+| Recherche commande specifique | A FAIRE | Non implemente |
 
 ---
 
@@ -258,6 +262,8 @@
 | Messages dans backoffice | FAIT | /admin/messages |
 | Bouton "Contact Me" chatbot | A FAIRE | Non implemente |
 | Chatbot reponses instantanees | A FAIRE | Non implemente |
+| Chatbot capture infos (email, sujet) | A FAIRE | Non implemente |
+| Lien formulaire depuis chatbot | A FAIRE | Non implemente |
 | Escalade vers humain | A FAIRE | Non implemente |
 | Conversations dans backoffice | A FAIRE | Non implemente |
 
@@ -274,6 +280,7 @@
 | Alertes rupture stock | FAIT | Badge rouge |
 | Messages non traites | FAIT | Badge |
 | Camembert ventes par categorie | A FAIRE | Graphique non implemente |
+| Montant € au survol camembert | A FAIRE | Non implemente |
 | Periode modifiable 7j/5sem | A FAIRE | Non implemente |
 | Bouton "Nouvelle commande" | A FAIRE | Non implemente |
 | Bouton "Ajouter produit" | FAIT | Lien vers /admin/products/new |
@@ -292,7 +299,10 @@
 | Recherche globale | FAIT | Barre recherche |
 | Filtres | PARTIEL | Basique |
 | Actions groupees | A FAIRE | Selection multiple non implementee |
-| Suppression groupee | A FAIRE | Non implemente |
+| Suppression groupee (avec confirmation) | A FAIRE | Non implemente |
+| Modifier statut groupe (publier/depublier) | A FAIRE | Non implemente |
+| Modifier categorie groupe | A FAIRE | Non implemente |
+| Export selection | A FAIRE | Non implemente |
 | Export CSV/Excel | A FAIRE | Non implemente |
 | Voir details | FAIT | /admin/products/[id] |
 | Creer produit | FAIT | /admin/products/new |
@@ -372,12 +382,12 @@
 | Fonctionnalite | Statut | Commentaire |
 |----------------|--------|-------------|
 | N° facture auto | FAIT | Generation automatique |
-| Telecharger PDF | FAIT | /api/orders/[id]/invoice |
+| Telecharger PDF | PARTIEL | API stub, a implementer |
 | Renvoyer par mail | A FAIRE | Non implemente |
 | Modifier facture | A FAIRE | Non implemente |
 | Supprimer (genere avoir) | PARTIEL | Model CreditNote existe |
-| Liste factures | FAIT | /admin/invoices |
-| Liste avoirs | FAIT | /admin/credits |
+| Liste factures | PARTIEL | Page existe, API stub |
+| Liste avoirs | PARTIEL | Page existe, API stub |
 
 ### Securite Backoffice
 
@@ -479,9 +489,13 @@
 | Documentation API | A FAIRE | Pas de Swagger/Postman |
 | Structure du code | PARTIEL | Ce document |
 | Justification choix tech | FAIT | Rapport soutenance |
-| Instructions tests | A FAIRE | Pas de tests |
+| Tests unitaires | A FAIRE | Non implementes |
+| Tests integration | A FAIRE | Non implementes |
+| Tests fonctionnels | A FAIRE | Non implementes |
 | DCT (Document Conception Technique) | PARTIEL | A completer |
-| Diagrammes architecture | A FAIRE | Non crees |
+| Diagramme architecture globale | FAIT | docs/DIAGRAMMES_TECHNIQUES.md |
+| Diagramme flux de donnees | FAIT | docs/DIAGRAMMES_TECHNIQUES.md |
+| Diagramme communication services | FAIT | docs/DIAGRAMMES_TECHNIQUES.md |
 | Plan securite | PARTIEL | Dans rapport |
 | Plan maintenance | A FAIRE | Non cree |
 

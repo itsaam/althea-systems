@@ -1,76 +1,123 @@
 # Althea Systems
 
-Application e-commerce complète construite avec Next.js 16, TypeScript, Prisma, et intégration Stripe.
+Plateforme e-commerce B2B pour la vente de materiel medical, construite avec Next.js 16.
 
-## 🚀 Stack Technique
+---
 
-- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Base de données**: PostgreSQL (principal), MongoDB (logs/sessions), Redis (cache)
-- **Authentification**: NextAuth.js avec OAuth (Google, GitHub, Apple) + Email/Password + 2FA Admin
-- **Paiement**: Stripe
-- **Email**: Nodemailer avec templates HTML
-- **i18n**: next-intl (FR/EN/AR)
+## Table of Contents
 
-## 📁 Structure du Projet
+- [Stack Technique](#stack-technique)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Base de donnees](#base-de-donnees)
+- [Authentification](#authentification)
+- [API](#api)
+- [Deploiement](#deploiement)
+- [Documentation](#documentation)
+- [Licence](#licence)
+
+---
+
+## Stack Technique
+
+| Categorie | Technologies |
+|-----------|--------------|
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
+| Backend | Next.js API Routes, Prisma ORM |
+| Base de donnees | PostgreSQL (principal), Redis (cache) |
+| Authentification | NextAuth.js (OAuth Google/GitHub + Credentials + 2FA) |
+| Paiement | Stripe |
+| Stockage images | Cloudflare R2 (CDN) |
+| Email | Resend |
+| Containerisation | Docker, Docker Compose |
+| Deploiement | Dokploy + Nixpacks |
+
+---
+
+## Architecture
 
 ```
-althea-systems/
-├── docker/                 # Configuration Docker
-│   ├── docker-compose.yml  # Services (PostgreSQL, MongoDB, Redis)
-│   └── Dockerfile          # Build de l'application
-├── docs/                   # Documentation
-│   ├── API.md              # Documentation API
-│   └── DEPLOYMENT.md       # Guide de déploiement
-├── prisma/
-│   ├── schema.prisma       # Schéma de base de données
-│   ├── migrations/         # Migrations
-│   └── seed.ts             # Données initiales
-├── public/                 # Assets statiques
-├── src/
-│   ├── app/                # App Router Next.js
-│   │   ├── (auth)/         # Pages authentification
-│   │   ├── (site)/         # Pages publiques
-│   │   ├── (account)/      # Pages compte utilisateur
-│   │   ├── admin/          # Pages administration
-│   │   └── api/            # API Routes
-│   ├── components/         # Composants React
-│   │   ├── ui/             # Composants UI (shadcn/ui)
-│   │   ├── layout/         # Header, Footer, Sidebars
-│   │   ├── auth/           # Formulaires auth
-│   │   └── ...
-│   ├── hooks/              # Custom hooks
-│   ├── i18n/               # Internationalisation
-│   │   ├── config.ts       # Configuration
-│   │   ├── locales/        # Fichiers de traduction (fr, en, ar)
-│   │   └── ...
-│   ├── lib/                # Utilitaires
-│   │   ├── auth.ts         # Configuration NextAuth
-│   │   ├── prisma.ts       # Client Prisma
-│   │   ├── redis.ts        # Client Redis + cache
-│   │   ├── email.ts        # Templates email
-│   │   └── ...
-│   ├── stores/             # Zustand stores
-│   └── types/              # Types TypeScript
-└── ...
+src/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Pages authentification (login, register, etc.)
+│   ├── (main)/            # Pages publiques (accueil, produits, etc.)
+│   ├── admin/             # Back-office (protege ADMIN + 2FA)
+│   └── api/               # API Routes
+├── components/            # Composants React reutilisables
+│   └── ui/               # Composants UI (shadcn/ui)
+├── lib/                  # Utilitaires et configurations
+│   ├── auth.ts          # Configuration NextAuth
+│   ├── prisma.ts        # Client Prisma
+│   ├── redis.ts         # Client Redis + helpers cache
+│   └── r2.ts            # Upload Cloudflare R2
+└── middleware.ts        # Protection des routes
+
+prisma/
+└── schema.prisma        # Schema base de donnees
+
+docker/
+├── Dockerfile           # Build multi-stage
+└── docker-compose.yml   # Services dev local
 ```
 
-## 🛠️ Installation
+### Diagramme d'Architecture
 
-### Prérequis
+```mermaid
+graph TB
+    subgraph Client
+        Browser[Navigateur]
+    end
+
+    subgraph Application
+        NextJS[Next.js App]
+        API[API Routes]
+        Auth[NextAuth.js]
+    end
+
+    subgraph Databases
+        PostgreSQL[(PostgreSQL)]
+        Redis[(Redis)]
+    end
+
+    subgraph External
+        Stripe[Stripe]
+        R2[Cloudflare R2]
+        OAuth[Google/GitHub OAuth]
+    end
+
+    Browser --> NextJS
+    NextJS --> API
+    API --> Auth
+    Auth --> PostgreSQL
+    Auth --> Redis
+    API --> PostgreSQL
+    API --> Redis
+    API --> Stripe
+    API --> R2
+    Auth --> OAuth
+```
+
+Pour les diagrammes complets (flux de donnees, ERD, sequences), voir [docs/DIAGRAMMES_TECHNIQUES.md](./docs/DIAGRAMMES_TECHNIQUES.md).
+
+---
+
+## Installation
+
+### Prerequisites
 
 - Node.js 20+
 - Docker et Docker Compose
-- npm ou pnpm
+- npm
 
 ### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/itsaam/althea-systems.git
+git clone https://github.com/votre-username/althea-systems.git
 cd althea-systems
 ```
 
-### 2. Installer les dépendances
+### 2. Installer les dependances
 
 ```bash
 npm install
@@ -80,170 +127,206 @@ npm install
 
 ```bash
 cp .env.example .env
-# Éditer .env avec vos valeurs
 ```
 
-### 4. Démarrer les services Docker
+Editer `.env` avec vos valeurs (voir [Configuration](#configuration)).
+
+### 4. Demarrer les services Docker
 
 ```bash
-# Services de base (PostgreSQL, MongoDB, Redis)
+# Services de base (PostgreSQL, Redis)
 docker compose -f docker/docker-compose.yml up -d
 
 # Avec outils de dev (Adminer, Redis Commander, MailHog)
 docker compose -f docker/docker-compose.yml --profile dev up -d
 ```
 
-### 5. Initialiser la base de données
+### 5. Initialiser la base de donnees
 
 ```bash
 npm run db:migrate
 npm run db:seed
 ```
 
-### 6. Lancer le serveur de développement
+### 6. Lancer le serveur de developpement
 
 ```bash
 npm run dev
 ```
 
-L'application est accessible sur [http://localhost:3000](http://localhost:3000)
+L'application est accessible sur `http://localhost:3000`.
 
-## 🔐 Authentification
+---
 
-### Providers supportés
+## Configuration
 
-- **Email/Password**: Inscription avec vérification email
-- **Google OAuth**: Connexion via Google
-- **GitHub OAuth**: Connexion via GitHub
-- **Apple OAuth**: Connexion via Apple
-
-### 2FA pour les administrateurs
-
-L'authentification à deux facteurs peut être activée pour les routes admin :
+### Variables d'environnement requises
 
 ```env
-ADMIN_2FA_REQUIRED=true
+# Base de donnees
+DATABASE_URL="postgresql://user:password@localhost:5432/althea"
+REDIS_URL="redis://localhost:6379"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="votre-secret-min-32-caracteres"
+
+# OAuth (optionnel)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+
+# Stripe
+STRIPE_SECRET_KEY=""
+STRIPE_WEBHOOK_SECRET=""
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=""
+
+# Cloudflare R2
+R2_ACCESS_KEY_ID=""
+R2_SECRET_ACCESS_KEY=""
+R2_BUCKET_NAME=""
+R2_PUBLIC_URL=""
+
+# Email (Resend)
+RESEND_API_KEY=""
 ```
 
-## 🌐 Internationalisation (i18n)
+---
 
-L'application supporte 3 langues :
+## Base de donnees
 
-- 🇫🇷 Français (par défaut)
-- 🇬🇧 Anglais
-- 🇸🇦 Arabe (RTL)
+### PostgreSQL
 
-Les fichiers de traduction sont dans `src/i18n/locales/`.
-
-## 🗄️ Base de données
-
-### PostgreSQL (Principal)
-
-Utilisé pour toutes les données métier :
-
+Base de donnees principale pour toutes les donnees metier :
 - Utilisateurs, Adresses
-- Produits, Catégories
+- Produits, Categories
 - Commandes, Factures
 - Sessions NextAuth
 
-### MongoDB
-
-Utilisé pour :
-
-- Logs applicatifs
-- Données non structurées
-
 ### Redis
 
-Utilisé pour :
-
-- Cache de recherche (<100ms)
-- Sessions utilisateur
+Utilise pour :
+- Cache applicatif
+- Sessions 2FA temporaires
 - Rate limiting
-- Cache produits/catégories
 
-## 📧 Emails
+### Schema ERD
 
-Templates HTML professionnels pour :
+Voir le diagramme complet dans [docs/DIAGRAMMES_TECHNIQUES.md](./docs/DIAGRAMMES_TECHNIQUES.md#4-schema-de-la-base-de-donnees-erd).
 
-- Vérification d'email
-- Réinitialisation de mot de passe
-- Confirmation de commande
-- Expédition de commande
-- Bienvenue
-- Code 2FA
+---
 
-En développement, utilisez MailHog pour tester :
+## Authentification
 
-- SMTP: `localhost:1025`
-- Web UI: [http://localhost:8025](http://localhost:8025)
+### Providers supportes
 
-## 🐳 Docker
+| Provider | Description |
+|----------|-------------|
+| Credentials | Email/password avec verification email |
+| Google OAuth | Connexion via compte Google |
+| GitHub OAuth | Connexion via compte GitHub |
 
-### Services disponibles
+### 2FA pour les administrateurs
 
-| Service         | Port  | Description                |
-| --------------- | ----- | -------------------------- |
-| PostgreSQL      | 5432  | Base de données principale |
-| MongoDB         | 27017 | Base de données documents  |
-| Redis           | 6379  | Cache et sessions          |
-| Adminer         | 8080  | UI PostgreSQL (dev)        |
-| Redis Commander | 8081  | UI Redis (dev)             |
-| MailHog         | 8025  | UI Emails (dev)            |
+L'authentification a deux facteurs (TOTP) est obligatoire pour acceder au back-office `/admin`.
 
-### Commandes utiles
+Configuration via application d'authentification (Google Authenticator, Authy, etc.).
+
+### Protection des routes
+
+| Route | Protection |
+|-------|------------|
+| `/admin/*` | Role ADMIN + 2FA verifie |
+| `/profile`, `/orders`, `/addresses` | Utilisateur connecte |
+| `/login`, `/register` | Redirection si deja connecte |
+
+---
+
+## API
+
+Documentation complete des endpoints : [docs/API.md](./docs/API.md)
+
+### Endpoints principaux
+
+| Methode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | `/api/auth/register` | Inscription |
+| POST | `/api/auth/2fa/setup` | Configuration 2FA |
+| GET | `/api/products` | Liste des produits |
+| POST | `/api/orders` | Creer une commande |
+| GET | `/api/profile` | Profil utilisateur |
+
+---
+
+## Deploiement
+
+### Production (Dokploy + Nixpacks)
+
+Le deploiement est automatise via Dokploy :
+- Autodeploy sur push branche `main`
+- Build automatique via Nixpacks
+- Bases de donnees hebergees sur Dokploy
+
+### Docker (local)
 
 ```bash
-# Démarrer les services
+# Build et demarrer tous les services
 docker compose -f docker/docker-compose.yml up -d
 
-# Arrêter les services
+# Arreter les services
 docker compose -f docker/docker-compose.yml down
 
-# Voir les logs
-docker compose -f docker/docker-compose.yml logs -f
-
-# Réinitialiser les données
+# Reset complet (supprime les volumes)
 docker compose -f docker/docker-compose.yml down -v
 ```
 
-## 📜 Scripts
+### Services Docker
+
+| Service | Port | Description |
+|---------|------|-------------|
+| PostgreSQL | 5432 | Base de donnees principale |
+| Redis | 6379 | Cache |
+| Adminer | 8080 | UI PostgreSQL (dev) |
+| Redis Commander | 8081 | UI Redis (dev) |
+| MailHog | 8025 | UI Emails (dev) |
+
+---
+
+## Scripts
 
 ```bash
-# Développement
-npm run dev           # Serveur de développement
+# Developpement
+npm run dev              # Serveur de developpement
 
 # Build
-npm run build         # Build production
-npm run start         # Démarrer en production
+npm run build            # Build production
+npm run start            # Demarrer en production
 
-# Base de données
-npm run db:migrate    # Appliquer les migrations
-npm run db:push       # Push le schema (dev)
-npm run db:seed       # Seed les données
-npm run db:studio     # Ouvrir Prisma Studio
-npm run db:reset      # Reset complet
+# Base de donnees
+npm run db:migrate       # Appliquer les migrations
+npm run db:push          # Push le schema (dev)
+npm run db:seed          # Seed les donnees
+npm run db:studio        # Ouvrir Prisma Studio
+npm run db:reset         # Reset complet
 
-# Qualité
-npm run lint          # Linter ESLint
-
-# Logs
-npm run logs:clear    # Nettoyer les logs
+# Qualite
+npm run lint             # Linter ESLint
 ```
 
-## 🔒 Middleware & Protection des routes
+---
 
-Les routes sont protégées automatiquement :
+## Documentation
 
-- `/admin/*` → Requiert rôle ADMIN + 2FA (si activé)
-- `/profile`, `/orders`, `/addresses`, `/payments` → Requiert authentification
-- `/login`, `/register`, etc. → Redirige si déjà connecté
+| Document | Description |
+|----------|-------------|
+| [API.md](./docs/API.md) | Documentation des endpoints API |
+| [DIAGRAMMES_TECHNIQUES.md](./docs/DIAGRAMMES_TECHNIQUES.md) | Diagrammes d'architecture, ERD, flux |
+| [CAHIER_DES_CHARGES_SUIVI.md](./docs/CAHIER_DES_CHARGES_SUIVI.md) | Suivi du cahier des charges |
+| [RAPPORT_SOUTENANCE_SAMY.md](./docs/RAPPORT_SOUTENANCE_SAMY.md) | Rapport technique Auth & Infra |
 
-## 📚 Documentation
+---
 
-- [Documentation API](./docs/API.md)
-- [Guide de déploiement](./docs/DEPLOYMENT.md)
-
-## 📄 Licence
+## Licence
 
 MIT
