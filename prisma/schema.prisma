@@ -10,23 +10,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== MODÈLES ====================
+// ==================== MODELES ====================
 
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
+  id               String       @id @default(cuid())
+  email            String       @unique
   password         String?
-  name             String?   // Requis par NextAuth PrismaAdapter
+  name             String?      // Requis par NextAuth PrismaAdapter
   firstName        String?
   lastName         String?
   phone            String?
-  role             Role      @default(USER)
+  role             Role         @default(USER)
+  status           UserStatus   @default(PENDING)
   emailVerified    DateTime?
   image            String?
-  twoFactorSecret  String?   // Secret TOTP pour 2FA
-  twoFactorEnabled Boolean   @default(false) // 2FA activé ou non
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean      @default(false)
+  lastLoginAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   addresses     Address[]
   orders        Order[]
@@ -93,6 +95,8 @@ model Category {
   description String?
   image       String?
   parentId    String?
+  order       Int       @default(0)
+  active      Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -102,45 +106,50 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  comparePrice Decimal? @db.Decimal(10, 2)
-  sku         String?  @unique
-  stock       Int      @default(0)
-  images      String[]
-  featured    Boolean  @default(false)
-  active      Boolean  @default(true)
-  categoryId  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  description  String?
+  price        Decimal       @db.Decimal(10, 2)
+  comparePrice Decimal?      @db.Decimal(10, 2)
+  tva          TvaRate       @default(TVA_20)
+  sku          String?       @unique
+  stock        Int           @default(0)
+  images       String[]
+  featured     Boolean       @default(false)
+  status       ProductStatus @default(DRAFT)
+  categoryId   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   category   Category?   @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
   userId          String
   addressId       String
-  status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
-  shippingCost    Decimal     @db.Decimal(10, 2)
-  tax             Decimal     @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
   paymentMethod   String?
   paymentIntentId String?
+  paymentDate     DateTime?
+  subtotal        Decimal       @db.Decimal(10, 2)
+  shippingCost    Decimal       @db.Decimal(10, 2)
+  tax             Decimal       @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
   notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  user    User        @relation(fields: [userId], references: [id])
-  address Address     @relation(fields: [addressId], references: [id])
-  items   OrderItem[]
-  invoice Invoice?
+  user          User                 @relation(fields: [userId], references: [id])
+  address       Address              @relation(fields: [addressId], references: [id])
+  items         OrderItem[]
+  invoice       Invoice?
+  creditNotes   CreditNote[]
+  statusHistory OrderStatusHistory[]
 }
 
 model OrderItem {
@@ -155,14 +164,28 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 }
 
-model Invoice {
-  id            String   @id @default(cuid())
-  invoiceNumber String   @unique
-  orderId       String   @unique
-  pdfUrl        String?
-  createdAt     DateTime @default(now())
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  changedBy String?
+  createdAt DateTime    @default(now())
 
-  order Order @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  orderId       String        @unique
+  userId        String
+  amount        Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(PENDING)
+  pdfUrl        String?
+  createdAt     DateTime      @default(now())
+
+  order       Order        @relation(fields: [orderId], references: [id])
+  creditNotes CreditNote[]
 }
 
 model CarouselSlide {
@@ -188,12 +211,16 @@ model ContactMessage {
 }
 
 model CreditNote {
-  id          String   @id @default(cuid())
-  creditNumber String  @unique
-  orderId     String
-  amount      Decimal  @db.Decimal(10, 2)
-  reason      String
-  createdAt   DateTime @default(now())
+  id           String          @id @default(cuid())
+  creditNumber String          @unique
+  orderId      String
+  invoiceId    String?
+  amount       Decimal         @db.Decimal(10, 2)
+  reason       CreditNoteReason
+  createdAt    DateTime        @default(now())
+
+  order   Order    @relation(fields: [orderId], references: [id])
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
 }
 
 // ==================== ENUMS ====================
@@ -203,6 +230,24 @@ enum Role {
   ADMIN
 }
 
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum TvaRate {
+  TVA_20
+  TVA_10
+  TVA_5_5
+  TVA_0
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -210,5 +255,23 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
   REFUNDED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum CreditNoteReason {
+  CANCELLATION
+  REFUND
+  ERROR
 }
