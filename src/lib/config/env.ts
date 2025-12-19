@@ -23,8 +23,6 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
-  APPLE_CLIENT_ID: z.string().optional(),
-  APPLE_CLIENT_SECRET: z.string().optional(),
 
   // Stripe
   STRIPE_PUBLIC_KEY: z.string().optional(),
@@ -72,7 +70,6 @@ export const features = {
   hasOAuth: {
     google: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
     github: !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
-    apple: !!(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET),
   },
   hasStripe: !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLIC_KEY),
   hasEmail: !!(process.env.SMTP_HOST && process.env.SMTP_USER),
