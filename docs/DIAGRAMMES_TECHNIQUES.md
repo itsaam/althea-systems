@@ -27,8 +27,7 @@ graph TB
 
     subgraph Databases["🗄️ Bases de Données"]
         PostgreSQL[(PostgreSQL<br/>Données principales)]
-        MongoDB[(MongoDB<br/>Logs & Sessions)]
-        Redis[(Redis<br/>Cache & Rate Limit)]
+        Redis[(Redis<br/>Cache & Sessions)]
     end
 
     subgraph External["🌐 Services Externes"]
@@ -47,7 +46,6 @@ graph TB
     Auth --> PostgreSQL
     Auth --> Redis
     API --> PostgreSQL
-    API --> MongoDB
     API --> Redis
     API --> Stripe
     API --> R2
@@ -69,12 +67,12 @@ flowchart LR
     end
 
     subgraph API["API Routes"]
-        AuthAPI[/api/auth/*]
-        ProductAPI[/api/products]
-        OrderAPI[/api/orders]
-        CartAPI[/api/cart]
-        ProfileAPI[/api/profile]
-        UploadAPI[/api/upload]
+        AuthAPI["api/auth"]
+        ProductAPI["api/products"]
+        OrderAPI["api/orders"]
+        CartAPI["api/cart"]
+        ProfileAPI["api/profile"]
+        UploadAPI["api/upload"]
     end
 
     subgraph Cache["Cache Layer"]
