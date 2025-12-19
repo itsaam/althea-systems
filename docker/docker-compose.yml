@@ -10,12 +10,9 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://althea:Kx9mP2vL8nQwR4tY@postgres:5432/althea_db
-      - MONGODB_URI=mongodb://althea:Jh7sN3bF6mWcX1zV@mongodb:27017/althea?authSource=admin
       - REDIS_URL=redis://redis:6379
     depends_on:
       postgres:
-        condition: service_healthy
-      mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -38,27 +35,6 @@ services:
       - ./init-scripts/postgres:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U althea -d althea_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - althea-network
-    restart: unless-stopped
-
-  # ==================== MONGODB ====================
-  mongodb:
-    image: mongo:7
-    container_name: althea-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: althea
-      MONGO_INITDB_ROOT_PASSWORD: Jh7sN3bF6mWcX1zV
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - ./init-scripts/mongo:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
@@ -127,8 +103,6 @@ services:
 # ==================== VOLUMES ====================
 volumes:
   postgres_data:
-    driver: local
-  mongodb_data:
     driver: local
   redis_data:
     driver: local
