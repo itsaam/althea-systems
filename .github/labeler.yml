@@ -1,0 +1,62 @@
+# Configuration pour le labeler automatique
+# Ajoute des labels aux PRs selon les fichiers modifiés
+
+# 📦 Dependencies
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: ['package.json', 'package-lock.json']
+
+# 🗄️ Database
+database:
+  - changed-files:
+      - any-glob-to-any-file: ['prisma/**']
+
+# 🎨 Frontend
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: ['src/components/**', 'src/app/**/*.tsx', 'src/styles/**']
+
+# 🔧 Backend / API
+api:
+  - changed-files:
+      - any-glob-to-any-file: ['src/app/api/**']
+
+# 🐳 Docker
+docker:
+  - changed-files:
+      - any-glob-to-any-file: ['docker/**', 'Dockerfile', 'docker-compose*.yml']
+
+# 📝 Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['docs/**', '*.md']
+
+# ⚙️ Configuration
+config:
+  - changed-files:
+      - any-glob-to-any-file: ['*.config.*', 'tsconfig.json', '.env*']
+
+# 🔐 Auth
+auth:
+  - changed-files:
+      - any-glob-to-any-file: ['src/app/(auth)/**', 'src/lib/auth.ts']
+
+# 👨‍💼 Admin
+admin:
+  - changed-files:
+      - any-glob-to-any-file: ['src/app/admin/**', 'src/components/admin/**']
+
+# 🌍 i18n
+i18n:
+  - changed-files:
+      - any-glob-to-any-file: ['src/i18n/**']
+
+# 🧪 Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.test.*', '**/*.spec.*', '__tests__/**']
+
+# 🚀 CI/CD
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**']
