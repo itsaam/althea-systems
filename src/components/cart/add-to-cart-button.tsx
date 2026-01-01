@@ -8,12 +8,12 @@ interface AddToCartButtonProps {
 }
 
 export default function AddToCartButton({
-  productId,
+  productId: _productId,
   disabled,
 }: AddToCartButtonProps) {
   const handleAddToCart = () => {
-    // TODO: Add to cart logic
-    // TODO: Implement add to cart logic
+    // TODO: Add to cart logic using _productId
+    console.log('Add to cart:', _productId);
   };
 
   return (

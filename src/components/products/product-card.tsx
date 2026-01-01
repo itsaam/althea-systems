@@ -11,7 +11,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({
-  id,
+  id: _id,
   name,
   price,
   image,

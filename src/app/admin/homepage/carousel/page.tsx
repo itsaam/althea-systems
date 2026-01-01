@@ -286,7 +286,7 @@ export default function AdminCarouselPage() {
                     className="mt-2"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    Changer l'image
+                    Changer l&apos;image
                   </Button>
                 </div>
               ) : (

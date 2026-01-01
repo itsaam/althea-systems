@@ -39,7 +39,7 @@ const GitHubIcon = () => (
 );
 
 export default function RegisterForm() {
-  const router = useRouter();
+  const _router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);

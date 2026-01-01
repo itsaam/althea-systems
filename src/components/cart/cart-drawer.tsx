@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import CartItem from "@/components/cart/cart-item";
+// import CartItem from "@/components/cart/cart-item"; // TODO: Uncomment when implementing cart items
 import CartSummary from "@/components/cart/cart-summary";
 
 export default function CartDrawer() {

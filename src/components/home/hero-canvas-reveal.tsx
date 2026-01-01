@@ -199,7 +199,7 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
                 </Link>
                 <Link href="/register">
                   <button className="h-8 px-4 rounded-full text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
-                    S'inscrire
+                    S&apos;inscrire
                   </button>
                 </Link>
               </div>

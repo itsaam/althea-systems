@@ -12,7 +12,7 @@ import {
 } from "@/lib/logger/exports";
 
 // GET /api/products - Récupérer tous les produits
-export const GET = withApiLogger(async (req: NextRequest) => {
+export const GET = withApiLogger(async (_req: NextRequest) => {
   try {
     const products = await prisma.product.findMany({
       include: {
