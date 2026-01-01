@@ -51,7 +51,7 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || session.user?.role !== "ADMIN") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }

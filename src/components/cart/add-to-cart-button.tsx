@@ -13,7 +13,7 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const handleAddToCart = () => {
     // TODO: Add to cart logic using _productId
-    console.log('Add to cart:', _productId);
+    console.log("Add to cart:", _productId);
   };
 
   return (

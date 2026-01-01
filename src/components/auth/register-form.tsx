@@ -100,12 +100,14 @@ export default function RegisterForm() {
   const handleOAuthLogin = (provider: string) => {
     setIsLoading(true);
     setFormError(null);
-    
+
     signIn(provider, { callbackUrl: "/" }).catch((err) => {
       if (process.env.NODE_ENV === "development") {
         console.error(`OAuth ${provider} error:`, err);
       }
-      setFormError(`Erreur de connexion ${provider}. Vérifiez que le provider est configuré.`);
+      setFormError(
+        `Erreur de connexion ${provider}. Vérifiez que le provider est configuré.`
+      );
       setIsLoading(false);
     });
   };
