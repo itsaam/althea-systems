@@ -1,0 +1,137 @@
+# generated: 2026-01-08
+# project: althea-systems
+# project_key: althea-systems
+# tracking_system: file-system
+# story_location: /Users/saam/althea-systems/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-08
+project: althea-systems
+project_key: althea-systems
+tracking_system: file-system
+story_location: /Users/saam/althea-systems/_bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Homepage & Navigation
+  epic-1: backlog
+  1-1-carrousel-homepage-dynamique: backlog
+  1-2-grille-categories-de-produits: backlog
+  1-3-section-top-produits-du-moment: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Catalogue & Recherche Produits
+  epic-2: backlog
+  2-1-navigation-categorie-avec-affichage-produits: backlog
+  2-2-tri-dynamique-produits-par-priorite-et-disponibilite: backlog
+  2-3-recherche-avancee-multi-facettes: backlog
+  2-4-tri-et-pagination-resultats-recherche: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Page Produit & Détails
+  epic-3: backlog
+  3-1-page-detail-produit-complete: backlog
+  3-2-produits-similaires-recommandes: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Panier & Gestion Articles
+  epic-4: backlog
+  4-1-gestion-panier-universelle: backlog
+  4-2-gestion-produits-indisponibles-dans-panier: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Processus Checkout & Paiement
+  epic-5: backlog
+  5-1-connexion-ou-inscription-au-checkout: backlog
+  5-2-selection-adresse-facturation-livraison: backlog
+  5-3-selection-methode-de-paiement: backlog
+  5-4-page-confirmation-commande: backlog
+  5-5-traitement-paiement-stripe-et-confirmation: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Authentification & Sécurité
+  epic-6: backlog
+  6-1-inscription-utilisateur-avec-validation-email: backlog
+  6-2-connexion-multi-providers-credentials-plus-oauth: backlog
+  6-3-reinitialisation-mot-de-passe: backlog
+  6-4-2fa-obligatoire-administrateurs-avec-totp: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Compte Utilisateur & Profil
+  epic-7: backlog
+  7-1-gestion-informations-personnelles: backlog
+  7-2-gestion-adresses-et-methodes-de-paiement: backlog
+  7-3-historique-commandes-avec-factures-pdf: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Contact & Support Client
+  epic-8: backlog
+  8-1-formulaire-de-contact: backlog
+  8-2-chatbot-contact-me-interactif-gap: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Back-office Dashboard & Analytics
+  epic-9: backlog
+  9-1-dashboard-avec-indicateurs-cles-cards: backlog
+  9-2-graphiques-analytics-ventes: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Gestion Produits & Catégories
+  epic-10: backlog
+  10-1-crud-complet-produits-avec-upload-images: backlog
+  10-2-actions-groupees-produits: backlog
+  10-3-crud-complet-categories-avec-hierarchie: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11: Gestion Commandes & Utilisateurs
+  epic-11: backlog
+  11-1-gestion-commandes-avec-statuts: backlog
+  11-2-gestion-utilisateurs-avec-actions-administratives: backlog
+  epic-11-retrospective: optional
+
+  # Epic 12: Gestion Factures & Avoirs
+  epic-12: backlog
+  12-1-generation-automatique-factures-pdf: backlog
+  12-2-gestion-factures-avec-actions-admin: backlog
+  12-3-generation-automatique-avoirs: backlog
+  epic-12-retrospective: optional
+
+  # Epic 13: Internationalisation & Accessibilité
+  epic-13: backlog
+  13-1-support-multi-langues-avec-rtl: backlog
+  13-2-accessibilite-wcag-2-1: backlog
+  epic-13-retrospective: optional
+
+  # Epic 14: Documentation & Tests (GAPS)
+  epic-14: backlog
+  14-1-documentation-api-avec-swagger-openapi-gap: backlog
+  14-2-tests-unitaires-et-d-integration-gap: backlog
+  14-3-tests-end-to-end-e2e-avec-playwright-gap: backlog
+  epic-14-retrospective: optional
