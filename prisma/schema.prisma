@@ -20,6 +20,7 @@ model User {
   firstName        String?
   lastName         String?
   phone            String?
+  stripeCustomerId String?      @unique // Pour gérer les méthodes de paiement via Stripe
   role             Role         @default(USER)
   status           UserStatus   @default(PENDING)
   emailVerified    DateTime?
@@ -78,7 +79,9 @@ model Address {
   firstName  String
   lastName   String
   street     String
+  street2    String? 
   city       String
+  region     String? // Région - CDC Section X
   postalCode String
   country    String
   phone      String?
@@ -115,6 +118,7 @@ model Product {
   tva          TvaRate       @default(TVA_20)
   sku          String?       @unique
   stock        Int           @default(0)
+  priority     Int           @default(0) 
   images       String[]
   featured     Boolean       @default(false)
   status       ProductStatus @default(DRAFT)
