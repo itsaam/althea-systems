@@ -23,13 +23,17 @@ export const stripe = {
   },
   checkout: {
     sessions: {
-      create: (params: Stripe.Checkout.SessionCreateParams) => getStripe().checkout.sessions.create(params),
+      create: (params: Stripe.Checkout.SessionCreateParams) =>
+        getStripe().checkout.sessions.create(params),
       retrieve: (id: string) => getStripe().checkout.sessions.retrieve(id),
     },
   },
   webhooks: {
-    constructEvent: (payload: string | Buffer, signature: string, secret: string) => 
-      getStripe().webhooks.constructEvent(payload, signature, secret),
+    constructEvent: (
+      payload: string | Buffer,
+      signature: string,
+      secret: string
+    ) => getStripe().webhooks.constructEvent(payload, signature, secret),
   },
 };
 
