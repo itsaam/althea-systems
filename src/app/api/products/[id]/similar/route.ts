@@ -27,7 +27,7 @@ export async function GET(
       FROM "Product"
       WHERE "categoryId" = ${product.categoryId}
         AND id != ${id}
-        AND active = true
+        AND status = 'PUBLISHED'
       ORDER BY RANDOM()
       LIMIT 6
     `;

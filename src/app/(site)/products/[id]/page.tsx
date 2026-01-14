@@ -8,10 +8,15 @@ interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getProduct(id: string) {
+async function getProduct(identifier: string) {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id },
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: identifier },
+          { slug: identifier },
+        ],
+      },
       include: {
         category: {
           select: {
@@ -37,24 +42,37 @@ async function getProduct(id: string) {
   }
 }
 
-async function getSimilarProducts(productId: string) {
+async function getSimilarProducts(identifier: string) {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-      select: { categoryId: true },
+    // Récupérer le produit pour avoir son ID et sa catégorie
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: identifier },
+          { slug: identifier },
+        ],
+      },
+      select: { id: true, categoryId: true },
     });
 
-    if (!product) return [];
+    if (!product) {
+      console.log("❌ Produit non trouvé pour getSimilarProducts:", identifier);
+      return [];
+    }
+
+    console.log("✅ Produit trouvé:", product.id, "Catégorie:", product.categoryId);
 
     const similarProducts = await prisma.$queryRaw<any[]>`
       SELECT id, name, slug, price, images, stock
       FROM "Product"
       WHERE "categoryId" = ${product.categoryId}
-        AND id != ${productId}
-        AND active = true
+        AND id != ${product.id}
+        AND status = 'PUBLISHED'
       ORDER BY RANDOM()
       LIMIT 6
     `;
+
+    console.log(`📦 Produits similaires trouvés: ${similarProducts.length}`);
 
     return similarProducts.map((p) => ({
       id: p.id,
@@ -65,7 +83,7 @@ async function getSimilarProducts(productId: string) {
       stock: p.stock,
     }));
   } catch (error) {
-    console.error("Erreur chargement produits similaires:", error);
+    console.error("❌ Erreur chargement produits similaires:", error);
     return [];
   }
 }

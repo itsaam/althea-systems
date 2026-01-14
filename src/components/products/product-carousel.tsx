@@ -12,6 +12,7 @@ import ProductCard from "@/components/products/product-card";
 interface Product {
   id: string;
   name: string;
+  slug?: string;
   price: number;
   image?: string;
   stock: number;
