@@ -5,7 +5,7 @@ Plateforme e-commerce B2B pour equipement medical. Next.js 16, React 19, TypeScr
 ## Commandes Principales
 
 ```bash
-# Developpement
+# Développement
 npm run dev                 # Serveur dev http://localhost:3000
 npm run build               # Build production (prisma generate + next build)
 npm run lint                # ESLint
