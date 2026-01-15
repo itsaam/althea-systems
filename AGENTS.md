@@ -9,7 +9,7 @@ Plateforme e-commerce B2B pour equipement medical. Next.js 16, React 19, TypeScr
 npm run dev                 # Serveur dev http://localhost:3000
 npm run build               # Build production (prisma generate + next build)
 npm run lint                # ESLint
-npx tsc --noEmit            # Verification TypeScript
+npx tsc --noEmit            # Vérification TypeScript
 
 # Base de données
 npm run db:migrate          # Creer/appliquer migrations
