@@ -11,7 +11,7 @@ npm run build               # Build production (prisma generate + next build)
 npm run lint                # ESLint
 npx tsc --noEmit            # Verification TypeScript
 
-# Base de donnees
+# Base de données
 npm run db:migrate          # Creer/appliquer migrations
 npm run db:push             # Push schema sans migration
 npm run db:seed             # Seeder la BDD
