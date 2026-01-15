@@ -13,28 +13,28 @@ datasource db {
 // ==================== MODELES ====================
 
 model User {
-  id               String       @id @default(cuid())
-  email            String       @unique
+  id               String     @id @default(cuid())
+  email            String     @unique
   password         String?
-  name             String?      // Requis par NextAuth PrismaAdapter
+  name             String? // Requis par NextAuth PrismaAdapter
   firstName        String?
   lastName         String?
   phone            String?
-  stripeCustomerId String?      @unique // Pour gérer les méthodes de paiement via Stripe
-  role             Role         @default(USER)
-  status           UserStatus   @default(PENDING)
+  stripeCustomerId String?    @unique // Pour gérer les méthodes de paiement via Stripe
+  role             Role       @default(USER)
+  status           UserStatus @default(PENDING)
   emailVerified    DateTime?
   image            String?
   twoFactorSecret  String?
-  twoFactorEnabled Boolean      @default(false)
+  twoFactorEnabled Boolean    @default(false)
   lastLoginAt      DateTime?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
-  addresses     Address[]
-  orders        Order[]
-  accounts      Account[]
-  sessions      Session[]
+  addresses Address[]
+  orders    Order[]
+  accounts  Account[]
+  sessions  Session[]
 }
 
 model Account {
@@ -79,7 +79,7 @@ model Address {
   firstName  String
   lastName   String
   street     String
-  street2    String? 
+  street2    String?
   city       String
   region     String? // Région - CDC Section X
   postalCode String
@@ -92,16 +92,16 @@ model Address {
 }
 
 model Category {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  slug        String    @unique
+  slug        String   @unique
   description String?
   image       String?
   parentId    String?
-  order       Int       @default(0)
-  active      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   children Category[] @relation("CategoryToCategory")
@@ -118,7 +118,7 @@ model Product {
   tva          TvaRate       @default(TVA_20)
   sku          String?       @unique
   stock        Int           @default(0)
-  priority     Int           @default(0) 
+  priority     Int           @default(0)
   images       String[]
   featured     Boolean       @default(false)
   status       ProductStatus @default(DRAFT)
@@ -215,13 +215,13 @@ model ContactMessage {
 }
 
 model CreditNote {
-  id           String          @id @default(cuid())
-  creditNumber String          @unique
+  id           String           @id @default(cuid())
+  creditNumber String           @unique
   orderId      String
   invoiceId    String?
-  amount       Decimal         @db.Decimal(10, 2)
+  amount       Decimal          @db.Decimal(10, 2)
   reason       CreditNoteReason
-  createdAt    DateTime        @default(now())
+  createdAt    DateTime         @default(now())
 
   order   Order    @relation(fields: [orderId], references: [id])
   invoice Invoice? @relation(fields: [invoiceId], references: [id])
