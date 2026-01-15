@@ -94,7 +94,7 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
 export const POST = withApiLogger(async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Non autorise" }, { status: 401 });
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
   // ... validation avec Zod puis traitement
 });
