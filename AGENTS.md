@@ -207,7 +207,7 @@ Stores disponibles : `cart-store`, `ui-store`, `auth-store` (tous avec persisten
 
 ## Notes Importantes
 
-- **Pas de framework de tests** configure (prevu : Vitest + Playwright)
+- **Pas de framework de tests** configuré (prévu : Vitest + Playwright)
 - **React Compiler** activé (experimental React 19)
 - **Langue** : Français pour UI/logs, anglais pour commentaires techniques
 - **Node.js** : >= 20.0.0 requis
