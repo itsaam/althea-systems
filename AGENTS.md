@@ -1,6 +1,6 @@
 # Guide pour Agents IA - Althea Systems
 
-Plateforme e-commerce B2B pour equipement medical. Next.js 16, React 19, TypeScript 5, Prisma 6, PostgreSQL, Redis.
+Plateforme e-commerce B2B pour équipement medical. Next.js 16, React 19, TypeScript 5, Prisma 6, PostgreSQL, Redis.
 
 ## Commandes Principales
 
