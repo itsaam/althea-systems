@@ -93,7 +93,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
         stock: stock || 0,
         images: image ? [image] : [],
         categoryId,
-        status: "PUBLISHED",
+        active: true,
         featured: false,
       },
       include: {
