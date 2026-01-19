@@ -26,11 +26,11 @@ const updateOrderSchema = z.object({
 
 export const GET = withApiLogger(async (
   req: NextRequest,
-  context: { params: { id: string } }
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
-    const { id } = context.params;
+    const { id } = (context as { params: { id: string } }).params;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -82,7 +82,7 @@ export const GET = withApiLogger(async (
 // PATCH (Admin only) 
 export const PATCH = withApiLogger(async (
   req: NextRequest,
-  context: { params: { id: string } }
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -90,7 +90,7 @@ export const PATCH = withApiLogger(async (
       return loggedErrorResponse("Non autorisé", 403);
     }
 
-    const { id } = context.params;
+    const { id } = (context as { params: { id: string } }).params;
     const body = await req.json();
     const validatedData = updateOrderSchema.parse(body);
 
@@ -147,7 +147,7 @@ export const PATCH = withApiLogger(async (
 // DELETE (Admin only) 
 export const DELETE = withApiLogger(async (
   req: NextRequest,
-  context: { params: { id: string } }
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -155,7 +155,7 @@ export const DELETE = withApiLogger(async (
       return loggedErrorResponse("Non autorisé", 403);
     }
 
-    const { id } = context.params;
+    const { id } = (context as { params: { id: string } }).params;
 
     const order = await prisma.order.findUnique({
       where: { id },

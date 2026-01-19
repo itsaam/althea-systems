@@ -10,14 +10,14 @@ import {
 } from '@/lib/logger/exports';
 
 // GET Récupérer un utilisateur avec adresses et commandes
-export const GET = withApiLogger(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+export const GET = withApiLogger(async (req: NextRequest, context?: unknown) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== 'ADMIN') {
       return loggedErrorResponse('Non autorisé', 403);
     }
 
-    const { id } = await context.params;
+    const { id } = await (context as { params: Promise<{ id: string }> }).params;
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
@@ -54,14 +54,14 @@ export const GET = withApiLogger(async (req: NextRequest, context: { params: Pro
 });
 
 // PATCH Mettre à jour un utilisateur 
-export const PATCH = withApiLogger(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+export const PATCH = withApiLogger(async (req: NextRequest, context?: unknown) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== 'ADMIN') {
       return loggedErrorResponse('Non autorisé', 403);
     }
 
-    const { id } = await context.params;
+    const { id } = await (context as { params: Promise<{ id: string }> }).params;
     const body = await req.json();
 
     const allowedFields = ['firstName', 'lastName', 'phone'];
@@ -99,14 +99,14 @@ export const PATCH = withApiLogger(async (req: NextRequest, context: { params: P
 });
 
 // DELETE Supprimer un utilisateur si pas de commandes/adresses
-export const DELETE = withApiLogger(async (req: NextRequest, context: { params: Promise<{ id: string }> }) => {
+export const DELETE = withApiLogger(async (req: NextRequest, context?: unknown) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== 'ADMIN') {
       return loggedErrorResponse('Non autorisé', 403);
     }
 
-    const { id } = await context.params;
+    const { id } = await (context as { params: Promise<{ id: string }> }).params;
 
     const user = await prisma.user.findUnique({
       where: { id },
