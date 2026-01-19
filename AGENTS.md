@@ -20,7 +20,7 @@ npm run db:reset            # Reset complet + seed
 
 # Docker (depuis docker/)
 docker-compose up -d                    # Services production
-docker-compose --profile dev up -d      # + outils dev (adminer, mailhog, redis-commander)
+docker-compose --profile dev up -d      # + outils dev (adminer, redis-commander)
 ```
 
 ## Structure du Projet

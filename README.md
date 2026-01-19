@@ -826,7 +826,6 @@ export type ProductInput = z.infer<typeof productSchema>;
 | **redis** | 6379 | Redis 7 | default |
 | **adminer** | 8080 | UI PostgreSQL | dev |
 | **redis-commander** | 8081 | UI Redis | dev |
-| **mailhog** | 8025 | SMTP test + UI | dev |
 
 ### Commandes Docker
 
