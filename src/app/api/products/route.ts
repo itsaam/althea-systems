@@ -10,6 +10,8 @@ import {
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
+import { ZodError } from "zod";
+import { productSchema } from "@/lib/validators/product";
 
 // GET /api/products - Récupérer tous les produits
 export const GET = withApiLogger(async (_req: NextRequest) => {
@@ -57,25 +59,33 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     }
 
     const body = await req.json();
-    const { name, slug, price, stock, description, categoryId, image } = body;
 
-    if (!name || !slug) {
-      apiLogger.warn(LogMessages.api.erreurValidation("name, slug requis"));
-      return loggedErrorResponse("Nom et slug requis", 400);
+    // Validation avec Zod
+    let validatedData;
+    try {
+      // Adapter les données au schéma Zod (convertir image → images)
+      const dataForValidation = {
+        ...body,
+        images: body.image ? [body.image] : body.images || [],
+        stock: body.stock ?? 0,
+      };
+      validatedData = productSchema.parse(dataForValidation);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const firstError = error.issues[0];
+        const message = `${firstError.path.join(".")}: ${firstError.message}`;
+        apiLogger.warn(LogMessages.api.erreurValidation(message));
+        return loggedErrorResponse(message, 400);
+      }
+      throw error;
     }
 
-    if (!price || price <= 0) {
-      apiLogger.warn(LogMessages.api.erreurValidation("prix invalide"));
-      return loggedErrorResponse("Prix invalide", 400);
-    }
+    const { name, slug, price, stock, description, categoryId, images } =
+      validatedData;
 
-    if (!categoryId) {
-      apiLogger.warn(LogMessages.api.erreurValidation("categoryId requis"));
-      return loggedErrorResponse("Catégorie requise", 400);
-    }
-
+    // Vérifier l'unicité du slug
     const existingProduct = await prisma.product.findUnique({
-      where: { slug },
+      where: { slug: slug || "" },
     });
 
     if (existingProduct) {
@@ -87,11 +97,11 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     const product = await prisma.product.create({
       data: {
         name,
-        slug,
+        slug: slug || "",
         description: description || null,
         price,
         stock: stock || 0,
-        images: image ? [image] : [],
+        images: images || [],
         categoryId,
         status: "PUBLISHED",
         featured: false,
