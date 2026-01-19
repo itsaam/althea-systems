@@ -11,6 +11,8 @@ import {
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
+import { ZodError } from "zod";
+import { productSchema } from "@/lib/validators/product";
 
 const productSchema = z.object({
   name: z.string().min(1),
@@ -88,6 +90,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     const body = await req.json();
     const validatedData = productSchema.parse(body);
 
+    // Vérifier l'unicité du slug
     const existingProduct = await prisma.product.findUnique({
       where: { slug: validatedData.slug },
     });

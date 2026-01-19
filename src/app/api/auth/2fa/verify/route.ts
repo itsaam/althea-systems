@@ -4,10 +4,16 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { authenticator } from "otplib";
+import { verifyBackupCode } from "@/lib/backup-codes";
+import { rateLimitMiddleware } from "@/lib/rate-limit";
 
 // POST - Vérifier le code 2FA
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting pour éviter les attaques par force brute
+    const rateLimitResult = await rateLimitMiddleware(request, "auth");
+    if (rateLimitResult) return rateLimitResult;
+
     const session = await getServerSession(authOptions);
     const { code, isSetup } = await request.json();
 
@@ -15,9 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    if (!code || !/^\d{6}$/.test(code)) {
+    // Validation : accepter TOTP (6 chiffres) OU backup code (12 chiffres avec tirets)
+    const cleanCode = code.replace(/-/g, ""); // Enlever les tirets
+    if (!code || (!/^\d{6}$/.test(cleanCode) && cleanCode.length !== 12)) {
       return NextResponse.json(
-        { error: "Code invalide (6 chiffres requis)" },
+        { error: "Code invalide (6 chiffres TOTP ou backup code requis)" },
         { status: 400 }
       );
     }
@@ -83,6 +91,41 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Récupérer et sauvegarder les backup codes
+      let backupCodesData: string | null = null;
+      try {
+        backupCodesData = await redis.get(`2fa_backup_codes:${user.id}`);
+      } catch (redisError) {
+        console.warn(
+          `[2FA Verify] Redis unavailable while reading backup codes for user ${user.id}:`,
+          redisError
+        );
+      }
+
+      if (backupCodesData) {
+        const hashedBackupCodes = JSON.parse(backupCodesData) as Array<{
+          code: string;
+        }>;
+
+        // Sauvegarder les backup codes dans la base de données
+        await prisma.backupCode.createMany({
+          data: hashedBackupCodes.map((item) => ({
+            code: item.code,
+            userId: user.id,
+          })),
+        });
+
+        // Supprimer les backup codes temporaires
+        try {
+          await redis.del(`2fa_backup_codes:${user.id}`);
+        } catch (redisError) {
+          console.warn(
+            `[2FA Verify] Redis unavailable while deleting backup codes for user ${user.id}:`,
+            redisError
+          );
+        }
+      }
+
       // Supprimer le secret temporaire
       try {
         await redis.del(`2fa_setup:${user.id}`);
@@ -110,10 +153,49 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier le code TOTP
-    const isValid = authenticator.verify({
+    let isValid = authenticator.verify({
       token: code,
       secret: user.twoFactorSecret,
     });
+
+    // Si le code TOTP échoue, vérifier si c'est un backup code
+    if (!isValid) {
+      // Normaliser le code (enlever les espaces et tirets)
+      const normalizedCode = code.replace(/[\s-]/g, "");
+
+      // Si le code ne fait pas 6 chiffres, essayer de le valider comme backup code
+      if (normalizedCode.length === 12 || code.includes("-")) {
+        // Récupérer tous les backup codes non utilisés de l'utilisateur
+        const backupCodes = await prisma.backupCode.findMany({
+          where: {
+            userId: user.id,
+            used: false,
+          },
+        });
+
+        // Vérifier si un des backup codes correspond
+        for (const backupCode of backupCodes) {
+          const isBackupCodeValid = await verifyBackupCode(
+            code,
+            backupCode.code
+          );
+
+          if (isBackupCodeValid) {
+            // Marquer le backup code comme utilisé
+            await prisma.backupCode.update({
+              where: { id: backupCode.id },
+              data: {
+                used: true,
+                usedAt: new Date(),
+              },
+            });
+
+            isValid = true;
+            break;
+          }
+        }
+      }
+    }
 
     if (!isValid) {
       return NextResponse.json({ error: "Code incorrect" }, { status: 400 });
