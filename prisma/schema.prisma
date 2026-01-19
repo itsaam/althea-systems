@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,25 +10,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==================== MODELES ====================
+
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
+  id               String     @id @default(cuid())
+  email            String     @unique
   password         String?
+  name             String? // Requis par NextAuth PrismaAdapter
   firstName        String?
   lastName         String?
   phone            String?
-  role             Role      @default(USER)
+  stripeCustomerId String?    @unique // Pour gérer les méthodes de paiement via Stripe
+  role             Role       @default(USER)
+  status           UserStatus @default(PENDING)
   emailVerified    DateTime?
   image            String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  name             String?
-  twoFactorEnabled Boolean   @default(false)
   twoFactorSecret  String?
-  accounts         Account[]
-  addresses        Address[]
-  orders           Order[]
-  sessions         Session[]
+  twoFactorEnabled Boolean    @default(false)
+  lastLoginAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  addresses   Address[]
+  orders      Order[]
+  accounts    Account[]
+  sessions    Session[]
+  backupCodes BackupCode[]
 }
 
 model Account {
@@ -41,7 +51,8 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -51,7 +62,8 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -62,73 +74,100 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model BackupCode {
+  id        String    @id @default(cuid())
+  code      String
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  userId    String
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, used])
+}
+
 model Address {
   id         String  @id @default(cuid())
   userId     String
   firstName  String
   lastName   String
   street     String
+  street2    String?
   city       String
+  region     String? 
   postalCode String
   country    String
   phone      String?
   isDefault  Boolean @default(false)
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders     Order[]
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
 }
 
 model Category {
-  id          String     @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  slug        String     @unique
+  slug        String   @unique
   description String?
   image       String?
   parentId    String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryToCategory")
-  products    Product[]
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToCategory")
+  products Product[]
 }
 
 model Product {
-  id           String      @id @default(cuid())
+  id           String        @id @default(cuid())
   name         String
-  slug         String      @unique
+  slug         String        @unique
   description  String?
-  price        Decimal     @db.Decimal(10, 2)
-  comparePrice Decimal?    @db.Decimal(10, 2)
-  sku          String?     @unique
-  stock        Int         @default(0)
+  price        Decimal       @db.Decimal(10, 2)
+  comparePrice Decimal?      @db.Decimal(10, 2)
+  tva          TvaRate       @default(TVA_20)
+  sku          String?       @unique
+  stock        Int           @default(0)
+  priority     Int           @default(0)
   images       String[]
-  featured     Boolean     @default(false)
-  active       Boolean     @default(true)
+  featured     Boolean       @default(false)
+  status       ProductStatus @default(DRAFT)
   categoryId   String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  orderItems   OrderItem[]
-  category     Category?   @relation(fields: [categoryId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  category   Category?   @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
   userId          String
   addressId       String
-  status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
-  shippingCost    Decimal     @db.Decimal(10, 2)
-  tax             Decimal     @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
   paymentMethod   String?
   paymentIntentId String?
+  paymentDate     DateTime?
+  subtotal        Decimal       @db.Decimal(10, 2)
+  shippingCost    Decimal       @db.Decimal(10, 2)
+  tax             Decimal       @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
   notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  invoice         Invoice?
-  address         Address     @relation(fields: [addressId], references: [id])
-  user            User        @relation(fields: [userId], references: [id])
-  items           OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user          User                 @relation(fields: [userId], references: [id])
+  address       Address              @relation(fields: [addressId], references: [id])
+  items         OrderItem[]
+  invoice       Invoice?
+  creditNotes   CreditNote[]
+  statusHistory OrderStatusHistory[]
 }
 
 model OrderItem {
@@ -138,17 +177,33 @@ model OrderItem {
   name      String
   price     Decimal @db.Decimal(10, 2)
   quantity  Int
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  changedBy String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Invoice {
-  id            String   @id @default(cuid())
-  invoiceNumber String   @unique
-  orderId       String   @unique
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  orderId       String        @unique
+  userId        String
+  amount        Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(PENDING)
   pdfUrl        String?
-  createdAt     DateTime @default(now())
-  order         Order    @relation(fields: [orderId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  order       Order        @relation(fields: [orderId], references: [id])
+  creditNotes CreditNote[]
 }
 
 model CarouselSlide {
@@ -174,17 +229,41 @@ model ContactMessage {
 }
 
 model CreditNote {
-  id           String   @id @default(cuid())
-  creditNumber String   @unique
+  id           String           @id @default(cuid())
+  creditNumber String           @unique
   orderId      String
-  amount       Decimal  @db.Decimal(10, 2)
-  reason       String
-  createdAt    DateTime @default(now())
+  invoiceId    String?
+  amount       Decimal          @db.Decimal(10, 2)
+  reason       CreditNoteReason
+  createdAt    DateTime         @default(now())
+
+  order   Order    @relation(fields: [orderId], references: [id])
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
 }
+
+// ==================== ENUMS ====================
 
 enum Role {
   USER
   ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum TvaRate {
+  TVA_20
+  TVA_10
+  TVA_5_5
+  TVA_0
 }
 
 enum OrderStatus {
@@ -194,5 +273,23 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
   REFUNDED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum CreditNoteReason {
+  CANCELLATION
+  REFUND
+  ERROR
 }

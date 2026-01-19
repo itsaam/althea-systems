@@ -1,200 +1,136 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { z } from "zod";
+import {
+  withApiLogger,
+  loggedSuccessResponse,
+  loggedErrorResponse,
+} from "@/lib/logger/exports";
 
-const creditNoteSchema = z.object({
-  orderId: z.string(),
-  invoiceId: z.string().optional(),
-  amount: z.number().positive('Le montant doit être positif'),
-  reason: z.enum(['CANCELLATION', 'REFUND', 'ERROR'], {
-    message: 'Raison invalide',
-  }),
+const updateProductSchema = z.object({
+  name: z.string().min(1).optional(),
+  slug: z.string().min(1).optional(),
+  description: z.string().optional(),
+  price: z.number().positive().optional(),
+  comparePrice: z.number().positive().optional(),
+  sku: z.string().optional(),
+  stock: z.number().int().min(0).optional(),
+  images: z.array(z.string()).optional(),
+  featured: z.boolean().optional(),
+  status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
+  tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]).optional(),
+  priority: z.number().int().optional(),
+  categoryId: z.string().optional().nullable(),
 });
 
-// Générer un numéro d'avoir unique
-function generateCreditNoteNumber() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `CN-${year}${month}-${random}`;
-}
+const TVA_MAP: Record<string, number> = {
+  TVA_20: 0.2,
+  TVA_10: 0.1,
+  TVA_5_5: 0.055,
+  TVA_0: 0,
+};
 
-// GET Liste des avoirs
-export async function GET(request: NextRequest) {
+export const GET = withApiLogger(async (req: NextRequest, context: { params: { id: string } }) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const orderId = searchParams.get('orderId');
-    const invoiceId = searchParams.get('invoiceId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const skip = (page - 1) * limit;
+    const { id } = context.params;
 
-    const where: any = {};
-    if (orderId) where.orderId = orderId;
-    if (invoiceId) where.invoiceId = invoiceId;
-
-    const [creditNotesRaw, total] = await Promise.all([
-      prisma.creditNote.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.creditNote.count({ where }),
-    ]);
-
-    const creditNotes = await Promise.all(
-      creditNotesRaw.map(async (cn) => {
-        const order = await prisma.order.findUnique({
-          where: { id: cn.orderId },
-          select: {
-            id: true,
-            orderNumber: true,
-            total: true,
-            user: {
-              select: { email: true, firstName: true, lastName: true },
-            },
-          },
-        });
-
-        // Schema does not currently store invoiceId on CreditNote model
-        // so we don't include invoice here.
-        return {
-          ...cn,
-          order: order || null,
-          invoice: null,
-        };
-      })
-    );
-
-    return NextResponse.json({
-      creditNotes,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error('GET Credit notes error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des avoirs' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST Créer un avoir
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const validatedData = creditNoteSchema.parse(body);
-
-    const order = await prisma.order.findUnique({
-      where: { id: validatedData.orderId },
-      select: { id: true, total: true },
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { category: { select: { id: true, name: true, slug: true } } },
     });
 
-    if (!order) {
-      return NextResponse.json(
-        { error: 'Commande non trouvée' },
-        { status: 404 }
-      );
-    }
+    if (!product) return loggedErrorResponse("Produit non trouvé", 404);
 
-    const creditNotesForOrder = await prisma.creditNote.findMany({
-      where: { orderId: validatedData.orderId },
-    });
+    const tvaRate = TVA_MAP[product.tva] ?? 0.2;
 
-    const totalCreditNotes = creditNotesForOrder.reduce(
-      (sum, cn) => sum + Number(cn.amount),
-      0
-    );
-    const remainingAmount = Number(order.total) - totalCreditNotes;
-
-    if (validatedData.amount > remainingAmount) {
-      return NextResponse.json(
-        { 
-          error: `Le montant de l'avoir ne peut pas dépasser ${remainingAmount.toFixed(2)}€` 
-        },
-        { status: 400 }
-      );
-    }
-
-    if (validatedData.invoiceId) {
-      const invoice = await prisma.invoice.findUnique({
-        where: { id: validatedData.invoiceId },
-      });
-
-      if (!invoice) {
-        return NextResponse.json(
-          { error: 'Facture non trouvée' },
-          { status: 404 }
-        );
-      }
-
-      if (invoice.orderId !== validatedData.orderId) {
-        return NextResponse.json(
-          { error: 'La facture ne correspond pas à cette commande' },
-          { status: 400 }
-        );
-      }
-    }
-
-    const creditNote = await prisma.creditNote.create({
-      data: {
-        orderId: validatedData.orderId,
-        amount: validatedData.amount,
-        reason: validatedData.reason,
-        creditNumber: generateCreditNoteNumber(),
-      },
-    });
-
-    // Fetch related order and invoice for response
-    const orderWithUser = await prisma.order.findUnique({
-      where: { id: validatedData.orderId },
-      select: {
-        id: true,
-        orderNumber: true,
-        total: true,
-        user: { select: { email: true, firstName: true, lastName: true } },
-      },
-    });
-
-    const invoice = validatedData.invoiceId
-      ? await prisma.invoice.findUnique({
-          where: { id: validatedData.invoiceId },
-        })
-      : null;
-
-    const creditNoteWithRelations = {
-      ...creditNote,
-      order: orderWithUser || null,
-      invoice,
+    const serializedProduct = {
+      ...product,
+      price: product.price.toNumber(),
+      comparePrice: product.comparePrice?.toNumber() || null,
+      priceTTC: product.price.toNumber() * (1 + tvaRate),
     };
 
-    const totalAfterCredit = totalCreditNotes + validatedData.amount;
-    if (totalAfterCredit >= Number(order.total)) {
-      await prisma.order.update({
-        where: { id: validatedData.orderId },
-        data: { status: 'REFUNDED' },
-      });
+    return loggedSuccessResponse({ product: serializedProduct });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur récupération produit: ${message}`, 500);
+  }
+});
+
+export const PATCH = withApiLogger(async (req: NextRequest, context: { params: { id: string } }) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return loggedErrorResponse("Non autorisé", 403);
     }
 
-    return NextResponse.json(creditNote, { status: 201 });
+    const { id } = context.params;
+    const body = await req.json();
+    const validatedData = updateProductSchema.parse(body);
+
+    const existingProduct = await prisma.product.findUnique({ where: { id } });
+    if (!existingProduct) return loggedErrorResponse("Produit non trouvé", 404);
+
+    if (validatedData.slug && validatedData.slug !== existingProduct.slug) {
+      const slugExists = await prisma.product.findUnique({ where: { slug: validatedData.slug } });
+      if (slugExists) return loggedErrorResponse("Ce slug est déjà utilisé", 400);
+    }
+
+    if (validatedData.categoryId) {
+      const category = await prisma.category.findUnique({ where: { id: validatedData.categoryId } });
+      if (!category) return loggedErrorResponse("Catégorie non trouvée", 404);
+    }
+
+    const product = await prisma.product.update({
+      where: { id },
+      data: validatedData,
+      include: { category: { select: { id: true, name: true, slug: true } } },
+    });
+
+    const tvaRate = TVA_MAP[product.tva] ?? 0.2;
+
+    const serializedProduct = {
+      ...product,
+      price: product.price.toNumber(),
+      comparePrice: product.comparePrice?.toNumber() || null,
+      priceTTC: product.price.toNumber() * (1 + tvaRate),
+    };
+
+    return loggedSuccessResponse({ product: serializedProduct }, "Produit mis à jour avec succès");
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Données invalides', details: error.issues },
-        { status: 400 }
-      );
+      return loggedErrorResponse(`Données invalides: ${error.issues.map(i => i.message).join(", ")}`, 400);
     }
-    console.error('POST Credit note error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la création de l\'avoir' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur mise à jour produit: ${message}`, 500);
   }
-}
+});
+
+export const DELETE = withApiLogger(async (req: NextRequest, context: { params: { id: string } }) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return loggedErrorResponse("Non autorisé", 403);
+    }
+
+    const { id } = context.params;
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { orderItems: true },
+    });
+
+    if (!product) return loggedErrorResponse("Produit non trouvé", 404);
+    if (product.orderItems.length > 0) {
+      return loggedErrorResponse("Impossible de supprimer un produit ayant des commandes. Désactivez-le plutôt.", 400);
+    }
+
+    await prisma.product.delete({ where: { id } });
+    return loggedSuccessResponse({ message: "Produit supprimé avec succès" }, "Produit supprimé");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur suppression produit: ${message}`, 500);
+  }
+});

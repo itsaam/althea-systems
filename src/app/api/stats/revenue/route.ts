@@ -1,18 +1,34 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import {
+  withApiLogger,
+  loggedSuccessResponse,
+  loggedErrorResponse,
+  apiLogger,
+} from '@/lib/logger/exports';
 
-// GET Statistiques de revenus détaillées
-export async function GET(request: Request) {
+export const GET = withApiLogger(async (req: NextRequest) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'month'; 
+    // Vérification admin
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== 'ADMIN') {
+      return loggedErrorResponse('Non autorisé', 403);
+    }
+
+    const { searchParams } = new URL(req.url);
+    const period = searchParams.get('period') || 'month';
 
     const orders = await prisma.order.findMany({
       where: { status: { not: 'CANCELLED' } },
       select: { total: true, subtotal: true, tax: true, createdAt: true },
     });
 
-    const revenueMap: Record<string, { total_orders: number; total_revenue: number; subtotal: number; total_tax: number; average_order: number; }> = {};
+    const revenueMap: Record<
+      string,
+      { total_orders: number; total_revenue: number; subtotal: number; total_tax: number; average_order: number }
+    > = {};
 
     orders.forEach(o => {
       let key = '';
@@ -20,13 +36,13 @@ export async function GET(request: Request) {
 
       switch (period) {
         case 'week':
-          key = d.toISOString().slice(0, 10); 
+          key = d.toISOString().slice(0, 10);
           break;
         case 'year':
-          key = d.toISOString().slice(0, 7); 
+          key = d.toISOString().slice(0, 7);
           break;
-        default: 
-          key = d.toISOString().slice(0, 10); 
+        default:
+          key = d.toISOString().slice(0, 10);
       }
 
       if (!revenueMap[key]) {
@@ -46,7 +62,7 @@ export async function GET(request: Request) {
     const revenue = Object.entries(revenueMap)
       .map(([period, stats]) => ({ period, ...stats }))
       .sort((a, b) => b.period.localeCompare(a.period))
-      .slice(0, 30); 
+      .slice(0, 30);
 
     const now = new Date();
     const currentPeriodStart = new Date(now);
@@ -58,37 +74,30 @@ export async function GET(request: Request) {
     previousPeriodEnd.setDate(previousPeriodEnd.getDate() - 30);
 
     const currentPeriodRevenue = orders.filter(o => new Date(o.createdAt) >= currentPeriodStart);
-    const previousPeriodRevenue = orders.filter(o => new Date(o.createdAt) >= previousPeriodStart && new Date(o.createdAt) < previousPeriodEnd);
+    const previousPeriodRevenue = orders.filter(
+      o => new Date(o.createdAt) >= previousPeriodStart && new Date(o.createdAt) < previousPeriodEnd
+    );
 
     const currentTotal = currentPeriodRevenue.reduce((sum, o) => sum + Number(o.total), 0);
     const previousTotal = previousPeriodRevenue.reduce((sum, o) => sum + Number(o.total), 0);
 
     const revenueGrowth = previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal) * 100 : 0;
-    const ordersGrowth = previousPeriodRevenue.length > 0 ? ((currentPeriodRevenue.length - previousPeriodRevenue.length) / previousPeriodRevenue.length) * 100 : 0;
+    const ordersGrowth =
+      previousPeriodRevenue.length > 0
+        ? ((currentPeriodRevenue.length - previousPeriodRevenue.length) / previousPeriodRevenue.length) * 100
+        : 0;
 
-    return NextResponse.json({
+    return loggedSuccessResponse({
       revenue,
       comparison: {
-        current: {
-          revenue: currentTotal,
-          orders: currentPeriodRevenue.length,
-        },
-        previous: {
-          revenue: previousTotal,
-          orders: previousPeriodRevenue.length,
-        },
-        growth: {
-          revenue: revenueGrowth,
-          orders: ordersGrowth,
-        },
+        current: { revenue: currentTotal, orders: currentPeriodRevenue.length },
+        previous: { revenue: previousTotal, orders: previousPeriodRevenue.length },
+        growth: { revenue: revenueGrowth, orders: ordersGrowth },
       },
     });
-
   } catch (error) {
-    console.error('Revenue stats error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des statistiques de revenus' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    apiLogger.error(`Revenue stats error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    return loggedErrorResponse('Erreur lors de la récupération des statistiques de revenus', 500);
   }
-}
+});

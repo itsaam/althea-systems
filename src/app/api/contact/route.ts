@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import {
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+} from '@/lib/logger/exports';
+import { apiLogger } from '@/lib/logger/sections';
 
 const contactSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
@@ -9,10 +17,15 @@ const contactSchema = z.object({
   message: z.string().min(10, 'Le message doit contenir au moins 10 caractères'),
 });
 
-// GET Liste des messages (Admin)
-export async function GET(request: NextRequest) {
+// GET Liste des messages (Admin uniquement)
+export const GET = withApiLogger(async (req: NextRequest) => {
   try {
-    const { searchParams } = new URL(request.url);
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== 'ADMIN') {
+      return loggedErrorResponse('Non autorisé', 403);
+    }
+
+    const { searchParams } = new URL(req.url);
     const read = searchParams.get('read');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -32,7 +45,7 @@ export async function GET(request: NextRequest) {
       prisma.contactMessage.count({ where }),
     ]);
 
-    return NextResponse.json({
+    return loggedSuccessResponse({
       messages,
       pagination: {
         page,
@@ -42,43 +55,38 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('GET Contact messages error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des messages' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    apiLogger.error('GET Contact messages error', { error: message });
+    return loggedErrorResponse('Erreur lors de la récupération des messages', 500);
   }
-}
+});
 
-// POST Créer un message de contact
-export async function POST(request: NextRequest) {
+// POST Créer un message de contact 
+export const POST = withApiLogger(async (req: NextRequest) => {
   try {
-    const body = await request.json();
+    const body = await req.json();
     const validatedData = contactSchema.parse(body);
 
     const message = await prisma.contactMessage.create({
       data: validatedData,
     });
 
-    return NextResponse.json(
-      { 
-        success: true,
-        message: 'Votre message a été envoyé avec succès',
-        data: message 
-      }, 
-      { status: 201 }
+    return loggedSuccessResponse(
+      { data: message, success: true },
+      'Votre message a été envoyé avec succès',
+      201
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Données invalides', details: error.issues },
-        { status: 400 }
+      return loggedErrorResponse(
+        'Données invalides',
+        400,
+        { details: error.issues }
       );
     }
-    console.error('POST Contact error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de l\'envoi du message' },
-      { status: 500 }
-    );
+
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    apiLogger.error('POST Contact error', { error: message });
+    return loggedErrorResponse('Erreur lors de l\'envoi du message', 500);
   }
-}
+});

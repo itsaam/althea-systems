@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "./sections";
 import { LogMessages } from "./messages";
 
-type ApiHandler = (
+type ApiHandler<TContext = unknown> = (
   req: NextRequest,
-  context?: unknown
+  context: TContext
 ) => Promise<NextResponse>;
 
 // Wrapper pour logger automatiquement les requêtes API
-export function withApiLogger(handler: ApiHandler): ApiHandler {
-  return async (req: NextRequest, context?: unknown) => {
+export function withApiLogger<TContext>(
+  handler: ApiHandler<TContext>
+): ApiHandler<TContext> {
+  return async (req: NextRequest, context: TContext) => {
     const start = Date.now();
     const { method, nextUrl } = req;
     const path = nextUrl.pathname;

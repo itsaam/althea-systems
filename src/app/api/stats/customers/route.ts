@@ -1,22 +1,29 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import {
+  withApiLogger,
+  loggedSuccessResponse,
+  loggedErrorResponse,
+  apiLogger,
+} from '@/lib/logger/exports';
 
-// GET Statistiques clients
-export async function GET() {
+export const GET = withApiLogger(async (req: NextRequest) => {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== 'ADMIN') {
+      return loggedErrorResponse('Non autorisé', 403);
+    }
+
     const topCustomersRaw = await prisma.user.findMany({
-      where: {
-        orders: { some: { status: { not: 'CANCELLED' } } },
-      },
+      where: { orders: { some: { status: { not: 'CANCELLED' } } } },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
-        orders: {
-          where: { status: { not: 'CANCELLED' } },
-          select: { total: true },
-        },
+        orders: { where: { status: { not: 'CANCELLED' } }, select: { total: true } },
         _count: { select: { orders: true } },
       },
       take: 10,
@@ -32,36 +39,27 @@ export async function GET() {
       }))
       .sort((a, b) => b.totalSpent - a.totalSpent);
 
-    const allUsers = await prisma.user.findMany({
-      select: { createdAt: true },
-    });
-
+    const allUsers = await prisma.user.findMany({ select: { createdAt: true } });
     const newCustomersByMonthMap: Record<string, number> = {};
     allUsers.forEach(u => {
-      const month = u.createdAt.toISOString().slice(0, 7); 
+      const month = u.createdAt.toISOString().slice(0, 7);
       newCustomersByMonthMap[month] = (newCustomersByMonthMap[month] || 0) + 1;
     });
-
     const newCustomersByMonth = Object.entries(newCustomersByMonthMap)
-      .sort((a, b) => b[0].localeCompare(a[0])) 
+      .sort((a, b) => b[0].localeCompare(a[0]))
       .slice(0, 12)
       .map(([month, count]) => ({ month, count }));
 
-
     const usersWithOrders = await prisma.user.findMany({
-      select: {
-        id: true,
-        orders: { where: { status: { not: 'CANCELLED' } }, select: { id: true } },
-      },
+      select: { id: true, orders: { where: { status: { not: 'CANCELLED' } }, select: { id: true } } },
     });
-
     const totalCustomersWithOrders = usersWithOrders.filter(u => u.orders.length > 0).length;
     const repeatCustomers = usersWithOrders.filter(u => u.orders.length > 1).length;
     const retentionRate = totalCustomersWithOrders > 0
       ? (repeatCustomers / totalCustomersWithOrders) * 100
       : 0;
 
-    return NextResponse.json({
+    return loggedSuccessResponse({
       topCustomers,
       newCustomersByMonth,
       retention: {
@@ -72,10 +70,8 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Customer stats error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des statistiques clients' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    apiLogger.error(`Customer stats error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    return loggedErrorResponse('Erreur lors de la récupération des statistiques clients', 500);
   }
-}
+});

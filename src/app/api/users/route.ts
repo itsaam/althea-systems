@@ -1,7 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hash } from 'bcryptjs';
 import { z } from 'zod';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import {
+  withApiLogger,
+  loggedSuccessResponse,
+  loggedErrorResponse,
+  apiLogger,
+} from '@/lib/logger/exports';
 
 const userSchema = z.object({
   email: z.string().email(),
@@ -9,13 +17,19 @@ const userSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   phone: z.string().optional(),
-  role: z.enum(['USER', 'ADMIN']).optional(),
+  // role ignoré côté client
 });
 
-// GET Liste des utilisateurs
-export async function GET(request: NextRequest) {
+// ================= GET /users =================
+export const GET = withApiLogger(async (req: NextRequest) => {
   try {
-    const { searchParams } = new URL(request.url);
+    // Vérification admin
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== 'ADMIN') {
+      return loggedErrorResponse('Non autorisé', 403);
+    }
+
+    const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
@@ -39,7 +53,7 @@ export async function GET(request: NextRequest) {
       prisma.user.count(),
     ]);
 
-    return NextResponse.json({
+    return loggedSuccessResponse({
       users,
       pagination: {
         page,
@@ -49,29 +63,23 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('GET users error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des utilisateurs' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    apiLogger.error(`GET users error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    return loggedErrorResponse('Erreur lors de la récupération des utilisateurs', 500);
   }
-}
+});
 
-// POST Créer un utilisateur
-export async function POST(request: NextRequest) {
+//Crer User
+export const POST = withApiLogger(async (req: NextRequest) => {
   try {
-    const body = await request.json();
+    const body = await req.json();
     const validatedData = userSchema.parse(body);
 
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
     });
-
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'Cet email est déjà utilisé' },
-        { status: 400 }
-      );
+      return loggedErrorResponse('Cet email est déjà utilisé', 400);
     }
 
     const hashedPassword = validatedData.password
@@ -82,6 +90,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...validatedData,
         password: hashedPassword,
+        role: 'USER', 
       },
       select: {
         id: true,
@@ -94,19 +103,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    return loggedSuccessResponse(user, 'Utilisateur créé avec succès', 201);
   } catch (error) {
-    console.error('POST user error:', error);
-    
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Données invalides', details: error.issues },
-        { status: 400 }
-      );
+      return loggedErrorResponse('Données invalides', 400, { details: error.issues });
     }
-    return NextResponse.json(
-      { error: 'Erreur lors de la création de l\'utilisateur' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    apiLogger.error(`POST user error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    return loggedErrorResponse('Erreur lors de la création de l\'utilisateur', 500);
   }
-}
+});

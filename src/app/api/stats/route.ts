@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import {
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+  apiLogger,
+} from '@/lib/logger/exports';
 
 // GET Statistiques du dashboard admin
-export async function GET(request: NextRequest) {
+export const GET = withApiLogger(async (request: NextRequest) => {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== 'ADMIN') {
+      return loggedErrorResponse('Non autorisé', 403);
+    }
+
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '30'; 
+    const period = searchParams.get('period') || '30';
     const days = parseInt(period);
 
     const startDate = new Date();
@@ -22,37 +35,19 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       prisma.user.count(),
       prisma.order.count(),
-      prisma.order.count({
-        where: { status: 'PENDING' },
-      }),
+      prisma.order.count({ where: { status: 'PENDING' } }),
       prisma.product.count(),
-      prisma.product.count({
-        where: { active: true },
-      }),
+      prisma.product.count({ where: { status: 'PUBLISHED' } }),
       prisma.order.aggregate({
-        where: {
-          status: { not: 'CANCELLED' },
-        },
-        _sum: {
-          total: true,
-        },
+        where: { status: { not: 'CANCELLED' } },
+        _sum: { total: true },
       }),
       prisma.order.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: {
-          user: {
-            select: {
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          items: {
-            select: {
-              quantity: true,
-            },
-          },
+          user: { select: { email: true, firstName: true, lastName: true } },
+          items: { select: { quantity: true } },
         },
       }),
     ]);
@@ -71,17 +66,9 @@ export async function GET(request: NextRequest) {
 
     const topProducts = await prisma.orderItem.groupBy({
       by: ['productId'],
-      _sum: {
-        quantity: true,
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _sum: {
-          quantity: 'desc',
-        },
-      },
+      _sum: { quantity: true },
+      _count: { id: true },
+      orderBy: { _sum: { quantity: 'desc' } },
       take: 10,
     });
 
@@ -89,12 +76,7 @@ export async function GET(request: NextRequest) {
       topProducts.map(async (item) => {
         const product = await prisma.product.findUnique({
           where: { id: item.productId },
-          select: {
-            id: true,
-            name: true,
-            images: true,
-            price: true,
-          },
+          select: { id: true, name: true, images: true, price: true },
         });
         return {
           ...product,
@@ -107,12 +89,10 @@ export async function GET(request: NextRequest) {
 
     const ordersByStatus = await prisma.order.groupBy({
       by: ['status'],
-      _count: {
-        id: true,
-      },
+      _count: { id: true },
     });
 
-    return NextResponse.json({
+    return loggedSuccessResponse({
       overview: {
         totalUsers,
         totalOrders,
@@ -135,10 +115,8 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Stats error:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des statistiques' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    apiLogger.error(`Stats error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    return loggedErrorResponse('Erreur lors de la récupération des statistiques', 500);
   }
-}
+});
