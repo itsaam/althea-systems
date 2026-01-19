@@ -22,10 +22,6 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "./data-table-pagination";
 
-interface WithId {
-  id: string;
-}
-
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -79,14 +75,10 @@ export function DataTable<TData, TValue>({
       setRowSelection(newSelection);
 
       // Extraire les IDs sélectionnés
+      // Les clés sont déjà les IDs car nous avons défini getRowId
       if (onRowSelectionChange) {
-        const selectedRows = Object.keys(newSelection)
-          .filter((key) => newSelection[key])
-          .map((index) => {
-            const row = data[parseInt(index)];
-            return (row as WithId).id;
-          });
-        onRowSelectionChange(selectedRows);
+        const selectedIds = Object.keys(newSelection).filter((key) => newSelection[key]);
+        onRowSelectionChange(selectedIds);
       }
     },
     onPaginationChange: (updater) => {
@@ -106,7 +98,7 @@ export function DataTable<TData, TValue>({
     manualSorting: true,
     pageCount: pageCount,
     enableRowSelection: true,
-    getRowId: (row) => (row as WithId).id,
+    getRowId: (row) => (row as { id: string }).id,
   });
 
   return (
