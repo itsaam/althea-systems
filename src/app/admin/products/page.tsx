@@ -1,192 +1,217 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import type { PaginationState, SortingState } from "@tanstack/react-table";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
-interface Product {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    price: number;
-    stock: number;
-    image: string | null;
-    categoryId: string;
-    createdAt: string;
-}
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/admin/data-table/data-table";
+import { DataTableToolbar } from "@/components/admin/data-table/data-table-toolbar";
+import { getProductsColumns } from "@/components/admin/products/products-columns";
+import { ProductsTableFilters } from "@/components/admin/products/products-table-filters";
+import { ProductsBulkActions } from "@/components/admin/products/products-bulk-actions";
+
+import type { ProductWithCategory, ProductFilters, ProductsResponse } from "@/types/admin-table";
 
 export default function AdminProductsPage() {
-    const router = useRouter();
-    const [products, setProducts] = useState<Product[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
-    useEffect(() => {
+  // States
+  const [products, setProducts] = useState<ProductWithCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Pagination state
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 25,
+  });
+  const [pageCount, setPageCount] = useState(0);
+
+  // Sorting state
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Filters state
+  const [filters, setFilters] = useState<ProductFilters>({});
+
+  // Debounce recherche (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchValue);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
+  // Fetch products quand les dépendances changent
+  useEffect(() => {
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.pageIndex, pagination.pageSize, sorting, debouncedSearch, filters]);
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      // Construction des query params
+      const params = new URLSearchParams({
+        page: (pagination.pageIndex + 1).toString(),
+        limit: pagination.pageSize.toString(),
+      });
+
+      // Recherche
+      if (debouncedSearch) {
+        params.append("search", debouncedSearch);
+      }
+
+      // Tri
+      if (sorting.length > 0) {
+        params.append("sortBy", sorting[0].id);
+        params.append("sortOrder", sorting[0].desc ? "desc" : "asc");
+      }
+
+      // Filtres
+      if (filters.categoryIds && filters.categoryIds.length > 0) {
+        params.append("categoryIds", filters.categoryIds.join(","));
+      }
+      if (filters.minPrice !== undefined) {
+        params.append("minPrice", filters.minPrice.toString());
+      }
+      if (filters.maxPrice !== undefined) {
+        params.append("maxPrice", filters.maxPrice.toString());
+      }
+      if (filters.inStock !== undefined) {
+        params.append("inStock", filters.inStock.toString());
+      }
+      if (filters.status) {
+        params.append("status", filters.status);
+      }
+      if (filters.startDate) {
+        params.append("startDate", filters.startDate);
+      }
+      if (filters.endDate) {
+        params.append("endDate", filters.endDate);
+      }
+
+      const res = await fetch(`/api/admin/products?${params.toString()}`);
+
+      if (!res.ok) {
+        throw new Error("Erreur lors du chargement des produits");
+      }
+
+      const data: ProductsResponse = await res.json();
+
+      setProducts(data.products);
+      setPageCount(data.pagination.totalPages);
+    } catch (error) {
+      console.error("Erreur chargement produits:", error);
+      toast.error("Erreur lors du chargement des produits");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleView = (id: string) => {
+    router.push(`/admin/products/${id}`);
+  };
+
+  const handleEdit = (id: string) => {
+    router.push(`/admin/products/${id}`);
+  };
+
+  const handleDelete = async (id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le produit "${product.name}" ?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/products/bulk`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [id] }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Produit supprimé avec succès");
         fetchProducts();
-    }, []);
+      } else {
+        toast.error(data.error || "Erreur lors de la suppression");
+      }
+    } catch (error) {
+      console.error("Erreur suppression:", error);
+      toast.error("Erreur lors de la suppression");
+    }
+  };
 
-    const fetchProducts = async () => {
-        setIsLoading(true);
-        try {
-            const response = await fetch("/api/products");
-            const data = await response.json();
-            setProducts(data.products || []);
-        } catch (error) {
-            console.error("Erreur chargement produits:", error);
-            toast.error("Erreur lors du chargement des produits");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const handlePaginationChange = useCallback((newPagination: PaginationState) => {
+    setPagination(newPagination);
+  }, []);
 
-    const filteredProducts = products.filter((prod) =>
-        prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prod.slug.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const handleSortingChange = useCallback((newSorting: SortingState) => {
+    setSorting(newSorting);
+  }, []);
 
-    const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`Êtes-vous sûr de vouloir supprimer le produit "${name}" ?`)) {
-            return;
-        }
+  const handleRowSelectionChange = useCallback((newSelectedIds: string[]) => {
+    setSelectedIds(newSelectedIds);
+  }, []);
 
-        try {
-            const response = await fetch(`/api/products/${id}`, {
-                method: "DELETE",
-            });
+  const handleResetFilters = () => {
+    setSearchValue("");
+    setDebouncedSearch("");
+    setFilters({});
+  };
 
-            const data = await response.json();
+  // Définition des colonnes
+  const columns = getProductsColumns({
+    onView: handleView,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+  });
 
-            if (response.ok) {
-                toast.success("Produit supprimé avec succès");
-                fetchProducts();
-            } else {
-                toast.error(data.error || "Erreur lors de la suppression");
-            }
-        } catch (error) {
-            console.error("Erreur suppression:", error);
-            toast.error("Erreur lors de la suppression");
-        }
-    };
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Produits</h1>
+        <Button onClick={() => router.push("/admin/products/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouveau produit
+        </Button>
+      </div>
 
-    return (
-        <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">Produits</h1>
-                <Button onClick={() => router.push("/admin/products/new")}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouveau produit
-                </Button>
-            </div>
+      {/* Toolbar avec recherche */}
+      <DataTableToolbar
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        onResetFilters={handleResetFilters}
+        filters={<ProductsTableFilters filters={filters} onFiltersChange={setFilters} />}
+      />
 
-            <div className="space-y-4">
-                <Input
-                    placeholder="Rechercher un produit..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="max-w-sm"
-                />
+      {/* Actions groupées */}
+      {selectedIds.length > 0 && (
+        <ProductsBulkActions selectedIds={selectedIds} onActionComplete={fetchProducts} />
+      )}
 
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Image</TableHead>
-                                <TableHead>Nom</TableHead>
-                                <TableHead>Slug</TableHead>
-                                <TableHead>Produits</TableHead>
-                                <TableHead>Stock</TableHead>
-                                <TableHead>Date de création</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="text-center">
-                                        Chargement...
-                                    </TableCell>
-                                </TableRow>
-                            ) : filteredProducts.length === 0 ? (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={7}
-                                        className="text-center text-muted-foreground"
-                                    >
-                                        {searchTerm ? "Aucun produit trouvé" : "Aucun produit"}
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                filteredProducts.map((product) => (
-                                    <TableRow key={product.id}>
-                                        <TableCell>
-                                            {product.image ? (
-                                                <div className="relative">
-                                                    <img
-                                                        src={product.image}
-                                                        alt={product.name}
-                                                        className="w-12 h-12 object-cover rounded"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
-                                                    Pas d&apos;image
-                                                </div>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="font-medium">
-                                            {product.name}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {product.slug}
-                                        </TableCell>
-                                        <TableCell>
-                                            {product.price.toFixed(2)} €
-                                        </TableCell>
-                                        <TableCell>
-                                            {product.stock}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {new Date(product.createdAt).toLocaleDateString("fr-FR")}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        router.push(`/admin/products/${product.id}`)
-                                                    }
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="icon"
-                                                    onClick={() => handleDelete(product.id, product.name)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-            </div>
-        </div>
-    );
+      {/* Table */}
+      <DataTable
+        columns={columns}
+        data={products}
+        pagination={pagination}
+        onPaginationChange={handlePaginationChange}
+        sorting={sorting}
+        onSortingChange={handleSortingChange}
+        onRowSelectionChange={handleRowSelectionChange}
+        isLoading={isLoading}
+        pageCount={pageCount}
+      />
+    </div>
+  );
 }
