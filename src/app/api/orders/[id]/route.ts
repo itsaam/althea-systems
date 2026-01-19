@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +8,7 @@ import {
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
+import type { Prisma } from "@prisma/client";
 
 const updateOrderSchema = z.object({
   status: z.enum([
@@ -24,8 +25,9 @@ const updateOrderSchema = z.object({
   notes: z.string().optional(),
 });
 
+// GET Order
 export const GET = withApiLogger(async (
-  req: NextRequest,
+  _req: NextRequest,
   context?: unknown
 ) => {
   try {
@@ -45,14 +47,8 @@ export const GET = withApiLogger(async (
       },
     });
 
-    if (!order) {
-      return loggedErrorResponse("Commande non trouvée", 404);
-    }
-
-    if (!session) {
-      return loggedErrorResponse("Non autorisé", 401);
-    }
-
+    if (!order) return loggedErrorResponse("Commande non trouvée", 404);
+    if (!session) return loggedErrorResponse("Non autorisé", 401);
     if (session.user.role !== "ADMIN" && session.user.id !== order.userId) {
       return loggedErrorResponse("Accès interdit", 403);
     }
@@ -73,33 +69,29 @@ export const GET = withApiLogger(async (
     };
 
     return loggedSuccessResponse({ order: serializedOrder });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     return loggedErrorResponse(`Erreur récupération commande: ${message}`, 500);
   }
 });
 
-// PATCH (Admin only) 
+// PATCH Order (Admin only)
 export const PATCH = withApiLogger(async (
   req: NextRequest,
   context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ADMIN") {
-      return loggedErrorResponse("Non autorisé", 403);
-    }
+    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
 
     const { id } = (context as { params: { id: string } }).params;
     const body = await req.json();
     const validatedData = updateOrderSchema.parse(body);
 
     const existingOrder = await prisma.order.findUnique({ where: { id } });
-    if (!existingOrder) {
-      return loggedErrorResponse("Commande non trouvée", 404);
-    }
+    if (!existingOrder) return loggedErrorResponse("Commande non trouvée", 404);
 
-    const updateData: any = { ...validatedData };
+    const updateData: Prisma.OrderUpdateInput = { ...validatedData };
 
     if (validatedData.status && validatedData.status !== existingOrder.status) {
       await prisma.orderStatusHistory.create({
@@ -132,7 +124,7 @@ export const PATCH = withApiLogger(async (
     };
 
     return loggedSuccessResponse({ order: serializedOrder }, "Commande mise à jour avec succès");
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return loggedErrorResponse(
         `Données invalides: ${error.issues.map(i => i.message).join(", ")}`,
@@ -144,16 +136,14 @@ export const PATCH = withApiLogger(async (
   }
 });
 
-// DELETE (Admin only) 
+// DELETE Order (Admin only)
 export const DELETE = withApiLogger(async (
-  req: NextRequest,
+  _req: NextRequest,
   context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ADMIN") {
-      return loggedErrorResponse("Non autorisé", 403);
-    }
+    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
 
     const { id } = (context as { params: { id: string } }).params;
 
@@ -162,10 +152,7 @@ export const DELETE = withApiLogger(async (
       include: { items: true },
     });
 
-    if (!order) {
-      return loggedErrorResponse("Commande non trouvée", 404);
-    }
-
+    if (!order) return loggedErrorResponse("Commande non trouvée", 404);
     if (order.status === "DELIVERED" || order.status === "SHIPPED") {
       return loggedErrorResponse("Impossible d'annuler une commande livrée ou expédiée", 400);
     }
@@ -184,7 +171,7 @@ export const DELETE = withApiLogger(async (
     ]);
 
     return loggedSuccessResponse({ message: "Commande annulée avec succès" }, "Commande annulée");
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     return loggedErrorResponse(`Erreur annulation commande: ${message}`, 500);
   }

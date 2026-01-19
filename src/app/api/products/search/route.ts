@@ -1,91 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const query = (searchParams.get('q') || '').trim();
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+    const { searchParams } = new URL(req.url);
+
+    const q = searchParams.get('q') || '';
     const categoryId = searchParams.get('categoryId');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
-    const sortBy = searchParams.get('sortBy') || 'relevance';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
 
-    // Si la recherche est vide, retourne vide
-    if (!query) {
-      return NextResponse.json({
-        products: [],
-        pagination: { page, limit, total: 0, totalPages: 0 },
-        query: '',
+    const filters: Prisma.ProductWhereInput[] = [];
+
+    if (q) {
+      filters.push({
+        name: { contains: q, mode: 'insensitive' },
       });
     }
 
-    // Construction du filtre
-    const filters: any[] = [
-      {
-        OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } },
-          { sku: { contains: query, mode: 'insensitive' } },
-        ],
-      },
-    ];
+    if (categoryId) {
+      filters.push({ categoryId });
+    }
 
-    // Filtre catégorie
-    if (categoryId) filters.push({ categoryId });
-
-    // Filtre prix
     if (minPrice || maxPrice) {
-      const priceFilter: any = {};
-      if (minPrice) priceFilter.gte = parseFloat(minPrice);
-      if (maxPrice) priceFilter.lte = parseFloat(maxPrice);
+      const priceFilter: Prisma.DecimalFilter = {};
+      if (minPrice) priceFilter.gte = new Prisma.Decimal(minPrice);
+      if (maxPrice) priceFilter.lte = new Prisma.Decimal(maxPrice);
       filters.push({ price: priceFilter });
     }
 
-    // Tri
-    let orderBy: any = [];
-    switch (sortBy) {
-      case 'price_asc':
-        orderBy = [{ price: 'asc' }];
-        break;
-      case 'price_desc':
-        orderBy = [{ price: 'desc' }];
-        break;
-      case 'newest':
-        orderBy = [{ createdAt: 'desc' }];
-        break;
-      case 'relevance':
-      default:
-        orderBy = [{ featured: 'desc' }, { createdAt: 'desc' }];
-        break;
-    }
+    const where: Prisma.ProductWhereInput = filters.length
+      ? { AND: filters }
+      : {};
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
-        where: { AND: filters },
+        where,
         skip,
         take: limit,
-        include: { category: { select: { id: true, name: true, slug: true } } },
-        orderBy,
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
       }),
-      prisma.product.count({ where: { AND: filters } }),
+      prisma.product.count({ where }),
     ]);
 
+    const serializedProducts = products.map((p) => ({
+      ...p,
+      price: p.price.toNumber(),
+      comparePrice: p.comparePrice?.toNumber() ?? null,
+      image: p.images[0] ?? null,
+    }));
+
     return NextResponse.json({
-      products,
+      products: serializedProducts,
       pagination: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
       },
-      query,
-      filters: { categoryId, minPrice, maxPrice, sortBy },
     });
   } catch (error) {
-    console.error('GET Search products error:', error);
+    console.error('GET /products/search error:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la recherche de produits' },
       { status: 500 }

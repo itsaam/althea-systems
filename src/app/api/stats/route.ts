@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -19,18 +19,19 @@ export const GET = withApiLogger(async (request: NextRequest) => {
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || '30';
-    const days = parseInt(period);
+    const days = parseInt(period, 10);
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
+    // Récupération des statistiques principales
     const [
       totalUsers,
       totalOrders,
       pendingOrders,
       totalProducts,
       activeProducts,
-      totalRevenue,
+      totalRevenueResult,
       recentOrders,
     ] = await Promise.all([
       prisma.user.count(),
@@ -52,7 +53,10 @@ export const GET = withApiLogger(async (request: NextRequest) => {
       }),
     ]);
 
-    const salesByDay = await prisma.$queryRaw`
+    // Ventes par jour
+    const salesByDay = await prisma.$queryRaw<
+      { date: string; orders: number; revenue: number }[]
+    >`
       SELECT 
         DATE("createdAt") as date,
         COUNT(*) as orders,
@@ -64,6 +68,7 @@ export const GET = withApiLogger(async (request: NextRequest) => {
       ORDER BY date ASC
     `;
 
+    // Top produits
     const topProducts = await prisma.orderItem.groupBy({
       by: ['productId'],
       _sum: { quantity: true },
@@ -87,6 +92,7 @@ export const GET = withApiLogger(async (request: NextRequest) => {
       })
     );
 
+    // Commandes par statut
     const ordersByStatus = await prisma.order.groupBy({
       by: ['status'],
       _count: { id: true },
@@ -99,7 +105,7 @@ export const GET = withApiLogger(async (request: NextRequest) => {
         pendingOrders,
         totalProducts,
         activeProducts,
-        totalRevenue: Number(totalRevenue._sum.total || 0),
+        totalRevenue: Number(totalRevenueResult._sum.total || 0),
       },
       salesByDay,
       topProducts: topProductsWithDetails,
@@ -114,7 +120,7 @@ export const GET = withApiLogger(async (request: NextRequest) => {
         createdAt: order.createdAt,
       })),
     });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
     apiLogger.error(`Stats error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
     return loggedErrorResponse('Erreur lors de la récupération des statistiques', 500);

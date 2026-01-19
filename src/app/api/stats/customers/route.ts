@@ -9,13 +9,14 @@ import {
   apiLogger,
 } from '@/lib/logger/exports';
 
-export const GET = withApiLogger(async (req: NextRequest) => {
+export const GET = withApiLogger(async (_req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== 'ADMIN') {
       return loggedErrorResponse('Non autorisé', 403);
     }
 
+    // Top 10 clients par dépenses
     const topCustomersRaw = await prisma.user.findMany({
       where: { orders: { some: { status: { not: 'CANCELLED' } } } },
       select: {
@@ -39,6 +40,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       }))
       .sort((a, b) => b.totalSpent - a.totalSpent);
 
+    // Nouveaux clients par mois
     const allUsers = await prisma.user.findMany({ select: { createdAt: true } });
     const newCustomersByMonthMap: Record<string, number> = {};
     allUsers.forEach(u => {
@@ -50,6 +52,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       .slice(0, 12)
       .map(([month, count]) => ({ month, count }));
 
+    // Retention et clients ayant commandé
     const usersWithOrders = await prisma.user.findMany({
       select: { id: true, orders: { where: { status: { not: 'CANCELLED' } }, select: { id: true } } },
     });
@@ -69,7 +72,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       },
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
     apiLogger.error(`Customer stats error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
     return loggedErrorResponse('Erreur lors de la récupération des statistiques clients', 500);

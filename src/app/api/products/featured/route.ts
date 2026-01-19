@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
-// GET Récupérer les produits mis en avant
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '8');
     const categoryId = searchParams.get('categoryId');
 
-    const where: any = {
+    const where: Prisma.ProductWhereInput = {
       featured: true,
-      active: true,
     };
 
     if (categoryId) {
@@ -29,9 +28,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: [
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ createdAt: 'desc' }],
     });
 
     return NextResponse.json({

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error); // fallback si ce n'est pas une instance d'Error
+}
+
 // GET Détails d'une adresse
 export async function GET(
   request: NextRequest,
@@ -8,6 +13,7 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
+
     const address = await prisma.address.findUnique({
       where: { id },
       include: {
@@ -30,14 +36,15 @@ export async function GET(
     }
 
     return NextResponse.json(address);
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération de l\'adresse' },
+      { error: `Erreur lors de la récupération de l'adresse : ${getErrorMessage(error)}` },
       { status: 500 }
     );
   }
 }
 
+// PATCH Mise à jour d'une adresse
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -70,15 +77,15 @@ export async function PATCH(
       });
     }
 
-    const address = await prisma.address.update({
+    const updatedAddress = await prisma.address.update({
       where: { id },
       data: body,
     });
 
-    return NextResponse.json(address);
-  } catch (error) {
+    return NextResponse.json(updatedAddress);
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'adresse' },
+      { error: `Erreur lors de la mise à jour de l'adresse : ${getErrorMessage(error)}` },
       { status: 500 }
     );
   }
@@ -91,6 +98,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
+
     const ordersCount = await prisma.order.count({
       where: { addressId: id },
     });
@@ -107,9 +115,9 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: 'Adresse supprimée avec succès' });
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression de l\'adresse' },
+      { error: `Erreur lors de la suppression de l'adresse : ${getErrorMessage(error)}` },
       { status: 500 }
     );
   }

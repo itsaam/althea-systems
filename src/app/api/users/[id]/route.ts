@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import {
@@ -33,7 +34,8 @@ export const GET = withApiLogger(async (req: NextRequest, context?: unknown) => 
       return loggedErrorResponse('Utilisateur non trouvé', 404);
     }
 
-    const { password, ...userWithoutPassword } = user;
+    // Exclure le password
+    const { password: _password, ...userWithoutPassword } = user;
 
     const ordersFormatted = userWithoutPassword.orders.map(order => ({
       ...order,
@@ -46,14 +48,16 @@ export const GET = withApiLogger(async (req: NextRequest, context?: unknown) => 
       ...userWithoutPassword,
       orders: ordersFormatted,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
-    apiLogger.error(`GET user error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    apiLogger.error(`GET user error: ${message}`, {
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return loggedErrorResponse('Erreur lors de la récupération de l\'utilisateur', 500);
   }
 });
 
-// PATCH Mettre à jour un utilisateur 
+// PATCH Mettre à jour un utilisateur
 export const PATCH = withApiLogger(async (req: NextRequest, context?: unknown) => {
   try {
     const session = await getServerSession(authOptions);
@@ -64,10 +68,11 @@ export const PATCH = withApiLogger(async (req: NextRequest, context?: unknown) =
     const { id } = await (context as { params: Promise<{ id: string }> }).params;
     const body = await req.json();
 
-    const allowedFields = ['firstName', 'lastName', 'phone'];
-    const updateData: Record<string, any> = {};
-    allowedFields.forEach(field => {
-      if (field in body) updateData[field] = body[field];
+    type AllowedFields = Partial<Pick<Prisma.UserUpdateInput, 'firstName' | 'lastName' | 'phone' | 'password'>>;
+    const updateData: AllowedFields = {};
+
+    ['firstName', 'lastName', 'phone'].forEach(field => {
+      if (field in body) updateData[field as keyof AllowedFields] = body[field];
     });
 
     if (body.password) {
@@ -91,9 +96,11 @@ export const PATCH = withApiLogger(async (req: NextRequest, context?: unknown) =
     });
 
     return loggedSuccessResponse(user);
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
-    apiLogger.error(`PATCH user error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    apiLogger.error(`PATCH user error: ${message}`, {
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return loggedErrorResponse('Erreur lors de la mise à jour de l\'utilisateur', 500);
   }
 });
@@ -121,15 +128,20 @@ export const DELETE = withApiLogger(async (req: NextRequest, context?: unknown) 
     }
 
     if (user.orders.length > 0 || user.addresses.length > 0) {
-      return loggedErrorResponse('Impossible de supprimer l’utilisateur : il possède des commandes ou des adresses associées', 400);
+      return loggedErrorResponse(
+        'Impossible de supprimer l’utilisateur : il possède des commandes ou des adresses associées',
+        400
+      );
     }
 
     await prisma.user.delete({ where: { id } });
 
     return loggedSuccessResponse({ message: 'Utilisateur supprimé avec succès' });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
-    apiLogger.error(`DELETE user error: ${message}`, { stack: error instanceof Error ? error.stack : undefined });
+    apiLogger.error(`DELETE user error: ${message}`, {
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return loggedErrorResponse('Erreur lors de la suppression de l’utilisateur', 500);
   }
 });

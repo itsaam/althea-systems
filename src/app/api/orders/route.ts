@@ -1,12 +1,16 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import {
   withApiLogger,
   loggedErrorResponse,
   loggedSuccessResponse,
+  apiLogger,
 } from "@/lib/logger/exports";
 
+// ----- SCHEMAS -----
 const orderItemSchema = z.object({
   productId: z.string(),
   quantity: z.number().int().positive(),
@@ -20,6 +24,22 @@ const orderSchema = z.object({
   paymentMethod: z.string().optional(),
 });
 
+const updateOrderSchema = z.object({
+  status: z.enum([
+    "PENDING",
+    "CONFIRMED",
+    "PROCESSING",
+    "SHIPPED",
+    "DELIVERED",
+    "CANCELLED",
+  ]).optional(),
+  paymentStatus: z.enum(["PENDING", "PAID", "FAILED", "REFUNDED"]).optional(),
+  paymentMethod: z.string().optional(),
+  paymentIntentId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+// ----- HELPERS -----
 function generateOrderNumber(): string {
   const date = new Date();
   const year = date.getFullYear();
@@ -42,16 +62,13 @@ function getTvaRate(tva: string): number {
 
 function calculateShippingCost(subtotal: number, country: string): number {
   if (subtotal >= 100) return 0;
-
   if (country === "France" || country === "FR") return 5.99;
-
   const euCountries = ["BE", "DE", "ES", "IT", "NL", "PT", "LU", "AT", "IE", "GR"];
   if (euCountries.includes(country)) return 9.99;
-
   return 19.99;
 }
 
-// GET Liste des commandes
+// ----- GET ORDERS -----
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
@@ -61,7 +78,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const status = searchParams.get("status");
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (userId) where.userId = userId;
     if (status) where.status = status;
 
@@ -71,27 +88,9 @@ export const GET = withApiLogger(async (req: NextRequest) => {
         skip,
         take: limit,
         include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
+          user: { select: { id: true, email: true, firstName: true, lastName: true } },
           address: true,
-          items: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  images: true,
-                  slug: true,
-                },
-              },
-            },
-          },
+          items: { include: { product: { select: { id: true, name: true, slug: true, images: true } } } },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -100,13 +99,13 @@ export const GET = withApiLogger(async (req: NextRequest) => {
 
     const serializedOrders = orders.map((order) => ({
       ...order,
-      subtotal: order.subtotal.toNumber(),
-      shippingCost: order.shippingCost.toNumber(),
-      tax: order.tax.toNumber(),
-      total: order.total.toNumber(),
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      tax: Number(order.tax),
+      total: Number(order.total),
       items: order.items.map((item) => ({
         ...item,
-        price: item.price.toNumber(),
+        price: Number(item.price),
       })),
     }));
 
@@ -121,75 +120,49 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
+    apiLogger.error(`GET orders error: ${message}`);
     return loggedErrorResponse(`Erreur récupération commandes: ${message}`, 500);
   }
 });
 
-// POST Créer une commande
+// ----- POST CREATE ORDER -----
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const body = await req.json();
     const validatedData = orderSchema.parse(body);
 
-    const user = await prisma.user.findUnique({
-      where: { id: validatedData.userId },
-    });
+    const user = await prisma.user.findUnique({ where: { id: validatedData.userId } });
+    if (!user) return loggedErrorResponse("Utilisateur non trouvé", 404);
 
-    if (!user) {
-      return loggedErrorResponse("Utilisateur non trouvé", 404);
-    }
-
-    const address = await prisma.address.findUnique({
-      where: { id: validatedData.addressId },
-    });
-
-    if (!address) {
-      return loggedErrorResponse("Adresse non trouvée", 404);
-    }
-
-    if (address.userId !== validatedData.userId) {
+    const address = await prisma.address.findUnique({ where: { id: validatedData.addressId } });
+    if (!address) return loggedErrorResponse("Adresse non trouvée", 404);
+    if (address.userId !== validatedData.userId)
       return loggedErrorResponse("Cette adresse ne vous appartient pas", 403);
-    }
 
-    const productIds = validatedData.items.map((item) => item.productId);
+    const productIds = validatedData.items.map((i) => i.productId);
     const products = await prisma.product.findMany({
-      where: {
-        id: { in: productIds },
-        status: "PUBLISHED",
-      },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        tva: true,
-        stock: true,
-      },
+      where: { id: { in: productIds }, status: "PUBLISHED" },
+      select: { id: true, name: true, price: true, tva: true, stock: true },
     });
-
     if (products.length !== productIds.length) {
-      const foundIds = products.map((p) => p.id);
-      const missingIds = productIds.filter((id) => !foundIds.includes(id));
-      return loggedErrorResponse(
-        `Produits non trouvés ou non disponibles: ${missingIds.join(", ")}`,
-        400
-      );
+      const missing = productIds.filter((id) => !products.some((p) => p.id === id));
+      return loggedErrorResponse(`Produits non trouvés ou indisponibles: ${missing.join(", ")}`, 400);
     }
 
+    // Check stock
     for (const item of validatedData.items) {
       const product = products.find((p) => p.id === item.productId);
       if (!product) continue;
-
-      if (product.stock < item.quantity) {
+      if (product.stock < item.quantity)
         return loggedErrorResponse(
-          `Stock insuffisant pour "${product.name}". Disponible: ${product.stock}, Demandé: ${item.quantity}`,
+          `Stock insuffisant pour "${product.name}". Disponible: ${product.stock}, demandé: ${item.quantity}`,
           400
         );
-      }
     }
 
+    // Calcul totals
     let subtotal = 0;
     let totalTax = 0;
-
     const orderItems = validatedData.items.map((item) => {
       const product = products.find((p) => p.id === item.productId);
       if (!product) throw new Error("Produit non trouvé");
@@ -202,12 +175,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
       subtotal += itemSubtotal;
       totalTax += itemTax;
 
-      return {
-        productId: item.productId,
-        name: product.name,
-        price: product.price,
-        quantity: item.quantity,
-      };
+      return { productId: product.id, name: product.name, price: product.price, quantity: item.quantity };
     });
 
     const shippingCost = calculateShippingCost(subtotal, address.country);
@@ -225,51 +193,20 @@ export const POST = withApiLogger(async (req: NextRequest) => {
           total,
           notes: validatedData.notes,
           paymentMethod: validatedData.paymentMethod,
-          items: {
-            create: orderItems,
-          },
-          statusHistory: {
-            create: {
-              status: "PENDING",
-            },
-          },
+          items: { create: orderItems },
+          statusHistory: { create: { status: "PENDING" } },
         },
         include: {
-          items: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  images: true,
-                  price: true,
-                },
-              },
-            },
-          },
+          items: { include: { product: { select: { id: true, name: true, slug: true, images: true, price: true } } } },
           address: true,
-          user: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
+          user: { select: { id: true, email: true, firstName: true, lastName: true } },
         },
       });
 
+      // Update stock
       await Promise.all(
         validatedData.items.map((item) =>
-          tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stock: {
-                decrement: item.quantity,
-              },
-            },
-          })
+          tx.product.update({ where: { id: item.productId }, data: { stock: { decrement: item.quantity } } })
         )
       );
 
@@ -278,30 +215,107 @@ export const POST = withApiLogger(async (req: NextRequest) => {
 
     const serializedOrder = {
       ...order,
-      subtotal: order.subtotal.toNumber(),
-      shippingCost: order.shippingCost.toNumber(),
-      tax: order.tax.toNumber(),
-      total: order.total.toNumber(),
-      items: order.items.map((item) => ({
-        ...item,
-        price: item.price.toNumber(),
-      })),
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      items: order.items.map((i) => ({ ...i, price: Number(i.price) })),
     };
 
-    return loggedSuccessResponse(
-      { order: serializedOrder },
-      "Commande créée avec succès",
-      201
-    );
+    return loggedSuccessResponse({ order: serializedOrder }, "Commande créée avec succès", 201);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return loggedErrorResponse(
-        `Données invalides: ${error.issues.map((i) => i.message).join(", ")}`,
-        400
-      );
+      return loggedErrorResponse(`Données invalides: ${error.issues.map((i) => i.message).join(", ")}`, 400);
     }
-
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     return loggedErrorResponse(`Erreur création commande: ${message}`, 500);
+  }
+});
+
+// ----- PATCH UPDATE ORDER (ADMIN) -----
+export const PATCH = withApiLogger(async (req: NextRequest, context?: unknown) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+
+    const { id } = (context as { params: { id: string } }).params;
+    const body = await req.json();
+    const validatedData = updateOrderSchema.parse(body);
+
+    const existingOrder = await prisma.order.findUnique({ where: { id } });
+    if (!existingOrder) return loggedErrorResponse("Commande non trouvée", 404);
+
+    const updateData: Record<string, unknown> = { ...validatedData };
+
+    if (validatedData.status && validatedData.status !== existingOrder.status) {
+      await prisma.orderStatusHistory.create({
+        data: { orderId: id, status: validatedData.status, changedBy: session.user.id },
+      });
+    }
+
+    if (validatedData.paymentStatus === "PAID" && !existingOrder.paymentDate) {
+      updateData.paymentDate = new Date();
+    }
+
+    const order = await prisma.order.update({
+      where: { id },
+      data: updateData,
+      include: {
+        items: { include: { product: true } },
+        address: true,
+        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        statusHistory: { orderBy: { createdAt: "desc" } },
+      },
+    });
+
+    const serializedOrder = {
+      ...order,
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      items: order.items.map((i) => ({ ...i, price: Number(i.price) })),
+    };
+
+    return loggedSuccessResponse({ order: serializedOrder }, "Commande mise à jour avec succès");
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return loggedErrorResponse(`Données invalides: ${error.issues.map((i) => i.message).join(", ")}`, 400);
+    }
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur mise à jour commande: ${message}`, 500);
+  }
+});
+
+// ----- DELETE ORDER (ADMIN) -----
+export const DELETE = withApiLogger(async (req: NextRequest, context?: unknown) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+
+    const { id } = (context as { params: { id: string } }).params;
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!order) return loggedErrorResponse("Commande non trouvée", 404);
+
+    if (["DELIVERED", "SHIPPED"].includes(order.status)) {
+      return loggedErrorResponse("Impossible d'annuler une commande livrée ou expédiée", 400);
+    }
+
+    await prisma.$transaction([
+      prisma.orderStatusHistory.create({ data: { orderId: id, status: "CANCELLED", changedBy: session.user.id } }),
+      prisma.order.update({ where: { id }, data: { status: "CANCELLED" } }),
+      ...order.items.map((item) =>
+        prisma.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } })
+      ),
+    ]);
+
+    return loggedSuccessResponse({ message: "Commande annulée avec succès" }, "Commande annulée");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur annulation commande: ${message}`, 500);
   }
 });

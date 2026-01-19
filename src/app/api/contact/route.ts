@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -9,6 +9,7 @@ import {
   loggedSuccessResponse,
 } from '@/lib/logger/exports';
 import { apiLogger } from '@/lib/logger/sections';
+import type { Prisma } from '@prisma/client';
 
 const contactSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
@@ -31,7 +32,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.ContactMessageWhereInput = {};
     if (read === 'true') where.read = true;
     if (read === 'false') where.read = false;
 
@@ -54,7 +55,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
     apiLogger.error('GET Contact messages error', { error: message });
     return loggedErrorResponse('Erreur lors de la récupération des messages', 500);
@@ -76,7 +77,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
       'Votre message a été envoyé avec succès',
       201
     );
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return loggedErrorResponse(
         'Données invalides',

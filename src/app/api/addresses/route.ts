@@ -16,6 +16,11 @@ const addressSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 // GET Liste des adresses
 export async function GET(request: NextRequest) {
   try {
@@ -35,9 +40,9 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(addresses);
-  } catch (error) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des adresses' },
+      { error: `Erreur lors de la récupération des adresses : ${getErrorMessage(error)}` },
       { status: 500 }
     );
   }
@@ -66,7 +71,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(address, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Données invalides', details: error.issues },
@@ -74,7 +79,7 @@ export async function POST(request: NextRequest) {
       );
     }
     return NextResponse.json(
-      { error: 'Erreur lors de la création de l\'adresse' },
+      { error: `Erreur lors de la création de l'adresse : ${getErrorMessage(error)}` },
       { status: 500 }
     );
   }
