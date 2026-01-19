@@ -14,19 +14,15 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      {/* Actions rapides */}
       <QuickActions />
 
-      {/* KPIs Cards */}
       <DashboardCards />
 
-      {/* Graphiques en 2 colonnes */}
       <div className="grid lg:grid-cols-2 gap-8">
         <SalesChart />
         <CategoryPieChart />
       </div>
 
-      {/* Graphique pleine largeur */}
       <CartAnalysisChart />
     </div>
   );

@@ -20,7 +20,6 @@ import {
 import { fr } from "date-fns/locale";
 import { z } from "zod";
 
-// Validation du query param
 const querySchema = z.object({
   period: z.enum(["7days", "5weeks"]).default("7days"),
 });
@@ -32,14 +31,12 @@ interface CartAnalysisDataPoint {
 
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
-    // Vérification auth et rôle ADMIN
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== "ADMIN") {
       apiLogger.warn("Tentative d'accès à cart-analysis sans autorisation");
       return loggedErrorResponse("Non autorisé", 401);
     }
 
-    // Validation du query param
     const { searchParams } = new URL(req.url);
     const periodParam = searchParams.get("period") || "7days";
 
@@ -55,7 +52,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const now = new Date();
     const data: CartAnalysisDataPoint[] = [];
 
-    // Calculer les bornes de la période complète
     let periodStart: Date;
     let periodEnd: Date;
 
@@ -67,7 +63,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       periodEnd = endOfWeek(now, { weekStartsOn: 1 });
     }
 
-    // UNE SEULE requête pour toute la période
     const allOrders = await prisma.order.findMany({
       where: {
         createdAt: {
@@ -89,18 +84,15 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     });
 
     if (period === "7days") {
-      // Analyser les 7 derniers jours
       for (let i = 6; i >= 0; i--) {
         const targetDate = subDays(now, i);
         const dayStart = startOfDay(targetDate);
         const dayEnd = endOfDay(targetDate);
 
-        // Filtrer les commandes en mémoire pour ce jour
         const orders = allOrders.filter(
           (order) => order.createdAt >= dayStart && order.createdAt <= dayEnd
         );
 
-        // Calculer le panier moyen par catégorie PAR COMMANDE
         const categoryTotalsByOrder = new Map<string, Map<string, number>>();
 
         for (const order of orders) {
@@ -116,7 +108,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
             );
           }
 
-          // Stocker les totaux par commande
           for (const [cat, sum] of orderCategorySums) {
             if (!categoryTotalsByOrder.has(cat)) {
               categoryTotalsByOrder.set(cat, new Map());
@@ -125,14 +116,13 @@ export const GET = withApiLogger(async (req: NextRequest) => {
           }
         }
 
-        // Calculer la moyenne par catégorie
         const categories: Record<string, number> = {};
         for (const [categoryName, orderSums] of categoryTotalsByOrder) {
           const total = Array.from(orderSums.values()).reduce(
             (a, b) => a + b,
             0
           );
-          const orderCount = orderSums.size; // Nombre de COMMANDES
+          const orderCount = orderSums.size;
           categories[categoryName] = total / orderCount;
         }
 
@@ -142,18 +132,15 @@ export const GET = withApiLogger(async (req: NextRequest) => {
         });
       }
     } else {
-      // Analyser les 5 dernières semaines
       for (let i = 4; i >= 0; i--) {
         const targetDate = subWeeks(now, i);
         const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 });
         const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
 
-        // Filtrer les commandes en mémoire pour cette semaine
         const orders = allOrders.filter(
           (order) => order.createdAt >= weekStart && order.createdAt <= weekEnd
         );
 
-        // Calculer le panier moyen par catégorie PAR COMMANDE
         const categoryTotalsByOrder = new Map<string, Map<string, number>>();
 
         for (const order of orders) {
@@ -169,7 +156,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
             );
           }
 
-          // Stocker les totaux par commande
           for (const [cat, sum] of orderCategorySums) {
             if (!categoryTotalsByOrder.has(cat)) {
               categoryTotalsByOrder.set(cat, new Map());
@@ -178,14 +164,13 @@ export const GET = withApiLogger(async (req: NextRequest) => {
           }
         }
 
-        // Calculer la moyenne par catégorie
         const categories: Record<string, number> = {};
         for (const [categoryName, orderSums] of categoryTotalsByOrder) {
           const total = Array.from(orderSums.values()).reduce(
             (a, b) => a + b,
             0
           );
-          const orderCount = orderSums.size; // Nombre de COMMANDES
+          const orderCount = orderSums.size;
           categories[categoryName] = total / orderCount;
         }
 

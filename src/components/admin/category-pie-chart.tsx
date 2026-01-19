@@ -27,22 +27,22 @@ interface CategorySalesDataPoint {
   name: string;
   value: number;
   percentage: number;
-  [key: string]: string | number; // Index signature for recharts compatibility
+  [key: string]: string | number;
 }
 
 type Period = "7days" | "5weeks";
 
 const COLORS = [
-  "#00a8b5", // Turquoise principal
-  "#ff6b6b", // Rouge corail
-  "#4ecdc4", // Turquoise clair
-  "#45b7d1", // Bleu ciel
-  "#f7b731", // Jaune doré
-  "#5f27cd", // Violet
-  "#00d2d3", // Cyan
-  "#fd79a8", // Rose
-  "#a29bfe", // Lavande
-  "#6c5ce7", // Violet foncé
+  "#00a8b5",
+  "#ff6b6b",
+  "#4ecdc4",
+  "#45b7d1",
+  "#f7b731",
+  "#5f27cd",
+  "#00d2d3",
+  "#fd79a8",
+  "#a29bfe",
+  "#6c5ce7",
 ];
 
 export default function CategoryPieChart() {
@@ -107,7 +107,7 @@ export default function CategoryPieChart() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderCustomLabel = (props: any) => {
     const percentage = props.percentage || 0;
-    if (percentage < 5) return ""; // Ne pas afficher si trop petit
+    if (percentage < 5) return "";
     return `${percentage.toFixed(0)}%`;
   };
 

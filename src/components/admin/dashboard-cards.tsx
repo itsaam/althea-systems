@@ -95,7 +95,6 @@ export default function DashboardCards() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {/* Chiffre d'affaires */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
@@ -123,7 +122,6 @@ export default function DashboardCards() {
         </CardContent>
       </Card>
 
-      {/* Commandes du jour */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
@@ -143,7 +141,6 @@ export default function DashboardCards() {
         </CardContent>
       </Card>
 
-      {/* Alertes stock */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Alertes stock</CardTitle>
@@ -164,7 +161,6 @@ export default function DashboardCards() {
         </CardContent>
       </Card>
 
-      {/* Messages non traités */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">

@@ -18,7 +18,6 @@ import {
 } from "date-fns";
 import { z } from "zod";
 
-// Validation du query param
 const querySchema = z.object({
   period: z.enum(["7days", "5weeks"]).default("7days"),
 });
@@ -31,14 +30,12 @@ interface CategorySalesDataPoint {
 
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
-    // Vérification auth et rôle ADMIN
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== "ADMIN") {
       apiLogger.warn("Tentative d'accès à category-sales sans autorisation");
       return loggedErrorResponse("Non autorisé", 401);
     }
 
-    // Validation du query param
     const { searchParams } = new URL(req.url);
     const periodParam = searchParams.get("period") || "7days";
 
@@ -53,7 +50,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const { period } = validation.data;
     const now = new Date();
 
-    // Calcul des dates de début et fin selon la période
     let periodStart: Date;
     let periodEnd: Date;
 
@@ -65,7 +61,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       periodEnd = endOfWeek(now, { weekStartsOn: 1 });
     }
 
-    // Récupérer toutes les commandes payées de la période avec leurs items et produits
     const orders = await prisma.order.findMany({
       where: {
         paymentStatus: "PAID",
@@ -87,7 +82,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       },
     });
 
-    // Calcul des ventes par catégorie
     const categorySales = new Map<string, number>();
     let totalSales = 0;
 
@@ -104,7 +98,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       }
     }
 
-    // Transformer en tableau avec pourcentages
     const data: CategorySalesDataPoint[] = Array.from(
       categorySales.entries()
     ).map(([name, value]) => ({
@@ -113,7 +106,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       percentage: totalSales > 0 ? (value / totalSales) * 100 : 0,
     }));
 
-    // Trier par valeur décroissante
     data.sort((a, b) => b.value - a.value);
 
     apiLogger.info(

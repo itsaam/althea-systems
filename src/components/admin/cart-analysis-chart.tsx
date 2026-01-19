@@ -33,14 +33,14 @@ interface CartAnalysisDataPoint {
 type Period = "7days" | "5weeks";
 
 const COLORS = [
-  "#00a8b5", // Turquoise principal
-  "#ff6b6b", // Rouge corail
-  "#4ecdc4", // Turquoise clair
-  "#45b7d1", // Bleu ciel
-  "#f7b731", // Jaune doré
-  "#5f27cd", // Violet
-  "#00d2d3", // Cyan
-  "#fd79a8", // Rose
+  "#00a8b5",
+  "#ff6b6b",
+  "#4ecdc4",
+  "#45b7d1",
+  "#f7b731",
+  "#5f27cd",
+  "#00d2d3",
+  "#fd79a8",
 ];
 
 export default function CartAnalysisChart() {
@@ -69,14 +69,12 @@ export default function CartAnalysisChart() {
     fetchCartAnalysis();
   }, [period]);
 
-  // Extraire toutes les catégories uniques
   const allCategories = Array.from(
     new Set(
       rawData.flatMap((item) => Object.keys(item.categories))
     )
   );
 
-  // Transformer les données pour Recharts
   const chartData = rawData.map((item) => ({
     period: item.period,
     ...item.categories,

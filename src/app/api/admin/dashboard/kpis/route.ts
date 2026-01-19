@@ -30,7 +30,6 @@ interface KPIsResponse {
 
 export const GET = withApiLogger(async (_req: NextRequest) => {
   try {
-    // Vérification auth et rôle ADMIN
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== "ADMIN") {
       apiLogger.warn("Tentative d'accès aux KPIs sans autorisation");
@@ -39,18 +38,15 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
 
     const now = new Date();
 
-    // Calcul des périodes
     const dayStart = startOfDay(now);
     const dayEnd = endOfDay(now);
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Lundi
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
 
-    // Parallel queries pour optimiser les performances
     const [revenueDay, revenueWeek, revenueMonth, ordersToday, lowStockCount, unreadCount] =
       await Promise.all([
-        // CA du jour (commandes PAID)
         prisma.order.aggregate({
           where: {
             paymentStatus: "PAID",
@@ -64,7 +60,6 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
           },
         }),
 
-        // CA de la semaine
         prisma.order.aggregate({
           where: {
             paymentStatus: "PAID",
@@ -78,7 +73,6 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
           },
         }),
 
-        // CA du mois
         prisma.order.aggregate({
           where: {
             paymentStatus: "PAID",
@@ -92,7 +86,6 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
           },
         }),
 
-        // Commandes créées aujourd'hui
         prisma.order.count({
           where: {
             createdAt: {
@@ -102,17 +95,15 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
           },
         }),
 
-        // Produits avec stock faible (< 10)
         prisma.product.count({
           where: {
             stock: {
               lt: 10,
             },
-            status: "PUBLISHED", // Seulement les produits publiés
+            status: "PUBLISHED",
           },
         }),
 
-        // Messages non lus
         prisma.contactMessage.count({
           where: {
             read: false,

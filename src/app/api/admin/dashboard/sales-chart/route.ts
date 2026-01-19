@@ -20,7 +20,6 @@ import {
 import { fr } from "date-fns/locale";
 import { z } from "zod";
 
-// Validation du query param
 const querySchema = z.object({
   period: z.enum(["7days", "5weeks"]).default("7days"),
 });
@@ -33,14 +32,12 @@ interface SalesChartDataPoint {
 
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
-    // Vérification auth et rôle ADMIN
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== "ADMIN") {
       apiLogger.warn("Tentative d'accès au sales-chart sans autorisation");
       return loggedErrorResponse("Non autorisé", 401);
     }
 
-    // Validation du query param
     const { searchParams } = new URL(req.url);
     const periodParam = searchParams.get("period") || "7days";
 
@@ -56,7 +53,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const now = new Date();
     const data: SalesChartDataPoint[] = [];
 
-    // Calculer les bornes de la période complète
     let periodStart: Date;
     let periodEnd: Date;
 
@@ -68,7 +64,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       periodEnd = endOfWeek(now, { weekStartsOn: 1 });
     }
 
-    // UNE SEULE requête pour toute la période
     const allOrders = await prisma.order.findMany({
       where: {
         createdAt: {
@@ -85,13 +80,11 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     });
 
     if (period === "7days") {
-      // 7 derniers jours
       for (let i = 6; i >= 0; i--) {
         const targetDate = subDays(now, i);
         const dayStart = startOfDay(targetDate);
         const dayEnd = endOfDay(targetDate);
 
-        // Filtrer les commandes en mémoire pour ce jour
         const dayOrders = allOrders.filter(
           (order) => order.createdAt >= dayStart && order.createdAt <= dayEnd
         );
@@ -107,13 +100,11 @@ export const GET = withApiLogger(async (req: NextRequest) => {
         });
       }
     } else {
-      // 5 dernières semaines
       for (let i = 4; i >= 0; i--) {
         const targetDate = subWeeks(now, i);
         const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 });
         const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
 
-        // Filtrer les commandes en mémoire pour cette semaine
         const weekOrders = allOrders.filter(
           (order) => order.createdAt >= weekStart && order.createdAt <= weekEnd
         );
