@@ -15,6 +15,7 @@ export default function Setup2FAPage() {
   const [step, setStep] = useState<"init" | "verify" | "success">("init");
   const [secret, setSecret] = useState("");
   const [otpauthUrl, setOtpauthUrl] = useState("");
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +34,7 @@ export default function Setup2FAPage() {
       if (response.ok) {
         setSecret(data.secret);
         setOtpauthUrl(data.otpauthUrl);
+        setBackupCodes(data.backupCodes || []);
         setStep("verify");
       } else {
         setError(data.error || "Erreur lors de l'initialisation");
@@ -81,6 +83,29 @@ export default function Setup2FAPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const downloadBackupCodes = () => {
+    const content = `Codes de sauvegarde Althea Systems
+Généré le: ${new Date().toLocaleString("fr-FR")}
+
+IMPORTANT: Conservez ces codes en lieu sûr. Chaque code ne peut être utilisé qu'une seule fois.
+
+${backupCodes.map((code, i) => `${i + 1}. ${code}`).join("\n")}
+
+Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l'accès à votre application d'authentification.
+`;
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "althea-backup-codes.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Codes téléchargés avec succès");
   };
 
   const goToDashboard = async () => {
@@ -167,8 +192,47 @@ export default function Setup2FAPage() {
               </div>
             </div>
 
+            {backupCodes.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-semibold">
+                  3. Sauvegardez vos codes de récupération
+                </h3>
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800 font-semibold mb-2">
+                    ⚠️ Important : Ces codes ne seront affichés qu&apos;une
+                    seule fois !
+                  </p>
+                  <p className="text-sm text-yellow-700 mb-3">
+                    Conservez ces codes en lieu sûr. Chaque code peut être
+                    utilisé une seule fois si vous perdez l&apos;accès à votre
+                    application d&apos;authentification.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {backupCodes.map((code, i) => (
+                      <div
+                        key={i}
+                        className="p-2 bg-white rounded font-mono text-sm text-center"
+                      >
+                        {code}
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={downloadBackupCodes}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    📥 Télécharger les codes
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="code">3. Entrez le code généré</Label>
+              <Label htmlFor="code">
+                {backupCodes.length > 0 ? "4" : "3"}. Entrez le code généré
+              </Label>
               <Input
                 id="code"
                 type="text"

@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { authenticator } from "otplib";
+import {
+  generateBackupCodes,
+  hashBackupCode,
+} from "@/lib/backup-codes";
 
 export async function POST() {
   try {
@@ -42,9 +46,34 @@ export async function POST() {
     const appName = process.env.NEXT_PUBLIC_APP_NAME || "Althea Systems";
     const otpauthUrl = authenticator.keyuri(user.email, appName, secret);
 
+    // Générer 10 backup codes
+    const backupCodes = generateBackupCodes(10);
+
+    // Hasher les backup codes et les stocker temporairement dans Redis
+    const hashedBackupCodes = await Promise.all(
+      backupCodes.map(async (code) => ({
+        code: await hashBackupCode(code),
+      }))
+    );
+
+    try {
+      await redis.set(
+        `2fa_backup_codes:${user.id}`,
+        JSON.stringify(hashedBackupCodes),
+        "EX",
+        600
+      );
+    } catch (redisError) {
+      console.warn(
+        `[2FA Setup] Redis unavailable while saving backup codes for user ${user.id}:`,
+        redisError
+      );
+    }
+
     return NextResponse.json({
       secret,
       otpauthUrl,
+      backupCodes, // Retourner les codes en clair (pour affichage une seule fois)
       message: "Scannez le QR code avec votre application d'authentification",
     });
   } catch (error) {
