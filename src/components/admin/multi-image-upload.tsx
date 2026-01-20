@@ -7,7 +7,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Upload, X, GripVertical } from "lucide-react";
+import { Upload, X, GripVertical, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface MultiImageUploadProps {
@@ -169,9 +169,11 @@ export function MultiImageUpload({
   };
 
   const handleRemove = (index: number) => {
-    const newValue = [...value];
-    newValue.splice(index, 1);
-    onChange(newValue);
+    if (window.confirm("Supprimer cette image ? Cette action est irréversible.")) {
+      const newValue = [...value];
+      newValue.splice(index, 1);
+      onChange(newValue);
+    }
   };
 
   return (
@@ -198,6 +200,14 @@ export function MultiImageUpload({
           Formats acceptés : JPG, PNG, WebP, GIF (max 5MB par image)
         </p>
       </div>
+
+      {/* Indicateur de chargement */}
+      {uploading && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Upload en cours...</span>
+        </div>
+      )}
 
       {/* Grille d'images avec drag & drop */}
       {value.length > 0 && (

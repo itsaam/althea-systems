@@ -18,6 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { MultiImageUpload } from "@/components/admin/multi-image-upload";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Eye } from "lucide-react";
 import Image from "next/image";
 
@@ -80,6 +81,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
 
   const watchedValues = watch();
   const watchName = watch("name");
+  const debouncedName = useDebounce(watchName, 300);
   const watchDescription = watch("description");
   const watchImages = watch("images");
   const watchPrice = watch("price");
@@ -138,8 +140,8 @@ export default function ProductForm({ productId }: ProductFormProps) {
 
   // Génération automatique du slug
   useEffect(() => {
-    if (!productId && watchName) {
-      const slug = watchName
+    if (!productId && debouncedName) {
+      const slug = debouncedName
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -148,7 +150,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
         .replace(/-{2,}/g, '-');
       setValue("slug", slug, { shouldValidate: true });
     }
-  }, [watchName, productId, setValue]);
+  }, [debouncedName, productId, setValue]);
 
   const onSubmit = async (data: ProductFormData) => {
     setIsLoading(true);

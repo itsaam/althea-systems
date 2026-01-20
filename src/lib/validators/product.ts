@@ -2,19 +2,48 @@ import { z } from "zod";
 
 // Schéma pour le formulaire de création/édition de produit
 export const productFormSchema = z.object({
-  name: z.string().min(1, "Nom requis"),
-  slug: z.string().min(1, "Slug requis").regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug invalide (ex: mon-produit)"),
+  name: z.string().min(1, "Le nom du produit est requis"),
+  slug: z
+    .string()
+    .min(1, "Le slug est requis")
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Format invalide : utiliser uniquement des lettres minuscules, chiffres et tirets (ex: stethoscope-3m)"
+    ),
   description: z.string().optional().nullable(),
   technicalSpecs: z.string().optional().nullable(),
-  price: z.number().positive("Prix invalide"),
-  comparePrice: z.number().positive().optional().nullable(),
-  tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]),
-  sku: z.string().optional().nullable(),
-  stock: z.number().int().min(0, "Stock >= 0"),
-  priority: z.number().int().min(0).max(100),
-  images: z.array(z.string().url()),
+  price: z
+    .number({ message: "Le prix doit être un nombre" })
+    .positive("Le prix doit être supérieur à 0"),
+  comparePrice: z
+    .number({ message: "Le prix de comparaison doit être un nombre" })
+    .positive("Le prix de comparaison doit être supérieur à 0")
+    .optional()
+    .nullable(),
+  tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"], {
+    message: "Taux de TVA invalide : choisir 20%, 10%, 5.5% ou 0%"
+  }),
+  sku: z
+    .string()
+    .regex(/^[A-Z0-9-]*$/, "Le SKU ne peut contenir que des majuscules, chiffres et tirets")
+    .optional()
+    .nullable(),
+  stock: z
+    .number({ message: "Le stock doit être un nombre entier" })
+    .int("Le stock doit être un nombre entier")
+    .min(0, "Le stock ne peut pas être négatif"),
+  priority: z
+    .number()
+    .int("La priorité doit être un nombre entier")
+    .min(0, "La priorité doit être entre 0 et 100")
+    .max(100, "La priorité doit être entre 0 et 100"),
+  images: z
+    .array(z.string().url("URL d'image invalide"))
+    .max(10, "Maximum 10 images par produit"),
   featured: z.boolean(),
-  status: z.enum(["DRAFT", "PUBLISHED"]),
+  status: z.enum(["DRAFT", "PUBLISHED"], {
+    message: "Statut invalide : choisir DRAFT (brouillon) ou PUBLISHED (publié)"
+  }),
   categoryId: z.string().optional().nullable(),
 });
 
@@ -32,7 +61,19 @@ export const productApiSchema = z.object({
   sku: z.string().optional().nullable(),
   stock: z.coerce.number().int().min(0, "Stock >= 0"),
   priority: z.coerce.number().int().min(0).max(100).default(0),
-  images: z.array(z.string().url()).default([]),
+  images: z
+    .array(
+      z.string().url("URL invalide").refine(
+        (url) => {
+          // Accepter les URLs vides ou provenant de notre R2
+          if (!url) return true;
+          const r2Url = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL || "https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev";
+          return url.startsWith(r2Url);
+        },
+        "Les images doivent provenir de notre CDN (R2)"
+      )
+    )
+    .default([]),
   featured: z.boolean().default(false),
   status: z.enum(["DRAFT", "PUBLISHED"]),
   categoryId: z.string().optional().nullable(),
