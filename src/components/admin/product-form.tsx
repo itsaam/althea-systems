@@ -125,7 +125,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
             images: product.images || [],
             featured: product.featured || false,
             status: product.status || "DRAFT",
-            categoryId: product.categoryId || "",
+            categoryId: product.categoryId || null,
           });
         })
         .catch(() => {
@@ -249,15 +249,14 @@ export default function ProductForm({ productId }: ProductFormProps) {
           <div>
             <Label htmlFor="categoryId">Catégorie</Label>
             <Select
-              value={watchedValues.categoryId || ""}
-              onValueChange={(value) => setValue("categoryId", value, { shouldValidate: true, shouldDirty: true })}
+              value={watchedValues.categoryId || undefined}
+              onValueChange={(value) => setValue("categoryId", value || null, { shouldValidate: true, shouldDirty: true })}
               disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner une catégorie" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucune catégorie</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
