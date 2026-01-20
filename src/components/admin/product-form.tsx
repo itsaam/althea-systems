@@ -273,7 +273,6 @@ export default function ProductForm({ productId }: ProductFormProps) {
           <h2 className="text-lg font-semibold border-b pb-2">Description</h2>
 
           <div>
-            <Label>Description du produit</Label>
             <RichTextEditor
               value={watchDescription || ""}
               onChange={(html) => setValue("description", html, { shouldValidate: true, shouldDirty: true })}
@@ -284,7 +283,6 @@ export default function ProductForm({ productId }: ProductFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="technicalSpecs">Caractéristiques techniques (optionnel)</Label>
             <Textarea
               id="technicalSpecs"
               {...register("technicalSpecs")}
@@ -304,7 +302,6 @@ export default function ProductForm({ productId }: ProductFormProps) {
           <h2 className="text-lg font-semibold border-b pb-2">Images</h2>
 
           <div>
-            <Label>Images du produit</Label>
             <MultiImageUpload
               value={watchImages}
               onChange={(urls) => setValue("images", urls, { shouldValidate: true, shouldDirty: true })}
