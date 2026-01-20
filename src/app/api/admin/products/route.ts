@@ -291,3 +291,4 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     return loggedErrorResponse(`Erreur lors de la création du produit : ${message}`, 500);
   }
 });
+
