@@ -183,3 +183,111 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     return loggedErrorResponse(`Erreur lors de la récupération des produits : ${message}`, 500);
   }
 });
+
+// POST /api/admin/products - Créer un nouveau produit
+export const POST = withApiLogger(async (req: NextRequest) => {
+  try {
+    // Vérification authentification admin
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      apiLogger.warn(LogMessages.auth.nonAutorise);
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+
+    if (session.user?.role !== "ADMIN") {
+      apiLogger.warn(LogMessages.auth.nonAutorise);
+      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+    }
+
+    const body = await req.json();
+    
+    // Validation avec le schéma API
+    const { productApiSchema } = await import("@/lib/validators/product");
+    const validatedData = productApiSchema.parse(body);
+
+    // Génération automatique du slug si vide
+    let slug = validatedData.slug;
+    if (!slug || slug.trim() === "") {
+      slug = validatedData.name
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    // Vérification unicité du slug
+    const existingProduct = await prisma.product.findUnique({
+      where: { slug },
+    });
+
+    if (existingProduct) {
+      return loggedErrorResponse("Un produit avec ce slug existe déjà", 400);
+    }
+
+    // Vérification unicité du SKU si fourni
+    if (validatedData.sku) {
+      const existingSku = await prisma.product.findUnique({
+        where: { sku: validatedData.sku },
+      });
+
+      if (existingSku) {
+        return loggedErrorResponse("Un produit avec ce SKU existe déjà", 400);
+      }
+    }
+
+    // Création du produit
+    const product = await prisma.product.create({
+      data: {
+        name: validatedData.name,
+        slug,
+        description: validatedData.description,
+        price: validatedData.price,
+        comparePrice: validatedData.comparePrice,
+        tva: validatedData.tva,
+        sku: validatedData.sku,
+        stock: validatedData.stock,
+        priority: validatedData.priority,
+        images: validatedData.images,
+        featured: validatedData.featured,
+        status: validatedData.status,
+        categoryId: validatedData.categoryId,
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    // Sérialisation
+    const serializedProduct = {
+      ...product,
+      price: product.price.toNumber(),
+      comparePrice: product.comparePrice ? product.comparePrice.toNumber() : null,
+      createdAt: product.createdAt.toISOString(),
+      updatedAt: product.updatedAt.toISOString(),
+    };
+
+    productLogger.info(`Produit créé : ${product.name} (${product.id})`);
+
+    return loggedSuccessResponse(
+      { product: serializedProduct },
+      `Produit créé : ${product.name}`,
+      201
+    );
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      apiLogger.warn(LogMessages.api.erreurValidation(error.message));
+      return loggedErrorResponse("Données invalides", 400);
+    }
+
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    productLogger.error(`Erreur création produit : ${message}`);
+    return loggedErrorResponse(`Erreur lors de la création du produit : ${message}`, 500);
+  }
+});

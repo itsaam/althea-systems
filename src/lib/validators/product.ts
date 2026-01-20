@@ -1,5 +1,44 @@
 import { z } from "zod";
 
+// Schéma pour le formulaire de création/édition de produit
+export const productFormSchema = z.object({
+  name: z.string().min(1, "Nom requis"),
+  slug: z.string().min(1, "Slug requis").regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug invalide (ex: mon-produit)"),
+  description: z.string().optional().nullable(),
+  technicalSpecs: z.string().optional().nullable(),
+  price: z.number().positive("Prix invalide"),
+  comparePrice: z.number().positive().optional().nullable(),
+  tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]),
+  sku: z.string().optional().nullable(),
+  stock: z.number().int().min(0, "Stock >= 0"),
+  priority: z.number().int().min(0).max(100),
+  images: z.array(z.string().url()),
+  featured: z.boolean(),
+  status: z.enum(["DRAFT", "PUBLISHED"]),
+  categoryId: z.string().optional().nullable(),
+});
+
+export type ProductFormData = z.infer<typeof productFormSchema>;
+
+// Schéma pour la validation en API (accepte aussi des strings pour les nombres)
+export const productApiSchema = z.object({
+  name: z.string().min(1, "Nom requis"),
+  slug: z.string().min(1, "Slug requis"),
+  description: z.string().optional().nullable(),
+  technicalSpecs: z.string().optional().nullable(),
+  price: z.coerce.number().positive("Prix invalide"),
+  comparePrice: z.coerce.number().positive().optional().nullable(),
+  tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]),
+  sku: z.string().optional().nullable(),
+  stock: z.coerce.number().int().min(0, "Stock >= 0"),
+  priority: z.coerce.number().int().min(0).max(100).default(0),
+  images: z.array(z.string().url()).default([]),
+  featured: z.boolean().default(false),
+  status: z.enum(["DRAFT", "PUBLISHED"]),
+  categoryId: z.string().optional().nullable(),
+});
+
+// Legacy schemas (à migrer progressivement)
 export const productSchema = z.object({
   name: z.string().min(2, "Nom trop court").max(200, "Nom trop long"),
   slug: z.string().min(2).max(200).optional(),
