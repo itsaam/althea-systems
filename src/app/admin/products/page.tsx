@@ -115,11 +115,11 @@ export default function AdminProductsPage() {
   };
 
   const handleView = (id: string) => {
-    router.push(`/admin/products/${id}`);
+    router.push(`/admin/products/${id}/view`);
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/admin/products/${id}`);
+    router.push(`/admin/products/${id}/edit`);
   };
 
   const handleDelete = async (id: string) => {
