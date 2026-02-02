@@ -123,22 +123,23 @@ model Category {
 }
 
 model Product {
-  id           String        @id @default(cuid())
-  name         String
-  slug         String        @unique
-  description  String?
-  price        Decimal       @db.Decimal(10, 2)
-  comparePrice Decimal?      @db.Decimal(10, 2)
-  tva          TvaRate       @default(TVA_20)
-  sku          String?       @unique
-  stock        Int           @default(0)
-  priority     Int           @default(0)
-  images       String[]
-  featured     Boolean       @default(false)
-  status       ProductStatus @default(DRAFT)
-  categoryId   String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  name           String
+  slug           String        @unique
+  description    String?
+  technicalSpecs String?
+  price          Decimal       @db.Decimal(10, 2)
+  comparePrice   Decimal?      @db.Decimal(10, 2)
+  tva            TvaRate       @default(TVA_20)
+  sku            String?       @unique
+  stock          Int           @default(0)
+  priority       Int           @default(0)
+  images         String[]
+  featured       Boolean       @default(false)
+  status         ProductStatus @default(DRAFT)
+  categoryId     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   category   Category?   @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]

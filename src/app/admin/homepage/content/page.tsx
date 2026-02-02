@@ -1,4 +1,4 @@
-import RichTextEditor from "@/components/admin/rich-text-editor";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
 export default function AdminContentPage() {
   return (
