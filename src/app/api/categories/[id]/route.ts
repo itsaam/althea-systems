@@ -3,14 +3,21 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { deleteFromR2 } from "@/lib/r2";
+import {
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+} from "@/lib/logger/exports";
 
-// GET - Récupérer une catégorie par ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET - Récupérer une catégorie par ID avec détail des relations
+export const GET = withApiLogger(async (
+  req: NextRequest,
+  context: any
+) => {
   try {
-    const { id } = await params;
+    // Next.js 15: params doit être attendu (awaited)
+    const params = await context.params;
+    const id = params.id;
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -24,52 +31,44 @@ export async function GET(
     });
 
     if (!category) {
-      return NextResponse.json(
-        { error: "Catégorie non trouvée" },
-        { status: 404 }
-      );
+      return loggedErrorResponse("Catégorie non trouvée", 404);
     }
 
-    return NextResponse.json({ category });
-  } catch (error) {
+    return loggedSuccessResponse({ category });
+  } catch (error: any) {
     console.error("[Categories GET by ID] Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération de la catégorie" },
-      { status: 500 }
+    return loggedErrorResponse(
+      `Erreur lors de la récupération de la catégorie: ${error.message}`,
+      500
     );
   }
-}
+});
 
-// PUT - Modifier une catégorie
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// PUT - Modifier une catégorie (Admin only)
+export const PUT = withApiLogger(async (
+  req: NextRequest,
+  context: any
+) => {
   try {
     const session = await getServerSession(authOptions);
+
+    // Sécurité Production : Pas de bypass
     if (!session || session.user?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Non autorisé. Accès admin requis." },
-        { status: 401 }
-      );
+      return loggedErrorResponse("Non autorisé. Accès admin requis.", 401);
     }
 
-    const { id } = await params;
-    const body = await request.json();
+    const params = await context.params;
+    const id = params.id;
+    
+    const body = await req.json();
     const { name, slug, description, image } = body;
 
     if (!name || !name.trim()) {
-      return NextResponse.json(
-        { error: "Le nom de la catégorie est requis" },
-        { status: 400 }
-      );
+      return loggedErrorResponse("Le nom de la catégorie est requis", 400);
     }
 
     if (!slug || !slug.trim()) {
-      return NextResponse.json(
-        { error: "Le slug est requis" },
-        { status: 400 }
-      );
+      return loggedErrorResponse("Le slug est requis", 400);
     }
 
     const existingCategory = await prisma.category.findUnique({
@@ -77,22 +76,17 @@ export async function PUT(
     });
 
     if (!existingCategory) {
-      return NextResponse.json(
-        { error: "Catégorie non trouvée" },
-        { status: 404 }
-      );
+      return loggedErrorResponse("Catégorie non trouvée", 404);
     }
 
+    // Si le slug est modifié, on vérifie son unicité
     if (slug !== existingCategory.slug) {
       const slugExists = await prisma.category.findUnique({
         where: { slug },
       });
 
       if (slugExists) {
-        return NextResponse.json(
-          { error: "Ce slug existe déjà. Veuillez en choisir un autre." },
-          { status: 400 }
-        );
+        return loggedErrorResponse("Ce slug existe déjà. Veuillez en choisir un autre.", 400);
       }
     }
 
@@ -108,34 +102,34 @@ export async function PUT(
 
     console.log(`[Categories PUT] Catégorie mise à jour: ${category.id} - ${category.name}`);
 
-    return NextResponse.json({
-      message: "Catégorie mise à jour avec succès",
-      category,
-    });
-  } catch (error) {
+    return loggedSuccessResponse(
+      { category },
+      "Catégorie mise à jour avec succès"
+    );
+  } catch (error: any) {
     console.error("[Categories PUT] Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la mise à jour de la catégorie" },
-      { status: 500 }
+    return loggedErrorResponse(
+      `Erreur lors de la mise à jour de la catégorie: ${error.message}`,
+      500
     );
   }
-}
+});
 
-// DELETE - Supprimer une catégorie
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// DELETE - Supprimer une catégorie (Admin only)
+export const DELETE = withApiLogger(async (
+  req: NextRequest,
+  context: any
+) => {
   try {
     const session = await getServerSession(authOptions);
+
+    // Sécurité Production : Pas de bypass
     if (!session || session.user?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Non autorisé. Accès admin requis." },
-        { status: 401 }
-      );
+      return loggedErrorResponse("Non autorisé. Accès admin requis.", 401);
     }
 
-    const { id } = await params;
+    const params = await context.params;
+    const id = params.id;
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -147,21 +141,18 @@ export async function DELETE(
     });
 
     if (!category) {
-      return NextResponse.json(
-        { error: "Catégorie non trouvée" },
-        { status: 404 }
-      );
+      return loggedErrorResponse("Catégorie non trouvée", 404);
     }
 
+    // Sécurité métier: Ne pas supprimer si des produits sont encore liés
     if (category._count.products > 0) {
-      return NextResponse.json(
-        {
-          error: `Impossible de supprimer cette catégorie car elle contient ${category._count.products} produit(s). Veuillez d'abord supprimer ou réassigner les produits.`,
-        },
-        { status: 400 }
+      return loggedErrorResponse(
+        `Impossible de supprimer cette catégorie car elle contient ${category._count.products} produit(s).`,
+        400
       );
     }
 
+    // Suppression de l'image sur Cloudflare R2 si elle existe
     if (category.image) {
       try {
         await deleteFromR2(category.image);
@@ -176,14 +167,12 @@ export async function DELETE(
 
     console.log(`[Categories DELETE] Catégorie supprimée: ${id} - ${category.name}`);
 
-    return NextResponse.json({
-      message: "Catégorie supprimée avec succès",
-    });
-  } catch (error) {
+    return loggedSuccessResponse({ message: "Catégorie supprimée avec succès" });
+  } catch (error: any) {
     console.error("[Categories DELETE] Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la suppression de la catégorie" },
-      { status: 500 }
+    return loggedErrorResponse(
+      `Erreur lors de la suppression de la catégorie: ${error.message}`,
+      500
     );
   }
-}
+});
