@@ -1,11 +1,9 @@
-<<<<<<< Updated upstream
-import { NextResponse } from "next/server";
-=======
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
 import {
   withApiLogger,
   loggedErrorResponse,
@@ -16,28 +14,14 @@ import {
   type CartItem,
 } from "@/lib/tva-utils";
 import type { Prisma } from "@prisma/client";
->>>>>>> Stashed changes
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  // TODO: Fetch order by id
-  return NextResponse.json({ order: { id } });
-}
+const updateOrderSchema = z.object({
+  status: z.nativeEnum(OrderStatus).optional(),
+  paymentStatus: z.nativeEnum(PaymentStatus).optional(),
+  trackingNumber: z.string().nullable().optional(),
+});
 
-<<<<<<< Updated upstream
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  // TODO: Update order status
-  return NextResponse.json({ message: `Order ${id} updated` });
-}
-=======
-// GET Order AVEC DÉTAIL TVA
+// GET Order AVEC DÉTAIL TVA ET SÉCURITÉ
 export const GET = withApiLogger(async (
   _req: NextRequest,
   context: any 
@@ -64,7 +48,6 @@ export const GET = withApiLogger(async (
 
     if (!order) return loggedErrorResponse("Commande non trouvée", 404);
     
-    // Vérification : ADMIN ou Propriétaire de la commande
     if (session.user.role !== "ADMIN" && session.user.id !== order.userId) {
       return loggedErrorResponse("Accès interdit", 403);
     }
@@ -94,9 +77,8 @@ export const GET = withApiLogger(async (
     };
 
     return loggedSuccessResponse({ order: serializedOrder });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur récupération commande: ${message}`, 500);
+  } catch (error: any) {
+    return loggedErrorResponse(`Erreur récupération commande: ${error.message}`, 500);
   }
 });
 
@@ -115,14 +97,17 @@ export const PATCH = withApiLogger(async (
     const id = params.id;
 
     const body = await req.json();
+    
     const validatedData = updateOrderSchema.parse(body);
 
     const existingOrder = await prisma.order.findUnique({ where: { id } });
     if (!existingOrder) return loggedErrorResponse("Commande non trouvée", 404);
 
-    const updateData: Prisma.OrderUpdateInput = { ...validatedData };
+    const updateData: Prisma.OrderUpdateInput = {
+      status: validatedData.status,
+      paymentStatus: validatedData.paymentStatus
+    };
 
-    // Logique d'historique de statut
     if (validatedData.status && validatedData.status !== existingOrder.status) {
       await prisma.orderStatusHistory.create({
         data: { 
@@ -133,7 +118,6 @@ export const PATCH = withApiLogger(async (
       });
     }
 
-    // Gestion automatique de la date de paiement
     if (validatedData.paymentStatus === "PAID" && !existingOrder.paymentDate) {
       updateData.paymentDate = new Date();
     }
@@ -159,15 +143,14 @@ export const PATCH = withApiLogger(async (
     };
 
     return loggedSuccessResponse({ order: serializedOrder }, "Commande mise à jour avec succès");
-  } catch (error: unknown) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return loggedErrorResponse(
         `Données invalides: ${error.issues.map(i => i.message).join(", ")}`,
         400
       );
     }
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur mise à jour commande: ${message}`, 500);
+    return loggedErrorResponse(`Erreur mise à jour commande: ${error.message}`, 500);
   }
 });
 
@@ -192,7 +175,6 @@ export const DELETE = withApiLogger(async (
 
     if (!order) return loggedErrorResponse("Commande non trouvée", 404);
     
-    // Protection contre l'annulation de commandes déjà traitées
     if (order.status === "DELIVERED" || order.status === "SHIPPED") {
       return loggedErrorResponse("Impossible d'annuler une commande livrée ou expédiée", 400);
     }
@@ -201,11 +183,11 @@ export const DELETE = withApiLogger(async (
       prisma.orderStatusHistory.create({
         data: { 
           orderId: id, 
-          status: "CANCELLED", 
+          status: OrderStatus.CANCELLED, 
           changedBy: session.user.id 
         },
       }),
-      prisma.order.update({ where: { id }, data: { status: "CANCELLED" } }),
+      prisma.order.update({ where: { id }, data: { status: OrderStatus.CANCELLED } }),
       ...order.items.map((item) =>
         prisma.product.update({
           where: { id: item.productId },
@@ -215,9 +197,7 @@ export const DELETE = withApiLogger(async (
     ]);
 
     return loggedSuccessResponse({ message: "Commande annulée avec succès" });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur annulation commande: ${message}`, 500);
+  } catch (error: any) {
+    return loggedErrorResponse(`Erreur annulation commande: ${error.message}`, 500);
   }
 });
->>>>>>> Stashed changes

@@ -1,30 +1,3 @@
-<<<<<<< Updated upstream
-import { NextResponse } from "next/server";
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  return NextResponse.json({ address: { id } });
-}
-
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  return NextResponse.json({ message: `Address ${id} updated` });
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  return NextResponse.json({ message: `Address ${id} deleted` });
-}
-=======
 import { NextRequest } from 'next/server';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -43,12 +16,10 @@ export const GET = withApiLogger(async (
   try {
     const session = await getServerSession(authOptions);
     
-    // Sécurité : Authentification obligatoire
     if (!session) {
       return loggedErrorResponse("Non authentifié", 401);
     }
 
-    // Next.js 15: params doit être attendu
     const params = await context.params;
     const { id } = params;
 
@@ -70,7 +41,6 @@ export const GET = withApiLogger(async (
       return loggedErrorResponse('Adresse non trouvée', 404);
     }
 
-    // Sécurité : Seul le propriétaire ou un ADMIN peut voir l'adresse
     if (session.user.role !== "ADMIN" && session.user.id !== address.userId) {
       return loggedErrorResponse("Accès interdit", 403);
     }
@@ -106,12 +76,10 @@ export const PATCH = withApiLogger(async (
       return loggedErrorResponse('Adresse non trouvée', 404);
     }
 
-    // Sécurité : Seul le propriétaire ou un ADMIN peut modifier
     if (session.user.id !== currentAddress.userId && session.user.role !== "ADMIN") {
       return loggedErrorResponse("Accès interdit", 403);
     }
 
-    // Si on définit cette adresse par défaut, on désactive le flag sur les autres adresses de l'user
     if (body.isDefault === true) {
       await prisma.address.updateMany({
         where: {
@@ -160,12 +128,10 @@ export const DELETE = withApiLogger(async (
       return loggedErrorResponse('Adresse non trouvée', 404);
     }
 
-    // Sécurité : Seul le propriétaire ou un ADMIN peut supprimer
     if (session.user.id !== address.userId && session.user.role !== "ADMIN") {
       return loggedErrorResponse("Accès interdit", 403);
     }
 
-    // Vérifier si l'adresse est liée à des commandes existantes
     const ordersCount = await prisma.order.count({
       where: { addressId: id },
     });
@@ -187,4 +153,3 @@ export const DELETE = withApiLogger(async (
     return loggedErrorResponse(`Erreur suppression adresse : ${error.message}`, 500);
   }
 });
->>>>>>> Stashed changes
