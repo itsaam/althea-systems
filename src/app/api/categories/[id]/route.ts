@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,15 +9,12 @@ import {
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
 
-// GET - Récupérer une catégorie par ID avec détail des relations
 export const GET = withApiLogger(async (
-  req: NextRequest,
-  context: any
+  _req: NextRequest,
+  context: unknown
 ) => {
   try {
-    // Next.js 15: params doit être attendu (awaited)
-    const params = await context.params;
-    const id = params.id;
+    const { id } = await (context as { params: Promise<{ id: string }> }).params;
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -35,30 +32,28 @@ export const GET = withApiLogger(async (
     }
 
     return loggedSuccessResponse({ category });
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
     console.error("[Categories GET by ID] Erreur:", error);
     return loggedErrorResponse(
-      `Erreur lors de la récupération de la catégorie: ${error.message}`,
+      `Erreur lors de la récupération de la catégorie: ${message}`,
       500
     );
   }
 });
 
-// PUT - Modifier une catégorie (Admin only)
 export const PUT = withApiLogger(async (
   req: NextRequest,
-  context: any
+  context: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
 
-    // Sécurité Production : Pas de bypass
     if (!session || session.user?.role !== "ADMIN") {
       return loggedErrorResponse("Non autorisé. Accès admin requis.", 401);
     }
 
-    const params = await context.params;
-    const id = params.id;
+    const { id } = await (context as { params: Promise<{ id: string }> }).params;
     
     const body = await req.json();
     const { name, slug, description, image } = body;
@@ -79,7 +74,6 @@ export const PUT = withApiLogger(async (
       return loggedErrorResponse("Catégorie non trouvée", 404);
     }
 
-    // Si le slug est modifié, on vérifie son unicité
     if (slug !== existingCategory.slug) {
       const slugExists = await prisma.category.findUnique({
         where: { slug },
@@ -106,30 +100,28 @@ export const PUT = withApiLogger(async (
       { category },
       "Catégorie mise à jour avec succès"
     );
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
     console.error("[Categories PUT] Erreur:", error);
     return loggedErrorResponse(
-      `Erreur lors de la mise à jour de la catégorie: ${error.message}`,
+      `Erreur lors de la mise à jour de la catégorie: ${message}`,
       500
     );
   }
 });
 
-// DELETE - Supprimer une catégorie (Admin only)
 export const DELETE = withApiLogger(async (
-  req: NextRequest,
-  context: any
+  _req: NextRequest,
+  context: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
 
-    // Sécurité Production : Pas de bypass
     if (!session || session.user?.role !== "ADMIN") {
       return loggedErrorResponse("Non autorisé. Accès admin requis.", 401);
     }
 
-    const params = await context.params;
-    const id = params.id;
+    const { id } = await (context as { params: Promise<{ id: string }> }).params;
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -144,7 +136,6 @@ export const DELETE = withApiLogger(async (
       return loggedErrorResponse("Catégorie non trouvée", 404);
     }
 
-    // Sécurité métier: Ne pas supprimer si des produits sont encore liés
     if (category._count.products > 0) {
       return loggedErrorResponse(
         `Impossible de supprimer cette catégorie car elle contient ${category._count.products} produit(s).`,
@@ -152,7 +143,6 @@ export const DELETE = withApiLogger(async (
       );
     }
 
-    // Suppression de l'image sur Cloudflare R2 si elle existe
     if (category.image) {
       try {
         await deleteFromR2(category.image);
@@ -168,10 +158,11 @@ export const DELETE = withApiLogger(async (
     console.log(`[Categories DELETE] Catégorie supprimée: ${id} - ${category.name}`);
 
     return loggedSuccessResponse({ message: "Catégorie supprimée avec succès" });
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
     console.error("[Categories DELETE] Erreur:", error);
     return loggedErrorResponse(
-      `Erreur lors de la suppression de la catégorie: ${error.message}`,
+      `Erreur lors de la suppression de la catégorie: ${message}`,
       500
     );
   }

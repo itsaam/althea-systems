@@ -29,7 +29,7 @@ const updateCartItemSchema = z.object({
 });
 
 // GET - Récupérer le panier avec calculs TVA
-export const GET = withApiLogger(async (req: NextRequest) => {
+export const GET = withApiLogger(async (_req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

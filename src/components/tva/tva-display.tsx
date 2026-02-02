@@ -1,14 +1,10 @@
-/**
- * Composant d'affichage de prix avec détail HT/TVA/TTC
- * Utilisable sur les pages produits, panier, et factures
- */
-
 import React, { useState } from "react";
 import { TvaRate } from "@prisma/client";
 import {
   getPriceBreakdown,
   formatEuro,
   TVA_LABELS,
+  calculateCartTotals,
   type TvaBreakdownByRate,
 } from "@/lib/tva-utils";
 
@@ -20,9 +16,6 @@ interface PriceDisplayProps {
   className?: string;
 }
 
-/**
- * Affichage de prix produit avec tooltip détail TVA
- */
 export function PriceDisplay({
   priceHT,
   tvaRate,
@@ -93,13 +86,7 @@ interface CartTotalsDisplayProps {
   shippingCost?: number;
 }
 
-/**
- * Affichage des totaux panier avec détail TVA par taux
- */
 export function CartTotalsDisplay({ items, shippingCost = 0 }: CartTotalsDisplayProps) {
-  // Import dynamique pour éviter la dépendance circulaire
-  const { calculateCartTotals } = require("@/lib/tva-utils");
-  
   const totals = calculateCartTotals(items, shippingCost);
 
   return (
@@ -159,11 +146,7 @@ interface InvoiceTvaTableProps {
   }>;
 }
 
-/**
- * Tableau détail TVA pour factures (lignes séparées par taux)
- */
 export function InvoiceTvaTable({ items }: InvoiceTvaTableProps) {
-  const { calculateCartTotals } = require("@/lib/tva-utils");
   const totals = calculateCartTotals(items);
 
   return (
@@ -204,9 +187,6 @@ export function InvoiceTvaTable({ items }: InvoiceTvaTableProps) {
   );
 }
 
-/**
- * Badge TVA pour affichage rapide du taux
- */
 export function TvaBadge({ tvaRate }: { tvaRate: TvaRate }) {
   const label = TVA_LABELS[tvaRate];
   
@@ -224,10 +204,12 @@ export function TvaBadge({ tvaRate }: { tvaRate: TvaRate }) {
   );
 }
 
-// Export des composants
-export default {
+// Export des composants via une variable nommée pour ESLint
+const TvaComponents = {
   PriceDisplay,
   CartTotalsDisplay,
   InvoiceTvaTable,
   TvaBadge,
 };
+
+export default TvaComponents;

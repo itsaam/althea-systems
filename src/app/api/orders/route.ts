@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import {
   withApiLogger,
   loggedErrorResponse,
@@ -27,21 +25,6 @@ const orderSchema = z.object({
   paymentMethod: z.string().optional(),
 });
 
-const updateOrderSchema = z.object({
-  status: z.enum([
-    "PENDING",
-    "CONFIRMED",
-    "PROCESSING",
-    "SHIPPED",
-    "DELIVERED",
-    "CANCELLED",
-  ]).optional(),
-  paymentStatus: z.enum(["PENDING", "PAID", "FAILED", "REFUNDED"]).optional(),
-  paymentMethod: z.string().optional(),
-  paymentIntentId: z.string().optional(),
-  notes: z.string().optional(),
-});
-
 function generateOrderNumber(): string {
   const date = new Date();
   const year = date.getFullYear();
@@ -60,7 +43,6 @@ function calculateShippingCost(subtotal: number, country: string): number {
   return 19.99;
 }
 
-// GET ORDERS
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
@@ -117,7 +99,6 @@ export const GET = withApiLogger(async (req: NextRequest) => {
   }
 });
 
-//  POST CREATE ORDER 
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const body = await req.json();
@@ -141,7 +122,6 @@ export const POST = withApiLogger(async (req: NextRequest) => {
       return loggedErrorResponse(`Produits non trouvés ou indisponibles: ${missing.join(", ")}`, 400);
     }
 
-    // Check stock
     for (const item of validatedData.items) {
       const product = products.find((p) => p.id === item.productId);
       if (!product) continue;
@@ -187,7 +167,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
           addressId: validatedData.addressId,
           subtotal: totals.subtotalHT,                   
           shippingCost: totals.shippingCost || 0,       
-          tax: totals.totalTVA,                          
+          tax: totals.totalTVA,                                  
           total: totals.grandTotal || totals.totalTTC,   
           notes: validatedData.notes,
           paymentMethod: validatedData.paymentMethod,
@@ -231,4 +211,3 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     return loggedErrorResponse(`Erreur création commande: ${message}`, 500);
   }
 });
-

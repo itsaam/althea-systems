@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -32,10 +32,9 @@ const updateProductSchema = z.object({
 
 // GET Détails du produit avec calculs TVA
 export const GET = withApiLogger(
-  async (req: NextRequest, context: any) => {
+  async (_req: NextRequest, context: unknown) => {
     try {
-      const params = await context.params;
-      const id = params.id;
+      const { id } = await (context as { params: Promise<{ id: string }> }).params;
 
       const product = await prisma.product.findUnique({
         where: { id },
@@ -54,7 +53,6 @@ export const GET = withApiLogger(
         return loggedErrorResponse("Produit non trouvé", 404);
       }
 
-      // Conversion des types Decimal de Prisma en nombres JS
       const priceHT = product.price.toNumber();
       const priceBreakdown = getPriceBreakdown(priceHT, product.tva);
       
@@ -78,9 +76,10 @@ export const GET = withApiLogger(
           comparePriceTTC,
         },
       });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
       return loggedErrorResponse(
-        `Erreur récupération produit: ${error.message}`,
+        `Erreur récupération produit: ${message}`,
         500
       );
     }
@@ -89,15 +88,14 @@ export const GET = withApiLogger(
 
 // PATCH  Mise à jour Admin 
 export const PATCH = withApiLogger(
-  async (req: NextRequest, context: any) => {
+  async (req: NextRequest, context: unknown) => {
     try {
       const session = await getServerSession(authOptions);
       if (!session || session.user?.role !== "ADMIN") {
         return loggedErrorResponse("Non autorisé", 403);
       }
 
-      const params = await context.params;
-      const id = params.id;
+      const { id } = await (context as { params: Promise<{ id: string }> }).params;
 
       const body = await req.json();
       const validatedData = updateProductSchema.parse(body);
@@ -110,7 +108,6 @@ export const PATCH = withApiLogger(
         return loggedErrorResponse("Produit non trouvé", 404);
       }
 
-      // Vérification du slug si modifié
       if (validatedData.slug && validatedData.slug !== existingProduct.slug) {
         const slugExists = await prisma.product.findUnique({
           where: { slug: validatedData.slug },
@@ -120,7 +117,6 @@ export const PATCH = withApiLogger(
         }
       }
 
-      // Vérification de la catégorie si modifiée
       if (validatedData.categoryId) {
         const category = await prisma.category.findUnique({
           where: { id: validatedData.categoryId },
@@ -142,7 +138,6 @@ export const PATCH = withApiLogger(
 
       productLogger.info(`Produit ${id} mis à jour`);
 
-      // Re-calcul des prix pour la réponse
       const priceHT = product.price.toNumber();
       const priceBreakdown = getPriceBreakdown(priceHT, product.tva);
       const comparePriceHT = product.comparePrice?.toNumber();
@@ -160,23 +155,23 @@ export const PATCH = withApiLogger(
         },
         "Produit mis à jour avec succès"
       );
-    } catch (error: any) {
-      return loggedErrorResponse(`Erreur mise à jour: ${error.message}`, 500);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
+      return loggedErrorResponse(`Erreur mise à jour: ${message}`, 500);
     }
   }
 );
 
 // DELETE Suppression Admin
 export const DELETE = withApiLogger(
-  async (req: NextRequest, context: any) => {
+  async (_req: NextRequest, context: unknown) => {
     try {
       const session = await getServerSession(authOptions);
       if (!session || session.user?.role !== "ADMIN") {
         return loggedErrorResponse("Non autorisé", 403);
       }
 
-      const params = await context.params;
-      const id = params.id;
+      const { id } = await (context as { params: Promise<{ id: string }> }).params;
 
       const product = await prisma.product.findUnique({
         where: { id },
@@ -201,8 +196,9 @@ export const DELETE = withApiLogger(
         { message: "Produit supprimé avec succès" },
         "Produit supprimé"
       );
-    } catch (error: any) {
-      return loggedErrorResponse(`Erreur suppression: ${error.message}`, 500);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
+      return loggedErrorResponse(`Erreur suppression: ${message}`, 500);
     }
   }
 );

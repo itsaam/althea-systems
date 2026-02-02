@@ -62,12 +62,13 @@ async function main() {
   });
   console.log("   ✓ User B2B 2:", user2.email, "(Hôpital du Nord - PENDING)");
 
-  // ============================================
+ // ============================================
   // 2. ADRESSES
   // ============================================
   console.log("\n📍 Création des adresses...");
 
-  const address1 = await prisma.address.create({
+  // On a enlevé "const address1 =" car on n'utilise pas la variable après
+  await prisma.address.create({
     data: {
       userId: user1.id,
       firstName: "Martin",
@@ -82,7 +83,8 @@ async function main() {
   });
   console.log("   ✓ Adresse principale pour", user1.email);
 
-  const address2 = await prisma.address.create({
+  // On a enlevé "const address2 =" ici aussi
+  await prisma.address.create({
     data: {
       userId: user1.id,
       firstName: "Martin",
@@ -96,7 +98,7 @@ async function main() {
     },
   });
   console.log("   ✓ Adresse secondaire pour", user1.email);
-
+  
   // ============================================
   // 3. CATÉGORIES
   // ============================================
