@@ -9,10 +9,21 @@ import {
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
-import { ZodError } from "zod";
+import { ZodError, z } from "zod";
 import { getPriceBreakdown } from "@/lib/tva-utils";
 
 export const dynamic = 'force-dynamic';
+
+const productSchema = z.object({
+  name: z.string().min(1, "Le nom est requis"),
+  slug: z.string().min(1, "Le slug est requis"),
+  description: z.string().optional().nullable(),
+  price: z.number().positive("Le prix doit être positif"),
+  stock: z.number().int().min(0).default(0),
+  categoryId: z.string().min(1, "La catégorie est requise"),
+  images: z.array(z.string()).default([]),
+  featured: z.boolean().default(false),
+});
 
 export const GET = withApiLogger(async (_req: NextRequest) => {
   try {
@@ -25,6 +36,7 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
         price: true,
         stock: true,
         images: true,
+        featured: true, 
         createdAt: true,
         categoryId: true,
         category: {
@@ -71,16 +83,19 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     }
 
     const body = await req.json();
+    
+    const validatedData = productSchema.parse(body);
 
     const product = await prisma.product.create({
       data: {
-        name: body.name,
-        slug: body.slug,
-        description: body.description || null,
-        price: body.price,
-        stock: body.stock || 0,
-        images: body.images || [],
-        categoryId: body.categoryId,
+        name: validatedData.name,
+        slug: validatedData.slug,
+        description: validatedData.description,
+        price: validatedData.price,
+        stock: validatedData.stock,
+        images: validatedData.images,
+        featured: validatedData.featured,
+        categoryId: validatedData.categoryId,
       },
       include: {
         category: {

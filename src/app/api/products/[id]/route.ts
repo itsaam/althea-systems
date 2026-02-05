@@ -16,16 +16,21 @@ export const dynamic = 'force-dynamic';
 const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
   slug: z.string().min(1).optional(),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   price: z.number().positive().optional(),
   stock: z.number().int().min(0).optional(),
   images: z.array(z.string()).optional(),
   categoryId: z.string().nullable().optional(),
+  featured: z.boolean().optional(),
 });
+
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
 
 export const GET = withApiLogger(async (_req: NextRequest, context: unknown) => {
   try {
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = await (context as RouteContext).params;
 
     const product = await prisma.product.findUnique({
       where: { id },
@@ -38,6 +43,9 @@ export const GET = withApiLogger(async (_req: NextRequest, context: unknown) => 
         stock: true,
         images: true,
         categoryId: true,
+        featured: true,
+        createdAt: true,
+        updatedAt: true,
         category: {
           select: { id: true, name: true, slug: true },
         },
@@ -51,14 +59,17 @@ export const GET = withApiLogger(async (_req: NextRequest, context: unknown) => 
     const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
     const breakdown = getPriceBreakdown(priceHT, "TVA_20");
 
+    const serializedProduct = {
+      ...product,
+      price: priceHT,
+      tva: "TVA_20",
+      priceTTC: breakdown.priceTTC,
+      priceBreakdown: breakdown,
+      image: product.images?.[0] || null,
+    };
+
     return loggedSuccessResponse({
-      product: {
-        ...product,
-        price: priceHT,
-        tva: "TVA_20",
-        priceTTC: breakdown.priceTTC,
-        priceBreakdown: breakdown,
-      },
+      product: serializedProduct,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
@@ -73,13 +84,19 @@ export const PATCH = withApiLogger(async (req: NextRequest, context: unknown) =>
       return loggedErrorResponse("Non autorisé", 403);
     }
 
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
-    const body = await req.json();
+    const { id } = await (context as RouteContext).params;
+    const body = await req.json() as Record<string, unknown>;
+
+    const { 
+      tva: _tva, 
+      priceTTC: _priceTTC, 
+      priceBreakdown: _priceBreakdown, 
+      createdAt: _createdAt, 
+      updatedAt: _updatedAt, 
+      ...rest 
+    } = body;
     
-    // Suppression des variables inutilisées pour ESLint
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { tva, priceTTC, priceBreakdown, ...validPrismaData } = body;
-    const validatedData = updateProductSchema.parse(validPrismaData);
+    const validatedData = updateProductSchema.parse(rest);
 
     const product = await prisma.product.update({
       where: { id },
@@ -93,6 +110,7 @@ export const PATCH = withApiLogger(async (req: NextRequest, context: unknown) =>
         stock: true,
         images: true,
         categoryId: true,
+        featured: true,
         category: {
           select: { id: true, name: true, slug: true },
         },
@@ -102,21 +120,25 @@ export const PATCH = withApiLogger(async (req: NextRequest, context: unknown) =>
     const priceHT = Number(product.price);
     const breakdown = getPriceBreakdown(priceHT, "TVA_20");
 
+    const serializedProduct = {
+      ...product,
+      price: priceHT,
+      tva: "TVA_20",
+      priceTTC: breakdown.priceTTC,
+      priceBreakdown: breakdown,
+      image: product.images?.[0] || null,
+    };
+
     productLogger.info(`Produit ${id} mis à jour`);
 
     return loggedSuccessResponse(
-      {
-        product: {
-          ...product,
-          price: priceHT,
-          tva: "TVA_20",
-          priceTTC: breakdown.priceTTC,
-          priceBreakdown: breakdown,
-        },
-      },
+      { product: serializedProduct },
       "Produit mis à jour avec succès"
     );
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return loggedErrorResponse(error.issues[0].message, 400);
+    }
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     return loggedErrorResponse(`Erreur mise à jour: ${message}`, 500);
   }
@@ -129,7 +151,7 @@ export const DELETE = withApiLogger(async (_req: NextRequest, context: unknown) 
       return loggedErrorResponse("Non autorisé", 403);
     }
 
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = await (context as RouteContext).params;
 
     const product = await prisma.product.findUnique({
       where: { id },
