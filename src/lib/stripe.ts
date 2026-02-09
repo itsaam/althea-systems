@@ -28,6 +28,25 @@ export const stripe = {
       retrieve: (id: string) => getStripe().checkout.sessions.retrieve(id),
     },
   },
+  paymentIntents: {
+    create: (params: Stripe.PaymentIntentCreateParams) =>
+      getStripe().paymentIntents.create(params),
+    retrieve: (id: string) => getStripe().paymentIntents.retrieve(id),
+    update: (id: string, params: Stripe.PaymentIntentUpdateParams) =>
+      getStripe().paymentIntents.update(id, params),
+  },
+  setupIntents: {
+    create: (params: Stripe.SetupIntentCreateParams) =>
+      getStripe().setupIntents.create(params),
+  },
+  customers: {
+    create: (params: Stripe.CustomerCreateParams) =>
+      getStripe().customers.create(params),
+  },
+  invoices: {
+    create: (params: Stripe.InvoiceCreateParams) =>
+      getStripe().invoices.create(params),
+  },
   webhooks: {
     constructEvent: (
       payload: string | Buffer,
@@ -36,6 +55,8 @@ export const stripe = {
     ) => getStripe().webhooks.constructEvent(payload, signature, secret),
   },
 };
+
+// --- Fonctions utilitaires ---
 
 export async function createCheckoutSession(params: {
   lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
@@ -55,6 +76,32 @@ export async function createCheckoutSession(params: {
   });
 
   return session;
+}
+
+export async function createPaymentIntent(params: {
+  amount: number;
+  orderId: string;
+  customerId?: string;
+  metadata?: Record<string, string>;
+}) {
+  return await getStripe().paymentIntents.create({
+    amount: Math.round(params.amount * 100),
+    currency: "eur",
+    customer: params.customerId,
+    setup_future_usage: "off_session", // Pour enregistrer la carte (PCI-DSS)
+    metadata: {
+      ...params.metadata,
+      orderId: params.orderId,
+    },
+    automatic_payment_methods: { enabled: true },
+  });
+}
+
+export async function createSetupIntent(customerId: string) {
+  return await getStripe().setupIntents.create({
+    customer: customerId,
+    usage: "off_session", // Pour enregistrement sans débit
+  });
 }
 
 export async function constructWebhookEvent(
