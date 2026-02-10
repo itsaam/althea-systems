@@ -30,6 +30,27 @@ export async function POST(request: Request) {
               ? session.payment_intent
               : session.id;
 
+          console.log("🔵 [WEBHOOK] Décrémentation du stock pour commande:", orderId);
+          
+          const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { items: true },
+          });
+
+          if (order) {
+            for (const item of order.items) {
+              await prisma.product.update({
+                where: { id: item.productId },
+                data: {
+                  stock: {
+                    decrement: item.quantity,
+                  },
+                },
+              });
+              console.log(`✅ [WEBHOOK] Stock décrémenté: ${item.name} (-${item.quantity})`);
+            }
+          }
+
           await prisma.order.update({
             where: { id: orderId },
             data: { 
@@ -69,6 +90,28 @@ export async function POST(request: Request) {
 
       case "charge.refunded": {
         if (orderId) {
+
+          console.log("🔵 [WEBHOOK] Restauration du stock pour commande remboursée:", orderId);
+          
+          const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { items: true },
+          });
+
+          if (order) {
+            for (const item of order.items) {
+              await prisma.product.update({
+                where: { id: item.productId },
+                data: {
+                  stock: {
+                    increment: item.quantity,
+                  },
+                },
+              });
+              console.log(`✅ [WEBHOOK] Stock restauré: ${item.name} (+${item.quantity})`);
+            }
+          }
+
           await prisma.order.update({
             where: { id: orderId },
             data: { 
