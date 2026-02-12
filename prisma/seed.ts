@@ -66,7 +66,7 @@ async function main() {
   // ============================================
   console.log("\n📍 Création des adresses...");
 
-  const address1 = await prisma.address.create({
+  await prisma.address.create({
     data: {
       userId: user1.id,
       firstName: "Martin",
@@ -81,7 +81,7 @@ async function main() {
   });
   console.log("   ✓ Adresse principale pour", user1.email);
 
-  const address2 = await prisma.address.create({
+  await prisma.address.create({
     data: {
       userId: user1.id,
       firstName: "Martin",
