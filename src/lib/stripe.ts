@@ -39,10 +39,14 @@ export const stripe = {
     create: (params: Stripe.SetupIntentCreateParams) =>
       getStripe().setupIntents.create(params),
   },
-  customers: {
-    create: (params: Stripe.CustomerCreateParams) =>
-      getStripe().customers.create(params),
-  },
+customers: {
+  create: (params: Stripe.CustomerCreateParams) =>
+    getStripe().customers.create(params),
+  retrieve: (id: string) =>  
+    getStripe().customers.retrieve(id),
+  update: (id: string, params: Stripe.CustomerUpdateParams) =>  
+    getStripe().customers.update(id, params),
+},
   invoices: {
     create: (params: Stripe.InvoiceCreateParams) =>
       getStripe().invoices.create(params),

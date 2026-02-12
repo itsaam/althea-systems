@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getUserCurrency, isCurrencySupported } from "@/lib/currency";
 
 export async function POST(req: Request) {
   try {
@@ -27,6 +28,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
     }
 
+    let currency = await getUserCurrency(userId, prisma);
+    
+    if (!isCurrencySupported(currency)) {
+      console.warn(`⚠️ Currency ${currency} not supported, fallback to EUR`);
+      currency = "eur";
+    }
+
+    console.log(`💱 [SAVED-CARD-PAYMENT] Using currency: ${currency.toUpperCase()}`);
+
     const user = await prisma.user.findUnique({ 
       where: { id: userId } 
     });
@@ -43,33 +53,43 @@ export async function POST(req: Request) {
       }, { status: 404 });
     }
 
-    console.log("🔵 [SAVED-CARD-PAYMENT] Fetching saved payment methods...");
-    const paymentMethods = await stripe.instance.paymentMethods.list({
-      customer: user.stripeCustomerId,
-      type: "card",
-    });
+    console.log("🔵 [SAVED-CARD-PAYMENT] Fetching Stripe customer details...");
+    const customer = await stripe.instance.customers.retrieve(user.stripeCustomerId);
 
-    console.log("🔵 [SAVED-CARD-PAYMENT] Found payment methods:", paymentMethods.data.length);
-
-    if (paymentMethods.data.length === 0) {
-      console.log("❌ [SAVED-CARD-PAYMENT] No saved cards found");
-      return NextResponse.json({ 
-        error: "No saved cards found. Please add a payment method first." 
-      }, { status: 404 });
+    if (customer.deleted) {
+      console.log("❌ [SAVED-CARD-PAYMENT] Customer deleted in Stripe");
+      return NextResponse.json({ error: "Stripe customer deleted" }, { status: 404 });
     }
 
-    const paymentMethodId = paymentMethods.data[0].id;
+    let paymentMethodId = customer.invoice_settings?.default_payment_method as string;
+
+    if (!paymentMethodId) {
+      console.log("🔵 [SAVED-CARD-PAYMENT] No default method, fetching list...");
+      const paymentMethods = await stripe.instance.paymentMethods.list({
+        customer: user.stripeCustomerId,
+        type: "card",
+      });
+
+      if (paymentMethods.data.length === 0) {
+        console.log("❌ [SAVED-CARD-PAYMENT] No saved cards found");
+        return NextResponse.json({ 
+          error: "No saved cards found. Please add a payment method first." 
+        }, { status: 404 });
+      }
+      paymentMethodId = paymentMethods.data[0].id;
+    }
+
     console.log("🔵 [SAVED-CARD-PAYMENT] Using payment method:", paymentMethodId);
 
     console.log("🔵 [SAVED-CARD-PAYMENT] Creating payment intent...");
     const paymentIntent = await stripe.instance.paymentIntents.create({
       amount: amount,
-      currency: "eur",
+      currency: currency,
       customer: user.stripeCustomerId,
       payment_method: paymentMethodId,
       off_session: true,
       confirm: true,
-      metadata: { orderId },
+      metadata: { orderId, currency },
     });
 
     console.log("✅ [SAVED-CARD-PAYMENT] Payment successful:", paymentIntent.status);
@@ -77,7 +97,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       success: true, 
       paymentIntentId: paymentIntent.id,
-      status: paymentIntent.status 
+      status: paymentIntent.status,
+      currency: currency,
     });
     
   } catch (error: unknown) {
