@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { productLogger } from "@/lib/logger/exports";
 import SimilarProducts from "@/components/products/similar-products";
 import StockBadge from "@/components/products/stock-badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,8 @@ async function getProduct(identifier: string) {
       image: product.images[0] || null,
     };
   } catch (error) {
-    console.error("Erreur récupération produit:", error);
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    productLogger.error(`Erreur récupération produit ${identifier}: ${message}`);
     return null;
   }
 }
@@ -56,13 +58,22 @@ async function getSimilarProducts(identifier: string) {
     });
 
     if (!product) {
-      console.log("❌ Produit non trouvé pour getSimilarProducts:", identifier);
+      productLogger.warn(`Produit non trouvé pour getSimilarProducts: ${identifier}`);
       return [];
     }
 
-    console.log("✅ Produit trouvé:", product.id, "Catégorie:", product.categoryId);
+    productLogger.debug(`Produit trouvé: ${product.id}, Catégorie: ${product.categoryId}`);
 
-    const similarProducts = await prisma.$queryRaw<any[]>`
+    interface SimilarProductRow {
+      id: string;
+      name: string;
+      slug: string | null;
+      price: number;
+      images: string[];
+      stock: number;
+    }
+
+    const similarProducts = await prisma.$queryRaw<SimilarProductRow[]>`
       SELECT id, name, slug, price, images, stock
       FROM "Product"
       WHERE "categoryId" = ${product.categoryId}
@@ -72,18 +83,19 @@ async function getSimilarProducts(identifier: string) {
       LIMIT 6
     `;
 
-    console.log(`📦 Produits similaires trouvés: ${similarProducts.length}`);
+    productLogger.info(`${similarProducts.length} produits similaires trouvés pour ${identifier}`);
 
     return similarProducts.map((p) => ({
       id: p.id,
       name: p.name,
-      slug: p.slug,
+      slug: p.slug ?? undefined,
       price: Number(p.price),
-      image: p.images?.[0] || null,
+      image: p.images?.[0] ?? undefined,
       stock: p.stock,
     }));
   } catch (error) {
-    console.error("❌ Erreur chargement produits similaires:", error);
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    productLogger.error(`Erreur chargement produits similaires pour ${identifier}: ${message}`);
     return [];
   }
 }

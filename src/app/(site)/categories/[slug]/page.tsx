@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { productLogger } from "@/lib/logger/exports";
 import ProductGrid from "@/components/products/product-grid";
 
 interface CategoryPageProps {
@@ -36,7 +37,8 @@ async function getCategoryWithProducts(slug: string) {
       })),
     };
   } catch (error) {
-    console.error("Erreur récupération catégorie:", error);
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    productLogger.error(`Erreur récupération catégorie ${slug}: ${message}`);
     return null;
   }
 }
