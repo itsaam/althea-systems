@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import HeroCanvasReveal from "@/components/home/hero-canvas-reveal";
 import CategoriesGrid from "@/components/home/categories-grid";
 import FeaturedProducts from "@/components/home/featured-products";

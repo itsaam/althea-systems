@@ -32,9 +32,9 @@ const updateProductSchema = z.object({
 
 // GET Détails du produit avec calculs TVA
 export const GET = withApiLogger(
-  async (_req: NextRequest, context: unknown) => {
+  async (_req: NextRequest, context?: unknown) => {
     try {
-      const { id } = await (context as { params: Promise<{ id: string }> }).params;
+      const { id } = (context as { params: { id: string } }).params;
 
       const product = await prisma.product.findUnique({
         where: { id },
@@ -86,16 +86,16 @@ export const GET = withApiLogger(
   }
 );
 
-// PATCH  Mise à jour Admin 
+// PATCH Mise à jour Admin
 export const PATCH = withApiLogger(
-  async (req: NextRequest, context: unknown) => {
+  async (req: NextRequest, context?: unknown) => {
     try {
       const session = await getServerSession(authOptions);
       if (!session || session.user?.role !== "ADMIN") {
         return loggedErrorResponse("Non autorisé", 403);
       }
 
-      const { id } = await (context as { params: Promise<{ id: string }> }).params;
+      const { id } = (context as { params: { id: string } }).params;
 
       const body = await req.json();
       const validatedData = updateProductSchema.parse(body);
@@ -131,7 +131,11 @@ export const PATCH = withApiLogger(
         data: validatedData,
         include: {
           category: {
-            select: { id: true, name: true, slug: true },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
           },
         },
       });
@@ -156,22 +160,28 @@ export const PATCH = withApiLogger(
         "Produit mis à jour avec succès"
       );
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return loggedErrorResponse(
+          `Données invalides: ${error.issues.map((i) => i.message).join(", ")}`,
+          400
+        );
+      }
       const message = error instanceof Error ? error.message : "Erreur inconnue";
-      return loggedErrorResponse(`Erreur mise à jour: ${message}`, 500);
+      return loggedErrorResponse(`Erreur mise à jour produit: ${message}`, 500);
     }
   }
 );
 
 // DELETE Suppression Admin
 export const DELETE = withApiLogger(
-  async (_req: NextRequest, context: unknown) => {
+  async (_req: NextRequest, context?: unknown) => {
     try {
       const session = await getServerSession(authOptions);
       if (!session || session.user?.role !== "ADMIN") {
         return loggedErrorResponse("Non autorisé", 403);
       }
 
-      const { id } = await (context as { params: Promise<{ id: string }> }).params;
+      const { id } = (context as { params: { id: string } }).params;
 
       const product = await prisma.product.findUnique({
         where: { id },
@@ -198,7 +208,7 @@ export const DELETE = withApiLogger(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erreur inconnue";
-      return loggedErrorResponse(`Erreur suppression: ${message}`, 500);
+      return loggedErrorResponse(`Erreur suppression produit: ${message}`, 500);
     }
   }
 );

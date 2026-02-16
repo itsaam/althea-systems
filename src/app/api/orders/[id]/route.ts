@@ -19,17 +19,21 @@ const updateOrderSchema = z.object({
   status: z.nativeEnum(OrderStatus).optional(),
   paymentStatus: z.nativeEnum(PaymentStatus).optional(),
   trackingNumber: z.string().nullable().optional(),
+  paymentMethod: z.string().optional(),
+  paymentIntentId: z.string().optional(),
+  notes: z.string().optional(),
 });
 
+// GET Order
 export const GET = withApiLogger(async (
   _req: NextRequest,
-  context: unknown 
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return loggedErrorResponse("Non autorisé", 401);
     
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = (context as { params: { id: string } }).params;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -75,15 +79,16 @@ export const GET = withApiLogger(async (
     };
 
     return loggedSuccessResponse({ order: serializedOrder });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     return loggedErrorResponse(`Erreur récupération commande: ${message}`, 500);
   }
 });
 
+// PATCH Order (Admin only)
 export const PATCH = withApiLogger(async (
   req: NextRequest,
-  context: unknown
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -91,19 +96,15 @@ export const PATCH = withApiLogger(async (
       return loggedErrorResponse("Non autorisé", 403);
     }
 
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = (context as { params: { id: string } }).params;
 
     const body = await req.json();
-    
     const validatedData = updateOrderSchema.parse(body);
 
     const existingOrder = await prisma.order.findUnique({ where: { id } });
     if (!existingOrder) return loggedErrorResponse("Commande non trouvée", 404);
 
-    const updateData: Prisma.OrderUpdateInput = {
-      status: validatedData.status,
-      paymentStatus: validatedData.paymentStatus
-    };
+    const updateData: Prisma.OrderUpdateInput = { ...validatedData };
 
     if (validatedData.status && validatedData.status !== existingOrder.status) {
       await prisma.orderStatusHistory.create({
@@ -140,7 +141,7 @@ export const PATCH = withApiLogger(async (
     };
 
     return loggedSuccessResponse({ order: serializedOrder }, "Commande mise à jour avec succès");
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return loggedErrorResponse(
         `Données invalides: ${error.issues.map(i => i.message).join(", ")}`,
@@ -152,9 +153,10 @@ export const PATCH = withApiLogger(async (
   }
 });
 
+// DELETE Order (Admin only)
 export const DELETE = withApiLogger(async (
   _req: NextRequest,
-  context: unknown
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -162,7 +164,7 @@ export const DELETE = withApiLogger(async (
       return loggedErrorResponse("Non autorisé", 403);
     }
 
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = (context as { params: { id: string } }).params;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -192,8 +194,8 @@ export const DELETE = withApiLogger(async (
       ),
     ]);
 
-    return loggedSuccessResponse({ message: "Commande annulée avec succès" });
-  } catch (error) {
+    return loggedSuccessResponse({ message: "Commande annulée avec succès" }, "Commande annulée");
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     return loggedErrorResponse(`Erreur annulation commande: ${message}`, 500);
   }

@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import {
   withApiLogger,
   loggedErrorResponse,
@@ -12,6 +14,7 @@ import {
   type CartItem,
 } from "@/lib/tva-utils";
 
+// ----- SCHEMAS -----
 const orderItemSchema = z.object({
   productId: z.string(),
   quantity: z.number().int().positive(),
@@ -25,6 +28,22 @@ const orderSchema = z.object({
   paymentMethod: z.string().optional(),
 });
 
+const updateOrderSchema = z.object({
+  status: z.enum([
+    "PENDING",
+    "CONFIRMED",
+    "PROCESSING",
+    "SHIPPED",
+    "DELIVERED",
+    "CANCELLED",
+  ]).optional(),
+  paymentStatus: z.enum(["PENDING", "PAID", "FAILED", "REFUNDED"]).optional(),
+  paymentMethod: z.string().optional(),
+  paymentIntentId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+// ----- HELPERS -----
 function generateOrderNumber(): string {
   const date = new Date();
   const year = date.getFullYear();
@@ -43,6 +62,7 @@ function calculateShippingCost(subtotal: number, country: string): number {
   return 19.99;
 }
 
+// ----- GET ORDERS -----
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
@@ -99,6 +119,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
   }
 });
 
+// ----- POST CREATE ORDER -----
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const body = await req.json();
@@ -122,6 +143,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
       return loggedErrorResponse(`Produits non trouvés ou indisponibles: ${missing.join(", ")}`, 400);
     }
 
+    // Check stock
     for (const item of validatedData.items) {
       const product = products.find((p) => p.id === item.productId);
       if (!product) continue;
@@ -181,6 +203,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
         },
       });
 
+      // Update stock
       await Promise.all(
         validatedData.items.map((item) =>
           tx.product.update({ where: { id: item.productId }, data: { stock: { decrement: item.quantity } } })
@@ -209,5 +232,93 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     }
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     return loggedErrorResponse(`Erreur création commande: ${message}`, 500);
+  }
+});
+
+// ----- PATCH UPDATE ORDER (ADMIN) -----
+export const PATCH = withApiLogger(async (req: NextRequest, context?: unknown) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+
+    const { id } = (context as { params: { id: string } }).params;
+    const body = await req.json();
+    const validatedData = updateOrderSchema.parse(body);
+
+    const existingOrder = await prisma.order.findUnique({ where: { id } });
+    if (!existingOrder) return loggedErrorResponse("Commande non trouvée", 404);
+
+    const updateData: Record<string, unknown> = { ...validatedData };
+
+    if (validatedData.status && validatedData.status !== existingOrder.status) {
+      await prisma.orderStatusHistory.create({
+        data: { orderId: id, status: validatedData.status, changedBy: session.user.id },
+      });
+    }
+
+    if (validatedData.paymentStatus === "PAID" && !existingOrder.paymentDate) {
+      updateData.paymentDate = new Date();
+    }
+
+    const order = await prisma.order.update({
+      where: { id },
+      data: updateData,
+      include: {
+        items: { include: { product: true } },
+        address: true,
+        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        statusHistory: { orderBy: { createdAt: "desc" } },
+      },
+    });
+
+    const serializedOrder = {
+      ...order,
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      items: order.items.map((i) => ({ ...i, price: Number(i.price) })),
+    };
+
+    return loggedSuccessResponse({ order: serializedOrder }, "Commande mise à jour avec succès");
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return loggedErrorResponse(`Données invalides: ${error.issues.map((i) => i.message).join(", ")}`, 400);
+    }
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur mise à jour commande: ${message}`, 500);
+  }
+});
+
+// ----- DELETE ORDER (ADMIN) -----
+export const DELETE = withApiLogger(async (req: NextRequest, context?: unknown) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+
+    const { id } = (context as { params: { id: string } }).params;
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!order) return loggedErrorResponse("Commande non trouvée", 404);
+
+    if (["DELIVERED", "SHIPPED"].includes(order.status)) {
+      return loggedErrorResponse("Impossible d'annuler une commande livrée ou expédiée", 400);
+    }
+
+    await prisma.$transaction([
+      prisma.orderStatusHistory.create({ data: { orderId: id, status: "CANCELLED", changedBy: session.user.id } }),
+      prisma.order.update({ where: { id }, data: { status: "CANCELLED" } }),
+      ...order.items.map((item) =>
+        prisma.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } })
+      ),
+    ]);
+
+    return loggedSuccessResponse({ message: "Commande annulée avec succès" }, "Commande annulée");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur annulation commande: ${message}`, 500);
   }
 });
