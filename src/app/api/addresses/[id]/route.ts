@@ -1,18 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from '@/lib/prisma';
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return String(error); // fallback si ce n'est pas une instance d'Error
-}
+import {
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+} from "@/lib/logger/exports";
 
 // GET Détails d'une adresse
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export const GET = withApiLogger(async (
+  _req: NextRequest,
+  context?: unknown
+) => {
   try {
-    const { id } = await context.params;
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return loggedErrorResponse("Non authentifié", 401);
+    }
+
+    const { id } = (context as { params: { id: string } }).params;
 
     const address = await prisma.address.findUnique({
       where: { id },
@@ -29,39 +37,45 @@ export async function GET(
     });
 
     if (!address) {
-      return NextResponse.json(
-        { error: 'Adresse non trouvée' },
-        { status: 404 }
-      );
+      return loggedErrorResponse('Adresse non trouvée', 404);
     }
 
-    return NextResponse.json(address);
+    if (session.user.role !== "ADMIN" && session.user.id !== address.userId) {
+      return loggedErrorResponse("Accès interdit", 403);
+    }
+
+    return loggedSuccessResponse(address);
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: `Erreur lors de la récupération de l'adresse : ${getErrorMessage(error)}` },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur récupération adresse: ${message}`, 500);
   }
-}
+});
 
 // PATCH Mise à jour d'une adresse
-export async function PATCH(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withApiLogger(async (
+  req: NextRequest,
+  context?: unknown
+) => {
   try {
-    const { id } = await context.params;
-    const body = await request.json();
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return loggedErrorResponse("Non authentifié", 401);
+    }
+
+    const { id } = (context as { params: { id: string } }).params;
+    const body = await req.json();
 
     const currentAddress = await prisma.address.findUnique({
       where: { id },
     });
 
     if (!currentAddress) {
-      return NextResponse.json(
-        { error: 'Adresse non trouvée' },
-        { status: 404 }
-      );
+      return loggedErrorResponse('Adresse non trouvée', 404);
+    }
+
+    if (session.user.id !== currentAddress.userId && session.user.role !== "ADMIN") {
+      return loggedErrorResponse("Accès interdit", 403);
     }
 
     if (body.isDefault === true) {
@@ -82,31 +96,47 @@ export async function PATCH(
       data: body,
     });
 
-    return NextResponse.json(updatedAddress);
+    return loggedSuccessResponse(updatedAddress, "Adresse mise à jour avec succès");
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: `Erreur lors de la mise à jour de l'adresse : ${getErrorMessage(error)}` },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur mise à jour adresse: ${message}`, 500);
   }
-}
+});
 
 // DELETE Supprimer une adresse
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withApiLogger(async (
+  _req: NextRequest,
+  context?: unknown
+) => {
   try {
-    const { id } = await context.params;
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return loggedErrorResponse("Non authentifié", 401);
+    }
+
+    const { id } = (context as { params: { id: string } }).params;
+
+    const address = await prisma.address.findUnique({
+      where: { id },
+    });
+
+    if (!address) {
+      return loggedErrorResponse('Adresse non trouvée', 404);
+    }
+
+    if (session.user.id !== address.userId && session.user.role !== "ADMIN") {
+      return loggedErrorResponse("Accès interdit", 403);
+    }
 
     const ordersCount = await prisma.order.count({
       where: { addressId: id },
     });
 
     if (ordersCount > 0) {
-      return NextResponse.json(
-        { error: 'Impossible de supprimer une adresse utilisée dans des commandes' },
-        { status: 400 }
+      return loggedErrorResponse(
+        'Impossible de supprimer une adresse utilisée dans des commandes passées. L\'historique doit être préservé.',
+        400
       );
     }
 
@@ -114,11 +144,9 @@ export async function DELETE(
       where: { id },
     });
 
-    return NextResponse.json({ message: 'Adresse supprimée avec succès' });
+    return loggedSuccessResponse({ message: 'Adresse supprimée avec succès' });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: `Erreur lors de la suppression de l'adresse : ${getErrorMessage(error)}` },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    return loggedErrorResponse(`Erreur suppression adresse: ${message}`, 500);
   }
-}
+});

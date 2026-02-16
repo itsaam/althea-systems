@@ -3,23 +3,22 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
 import {
   withApiLogger,
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
+import {
+  calculateCartTotals,
+  type CartItem,
+} from "@/lib/tva-utils";
 import type { Prisma } from "@prisma/client";
 
 const updateOrderSchema = z.object({
-  status: z.enum([
-    "PENDING",
-    "CONFIRMED",
-    "PROCESSING",
-    "SHIPPED",
-    "DELIVERED",
-    "CANCELLED",
-  ]).optional(),
-  paymentStatus: z.enum(["PENDING", "PAID", "FAILED", "REFUNDED"]).optional(),
+  status: z.nativeEnum(OrderStatus).optional(),
+  paymentStatus: z.nativeEnum(PaymentStatus).optional(),
+  trackingNumber: z.string().nullable().optional(),
   paymentMethod: z.string().optional(),
   paymentIntentId: z.string().optional(),
   notes: z.string().optional(),
@@ -32,6 +31,8 @@ export const GET = withApiLogger(async (
 ) => {
   try {
     const session = await getServerSession(authOptions);
+    if (!session) return loggedErrorResponse("Non autorisé", 401);
+    
     const { id } = (context as { params: { id: string } }).params;
 
     const order = await prisma.order.findUnique({
@@ -48,10 +49,18 @@ export const GET = withApiLogger(async (
     });
 
     if (!order) return loggedErrorResponse("Commande non trouvée", 404);
-    if (!session) return loggedErrorResponse("Non autorisé", 401);
+    
     if (session.user.role !== "ADMIN" && session.user.id !== order.userId) {
       return loggedErrorResponse("Accès interdit", 403);
     }
+
+    const cartItems: CartItem[] = order.items.map((item) => ({
+      priceHT: item.price.toNumber(),
+      tvaRate: item.product.tva,
+      quantity: item.quantity,
+    }));
+
+    const totals = calculateCartTotals(cartItems, order.shippingCost.toNumber());
 
     const serializedOrder = {
       ...order,
@@ -66,6 +75,7 @@ export const GET = withApiLogger(async (
       invoice: order.invoice
         ? { ...order.invoice, amount: order.invoice.amount.toNumber() }
         : null,
+      tvaBreakdown: totals.tvaBreakdown,  
     };
 
     return loggedSuccessResponse({ order: serializedOrder });
@@ -82,9 +92,12 @@ export const PATCH = withApiLogger(async (
 ) => {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+    if (!session || session.user.role !== "ADMIN") {
+      return loggedErrorResponse("Non autorisé", 403);
+    }
 
     const { id } = (context as { params: { id: string } }).params;
+
     const body = await req.json();
     const validatedData = updateOrderSchema.parse(body);
 
@@ -95,7 +108,11 @@ export const PATCH = withApiLogger(async (
 
     if (validatedData.status && validatedData.status !== existingOrder.status) {
       await prisma.orderStatusHistory.create({
-        data: { orderId: id, status: validatedData.status, changedBy: session.user.id },
+        data: { 
+          orderId: id, 
+          status: validatedData.status, 
+          changedBy: session.user.id 
+        },
       });
     }
 
@@ -143,7 +160,9 @@ export const DELETE = withApiLogger(async (
 ) => {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+    if (!session || session.user.role !== "ADMIN") {
+      return loggedErrorResponse("Non autorisé", 403);
+    }
 
     const { id } = (context as { params: { id: string } }).params;
 
@@ -153,15 +172,20 @@ export const DELETE = withApiLogger(async (
     });
 
     if (!order) return loggedErrorResponse("Commande non trouvée", 404);
+    
     if (order.status === "DELIVERED" || order.status === "SHIPPED") {
       return loggedErrorResponse("Impossible d'annuler une commande livrée ou expédiée", 400);
     }
 
     await prisma.$transaction([
       prisma.orderStatusHistory.create({
-        data: { orderId: id, status: "CANCELLED", changedBy: session.user.id },
+        data: { 
+          orderId: id, 
+          status: OrderStatus.CANCELLED, 
+          changedBy: session.user.id 
+        },
       }),
-      prisma.order.update({ where: { id }, data: { status: "CANCELLED" } }),
+      prisma.order.update({ where: { id }, data: { status: OrderStatus.CANCELLED } }),
       ...order.items.map((item) =>
         prisma.product.update({
           where: { id: item.productId },

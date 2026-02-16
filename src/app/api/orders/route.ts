@@ -9,6 +9,10 @@ import {
   loggedSuccessResponse,
   apiLogger,
 } from "@/lib/logger/exports";
+import {
+  calculateCartTotals,
+  type CartItem,
+} from "@/lib/tva-utils";
 
 // ----- SCHEMAS -----
 const orderItemSchema = z.object({
@@ -48,16 +52,6 @@ function generateOrderNumber(): string {
     .toString()
     .padStart(4, "0");
   return `ORD-${year}${month}-${random}`;
-}
-
-function getTvaRate(tva: string): number {
-  const rates: Record<string, number> = {
-    TVA_20: 0.2,
-    TVA_10: 0.1,
-    TVA_5_5: 0.055,
-    TVA_0: 0.0,
-  };
-  return rates[tva] || 0.2;
 }
 
 function calculateShippingCost(subtotal: number, country: string): number {
@@ -160,26 +154,32 @@ export const POST = withApiLogger(async (req: NextRequest) => {
         );
     }
 
-    // Calcul totals
-    let subtotal = 0;
-    let totalTax = 0;
+    const cartItems: CartItem[] = validatedData.items.map((item) => {
+      const product = products.find((p) => p.id === item.productId);
+      if (!product) throw new Error("Produit non trouvé");
+      
+      return {
+        priceHT: Number(product.price),
+        tvaRate: product.tva,
+        quantity: item.quantity,
+      };
+    });
+
+    const tempTotals = calculateCartTotals(cartItems);
+    const shippingCost = calculateShippingCost(tempTotals.subtotalHT, address.country);
+    const totals = calculateCartTotals(cartItems, shippingCost);
+
     const orderItems = validatedData.items.map((item) => {
       const product = products.find((p) => p.id === item.productId);
       if (!product) throw new Error("Produit non trouvé");
 
-      const priceHT = Number(product.price);
-      const itemSubtotal = priceHT * item.quantity;
-      const tvaRate = getTvaRate(product.tva);
-      const itemTax = itemSubtotal * tvaRate;
-
-      subtotal += itemSubtotal;
-      totalTax += itemTax;
-
-      return { productId: product.id, name: product.name, price: product.price, quantity: item.quantity };
+      return { 
+        productId: product.id, 
+        name: product.name, 
+        price: product.price, 
+        quantity: item.quantity 
+      };
     });
-
-    const shippingCost = calculateShippingCost(subtotal, address.country);
-    const total = subtotal + totalTax + shippingCost;
 
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
@@ -187,10 +187,10 @@ export const POST = withApiLogger(async (req: NextRequest) => {
           orderNumber: generateOrderNumber(),
           userId: validatedData.userId,
           addressId: validatedData.addressId,
-          subtotal,
-          shippingCost,
-          tax: totalTax,
-          total,
+          subtotal: totals.subtotalHT,                   
+          shippingCost: totals.shippingCost || 0,       
+          tax: totals.totalTVA,                                  
+          total: totals.grandTotal || totals.totalTTC,   
           notes: validatedData.notes,
           paymentMethod: validatedData.paymentMethod,
           items: { create: orderItems },
@@ -220,7 +220,10 @@ export const POST = withApiLogger(async (req: NextRequest) => {
       tax: Number(order.tax),
       total: Number(order.total),
       items: order.items.map((i) => ({ ...i, price: Number(i.price) })),
+      tvaBreakdown: totals.tvaBreakdown,  
     };
+
+    apiLogger.info(`Commande créée: ${order.orderNumber} - Total: ${totals.grandTotal || totals.totalTTC}€ (TVA: ${totals.totalTVA}€)`);
 
     return loggedSuccessResponse({ order: serializedOrder }, "Commande créée avec succès", 201);
   } catch (error) {

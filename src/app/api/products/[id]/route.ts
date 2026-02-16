@@ -9,7 +9,10 @@ import {
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
-
+import {
+  calculateTTC,
+  getPriceBreakdown,
+} from "@/lib/tva-utils";
 
 const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
@@ -27,7 +30,7 @@ const updateProductSchema = z.object({
   categoryId: z.string().nullable().optional(),
 });
 
-// GET 
+// GET Détails du produit avec calculs TVA
 export const GET = withApiLogger(
   async (_req: NextRequest, context?: unknown) => {
     try {
@@ -50,16 +53,31 @@ export const GET = withApiLogger(
         return loggedErrorResponse("Produit non trouvé", 404);
       }
 
+      const priceHT = product.price.toNumber();
+      const priceBreakdown = getPriceBreakdown(priceHT, product.tva);
+      
+      const comparePriceHT = product.comparePrice?.toNumber();
+      const comparePriceTTC = comparePriceHT 
+        ? calculateTTC(comparePriceHT, product.tva)
+        : null;
+
       return loggedSuccessResponse({
         product: {
           ...product,
-          price: product.price.toNumber(),
-          comparePrice: product.comparePrice?.toNumber() ?? null,
+          price: priceHT,
+          comparePrice: comparePriceHT ?? null,
+          priceBreakdown: {
+            priceHT: priceBreakdown.priceHT,
+            priceTTC: priceBreakdown.priceTTC,
+            tvaAmount: priceBreakdown.tvaAmount,
+            tvaRate: priceBreakdown.tvaRate,
+            tvaLabel: priceBreakdown.tvaLabel,
+          },
+          comparePriceTTC,
         },
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erreur inconnue";
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
       return loggedErrorResponse(
         `Erreur récupération produit: ${message}`,
         500
@@ -68,17 +86,16 @@ export const GET = withApiLogger(
   }
 );
 
-// PATCH Admin 
-
+// PATCH Mise à jour Admin
 export const PATCH = withApiLogger(
   async (req: NextRequest, context?: unknown) => {
-    const { id } = (context as { params: { id: string } }).params;
     try {
       const session = await getServerSession(authOptions);
-
       if (!session || session.user?.role !== "ADMIN") {
         return loggedErrorResponse("Non autorisé", 403);
       }
+
+      const { id } = (context as { params: { id: string } }).params;
 
       const body = await req.json();
       const validatedData = updateProductSchema.parse(body);
@@ -91,14 +108,10 @@ export const PATCH = withApiLogger(
         return loggedErrorResponse("Produit non trouvé", 404);
       }
 
-      if (
-        validatedData.slug &&
-        validatedData.slug !== existingProduct.slug
-      ) {
+      if (validatedData.slug && validatedData.slug !== existingProduct.slug) {
         const slugExists = await prisma.product.findUnique({
           where: { slug: validatedData.slug },
         });
-
         if (slugExists) {
           return loggedErrorResponse("Ce slug est déjà utilisé", 400);
         }
@@ -108,7 +121,6 @@ export const PATCH = withApiLogger(
         const category = await prisma.category.findUnique({
           where: { id: validatedData.categoryId },
         });
-
         if (!category) {
           return loggedErrorResponse("Catégorie non trouvée", 404);
         }
@@ -130,12 +142,19 @@ export const PATCH = withApiLogger(
 
       productLogger.info(`Produit ${id} mis à jour`);
 
+      const priceHT = product.price.toNumber();
+      const priceBreakdown = getPriceBreakdown(priceHT, product.tva);
+      const comparePriceHT = product.comparePrice?.toNumber();
+      const comparePriceTTC = comparePriceHT ? calculateTTC(comparePriceHT, product.tva) : null;
+
       return loggedSuccessResponse(
         {
           product: {
             ...product,
-            price: product.price.toNumber(),
-            comparePrice: product.comparePrice?.toNumber() ?? null,
+            price: priceHT,
+            comparePrice: comparePriceHT ?? null,
+            priceBreakdown,
+            comparePriceTTC,
           },
         },
         "Produit mis à jour avec succès"
@@ -143,30 +162,21 @@ export const PATCH = withApiLogger(
     } catch (error) {
       if (error instanceof z.ZodError) {
         return loggedErrorResponse(
-          `Données invalides: ${error.issues
-            .map((i) => i.message)
-            .join(", ")}`,
+          `Données invalides: ${error.issues.map((i) => i.message).join(", ")}`,
           400
         );
       }
-
-      const message =
-        error instanceof Error ? error.message : "Erreur inconnue";
-      return loggedErrorResponse(
-        `Erreur mise à jour produit: ${message}`,
-        500
-      );
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
+      return loggedErrorResponse(`Erreur mise à jour produit: ${message}`, 500);
     }
   }
 );
 
-// DELETE Admin
-
+// DELETE Suppression Admin
 export const DELETE = withApiLogger(
   async (_req: NextRequest, context?: unknown) => {
     try {
       const session = await getServerSession(authOptions);
-
       if (!session || session.user?.role !== "ADMIN") {
         return loggedErrorResponse("Non autorisé", 403);
       }
@@ -184,13 +194,12 @@ export const DELETE = withApiLogger(
 
       if (product.orderItems.length > 0) {
         return loggedErrorResponse(
-          "Impossible de supprimer un produit ayant des commandes",
+          "Impossible de supprimer un produit ayant des commandes liées",
           400
         );
       }
 
       await prisma.product.delete({ where: { id } });
-
       productLogger.info(`Produit ${id} supprimé`);
 
       return loggedSuccessResponse(
@@ -198,12 +207,8 @@ export const DELETE = withApiLogger(
         "Produit supprimé"
       );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erreur inconnue";
-      return loggedErrorResponse(
-        `Erreur suppression produit: ${message}`,
-        500
-      );
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
+      return loggedErrorResponse(`Erreur suppression produit: ${message}`, 500);
     }
   }
 );
