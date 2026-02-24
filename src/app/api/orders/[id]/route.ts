@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   withApiLogger,
   loggedErrorResponse,
@@ -15,10 +16,15 @@ import {
   type CartItem,
 } from "@/lib/tva-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-const updateStatusSchema = z.object({
-  status: z.nativeEnum(OrderStatus),
+const updateOrderSchema = z.object({
+  status: z.nativeEnum(OrderStatus).optional(),
+  paymentStatus: z.nativeEnum(PaymentStatus).optional(),
+  trackingNumber: z.string().nullable().optional(),
+  paymentMethod: z.string().optional(),
+  paymentIntentId: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 interface RouteContext {
@@ -26,15 +32,13 @@ interface RouteContext {
 }
 
 export const GET = withApiLogger(async (
-  req: NextRequest,
+  _req: NextRequest,
   context: unknown
 ) => {
   let currentId = "unknown";
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return loggedErrorResponse("Vous devez être connecté", 401);
-    }
+    if (!session) return loggedErrorResponse("Vous devez être connecté", 401);
 
     const { id } = await (context as RouteContext).params;
     currentId = id;
@@ -46,20 +50,19 @@ export const GET = withApiLogger(async (
           select: { id: true, email: true, firstName: true, lastName: true, phone: true },
         },
         address: true,
-        items: { 
-          include: { 
+        items: {
+          include: {
             product: {
-              select: { id: true, name: true, slug: true, images: true, tva: true }
-            } 
-          } 
+              select: { id: true, name: true, slug: true, images: true, tva: true },
+            },
+          },
         },
+        invoice: true,
         statusHistory: { orderBy: { createdAt: "desc" } },
       },
     });
 
-    if (!order) {
-      return loggedErrorResponse("Commande introuvable", 404);
-    }
+    if (!order) return loggedErrorResponse("Commande introuvable", 404);
 
     if (session.user.role !== "ADMIN" && session.user.id !== order.userId) {
       return loggedErrorResponse("Accès non autorisé à cette commande", 403);
@@ -83,86 +86,117 @@ export const GET = withApiLogger(async (
         ...item,
         price: Number(item.price),
       })),
+      invoice: order.invoice
+        ? { ...order.invoice, amount: Number(order.invoice.amount) }
+        : null,
       tvaBreakdown: totals.tvaBreakdown,
     };
 
     return loggedSuccessResponse({ order: serializedOrder });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    apiLogger.error(`Erreur GET order detail [${currentId}]: ${message}`);
+    apiLogger.error(`Erreur GET order [${currentId}]: ${message}`);
     return loggedErrorResponse(`Erreur récupération commande: ${message}`, 500);
   }
 });
 
-export const PUT = withApiLogger(async (
+export const PATCH = withApiLogger(async (
   req: NextRequest,
   context: unknown
 ) => {
   let currentId = "unknown";
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session || session.user.role !== "ADMIN") {
       return loggedErrorResponse("Action réservée aux administrateurs", 403);
     }
 
     const { id } = await (context as RouteContext).params;
     currentId = id;
-    
-    const body = await req.json();
-    const validatedData = updateStatusSchema.parse(body);
 
-    const existingOrder = await prisma.order.findUnique({ 
+    const body = await req.json();
+    const validatedData = updateOrderSchema.parse(body);
+
+    const existingOrder = await prisma.order.findUnique({
       where: { id },
-      select: { id: true, status: true, orderNumber: true }
+      select: { id: true, status: true, orderNumber: true, paymentDate: true },
     });
 
-    if (!existingOrder) {
-      return loggedErrorResponse("Commande introuvable", 404);
-    }
+    if (!existingOrder) return loggedErrorResponse("Commande introuvable", 404);
 
-    if (existingOrder.status === validatedData.status) {
-      return loggedErrorResponse(
-        `La commande est déjà au statut ${validatedData.status}`,
-        400
-      );
-    }
+    const updateData: Prisma.OrderUpdateInput = { ...validatedData };
 
-    const updatedOrder = await prisma.$transaction(async (tx) => {
-      const order = await tx.order.update({
-        where: { id },
-        data: { status: validatedData.status },
-      });
-
-      await tx.orderStatusHistory.create({
+    if (validatedData.status && validatedData.status !== existingOrder.status) {
+      await prisma.orderStatusHistory.create({
         data: {
           orderId: id,
           status: validatedData.status,
-          changedBy: session.user.id
+          changedBy: session.user.id,
         },
       });
+      apiLogger.info(
+        `Statut commande ${existingOrder.orderNumber} : ${existingOrder.status} → ${validatedData.status}`
+      );
+    }
 
-      return order;
+    if (validatedData.paymentStatus === "PAID" && !existingOrder.paymentDate) {
+      updateData.paymentDate = new Date();
+    }
+
+    const order = await prisma.order.update({
+      where: { id },
+      data: updateData,
+      include: {
+        items: {
+          include: {
+            product: {
+              select: { id: true, name: true, slug: true, images: true, tva: true },
+            },
+          },
+        },
+        address: true,
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+        invoice: true,
+        statusHistory: { orderBy: { createdAt: "desc" } },
+      },
     });
 
-    apiLogger.info(`Statut commande ${existingOrder.orderNumber} mis à jour : ${existingOrder.status} -> ${validatedData.status}`);
+    const serializedOrder = {
+      ...order,
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      items: order.items.map((item) => ({
+        ...item,
+        price: Number(item.price),
+      })),
+      invoice: order.invoice
+        ? { ...order.invoice, amount: Number(order.invoice.amount) }
+        : null,
+    };
 
     return loggedSuccessResponse(
-      { order: updatedOrder },
-      `Statut mis à jour vers ${validatedData.status} avec succès`
+      { order: serializedOrder },
+      "Commande mise à jour avec succès"
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return loggedErrorResponse(`Données invalides: ${error.issues[0].message}`, 400);
+      return loggedErrorResponse(
+        `Données invalides: ${error.issues.map((i) => i.message).join(", ")}`,
+        400
+      );
     }
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    apiLogger.error(`Erreur mise à jour statut [${currentId}]: ${message}`);
-    return loggedErrorResponse(`Erreur lors de la mise à jour: ${message}`, 500);
+    apiLogger.error(`Erreur PATCH order [${currentId}]: ${message}`);
+    return loggedErrorResponse(`Erreur mise à jour commande: ${message}`, 500);
   }
 });
 
 export const DELETE = withApiLogger(async (
-  req: NextRequest,
+  _req: NextRequest,
   context: unknown
 ) => {
   let currentId = "unknown";
@@ -178,27 +212,30 @@ export const DELETE = withApiLogger(async (
       include: { items: true },
     });
 
-    if (!order) return loggedErrorResponse("Commande non trouvée", 404);
+    if (!order) return loggedErrorResponse("Commande introuvable", 404);
 
     if (session.user.role !== "ADMIN" && session.user.id !== order.userId) {
       return loggedErrorResponse("Accès interdit", 403);
     }
 
     if (order.status === "SHIPPED" || order.status === "DELIVERED") {
-      return loggedErrorResponse("Impossible d'annuler une commande déjà expédiée", 400);
+      return loggedErrorResponse(
+        "Impossible d'annuler une commande déjà expédiée ou livrée",
+        400
+      );
     }
 
     await prisma.$transaction([
-      prisma.order.update({
-        where: { id },
-        data: { status: OrderStatus.CANCELLED }
-      }),
       prisma.orderStatusHistory.create({
         data: {
           orderId: id,
           status: OrderStatus.CANCELLED,
-          changedBy: session.user.id
-        }
+          changedBy: session.user.id,
+        },
+      }),
+      prisma.order.update({
+        where: { id },
+        data: { status: OrderStatus.CANCELLED },
       }),
       ...order.items.map((item) =>
         prisma.product.update({
@@ -208,11 +245,16 @@ export const DELETE = withApiLogger(async (
       ),
     ]);
 
-    apiLogger.warn(`Commande ${order.orderNumber} annulée par ${session.user.email}`);
-    return loggedSuccessResponse({ message: "Commande annulée et stock restauré" });
+    apiLogger.warn(
+      `Commande ${order.orderNumber} annulée par ${session.user.email}`
+    );
+    return loggedSuccessResponse(
+      { message: "Commande annulée et stock restauré" },
+      "Commande annulée avec succès"
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    apiLogger.error(`Erreur annulation [${currentId}]: ${message}`);
+    apiLogger.error(`Erreur DELETE order [${currentId}]: ${message}`);
     return loggedErrorResponse("Erreur lors de l'annulation", 500);
   }
 });

@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import {
@@ -12,7 +14,7 @@ import {
   type CartItem,
 } from "@/lib/tva-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const orderItemSchema = z.object({
   productId: z.string(),
@@ -47,6 +49,9 @@ function calculateShippingCost(subtotal: number, country: string): number {
 
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return loggedErrorResponse("Vous devez être connecté", 401);
+
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -55,7 +60,11 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
-    if (userId) where.userId = userId;
+    if (session.user.role !== "ADMIN") {
+      where.userId = session.user.id;
+    } else {
+      if (userId) where.userId = userId;
+    }
     if (status) where.status = status;
 
     const [orders, total] = await Promise.all([
@@ -66,7 +75,13 @@ export const GET = withApiLogger(async (req: NextRequest) => {
         include: {
           user: { select: { id: true, email: true, firstName: true, lastName: true } },
           address: true,
-          items: { include: { product: { select: { id: true, name: true, slug: true, images: true } } } },
+          items: {
+            include: {
+              product: {
+                select: { id: true, name: true, slug: true, images: true },
+              },
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -122,10 +137,12 @@ export const POST = withApiLogger(async (req: NextRequest) => {
 
     if (products.length !== productIds.length) {
       const missing = productIds.filter((id) => !products.some((p) => p.id === id));
-      return loggedErrorResponse(`Produits non trouvés ou indisponibles: ${missing.join(", ")}`, 400);
+      return loggedErrorResponse(
+        `Produits non trouvés ou indisponibles: ${missing.join(", ")}`,
+        400
+      );
     }
 
-    // Validation disponibilité produits
     for (const item of validatedData.items) {
       const product = products.find((p) => p.id === item.productId);
       if (!product) continue;
@@ -136,11 +153,9 @@ export const POST = withApiLogger(async (req: NextRequest) => {
         );
     }
 
-    // Calcul automatique montants TTC (Utilisation de ton utilitaire tva-utils)
     const cartItems: CartItem[] = validatedData.items.map((item) => {
       const product = products.find((p) => p.id === item.productId);
       if (!product) throw new Error("Produit non trouvé interne");
-      
       return {
         priceHT: Number(product.price),
         tvaRate: product.tva,
@@ -155,49 +170,50 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     const orderItems = validatedData.items.map((item) => {
       const product = products.find((p) => p.id === item.productId);
       if (!product) throw new Error("Produit non trouvé interne");
-
-      return { 
-        productId: product.id, 
-        name: product.name, 
-        price: product.price, 
-        quantity: item.quantity 
+      return {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: item.quantity,
       };
     });
 
-    // Transaction Prisma (order + orderItems + décrémentation stock)
     const order = await prisma.$transaction(async (tx) => {
-      // 1. Création de la commande
       const newOrder = await tx.order.create({
         data: {
           orderNumber: generateOrderNumber(),
           userId: validatedData.userId,
           addressId: validatedData.addressId,
-          subtotal: totals.subtotalHT,                  
-          shippingCost: totals.shippingCost || 0,       
-          tax: totals.totalTVA,                                  
-          total: totals.grandTotal || totals.totalTTC,   
+          subtotal: totals.subtotalHT,
+          shippingCost: totals.shippingCost || 0,
+          tax: totals.totalTVA,
+          total: totals.grandTotal || totals.totalTTC,
           notes: validatedData.notes,
           paymentMethod: validatedData.paymentMethod,
           items: { create: orderItems },
           statusHistory: { create: { status: "PENDING" } },
         },
         include: {
-          items: { include: { product: { select: { id: true, name: true, slug: true, images: true, price: true } } } },
+          items: {
+            include: {
+              product: {
+                select: { id: true, name: true, slug: true, images: true, price: true },
+              },
+            },
+          },
           address: true,
           user: { select: { id: true, email: true, firstName: true, lastName: true } },
         },
       });
 
-      // 2. Décrémentation du stock (Critère d'acceptation)
-      // On utilise une sécurité gte pour éviter les stocks négatifs en cas d'accès concurrents
       await Promise.all(
         validatedData.items.map((item) =>
-          tx.product.update({ 
-            where: { 
+          tx.product.update({
+            where: {
               id: item.productId,
-              stock: { gte: item.quantity } 
-            }, 
-            data: { stock: { decrement: item.quantity } } 
+              stock: { gte: item.quantity },
+            },
+            data: { stock: { decrement: item.quantity } },
           })
         )
       );
@@ -212,15 +228,24 @@ export const POST = withApiLogger(async (req: NextRequest) => {
       tax: Number(order.tax),
       total: Number(order.total),
       items: order.items.map((i) => ({ ...i, price: Number(i.price) })),
-      tvaBreakdown: totals.tvaBreakdown,  
+      tvaBreakdown: totals.tvaBreakdown,
     };
 
-    apiLogger.info(`Commande créée: ${order.orderNumber} - Total: ${totals.grandTotal || totals.totalTTC}€ (TVA: ${totals.totalTVA}€)`);
+    apiLogger.info(
+      `Commande créée: ${order.orderNumber} - Total: ${totals.grandTotal || totals.totalTTC}€ (TVA: ${totals.totalTVA}€)`
+    );
 
-    return loggedSuccessResponse({ order: serializedOrder }, "Commande créée avec succès", 201);
+    return loggedSuccessResponse(
+      { order: serializedOrder },
+      "Commande créée avec succès",
+      201
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return loggedErrorResponse(`Données invalides: ${error.issues.map((i) => i.message).join(", ")}`, 400);
+      return loggedErrorResponse(
+        `Données invalides: ${error.issues.map((i) => i.message).join(", ")}`,
+        400
+      );
     }
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     apiLogger.error(`POST orders error: ${message}`);
