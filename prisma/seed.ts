@@ -66,7 +66,6 @@ async function main() {
   // ============================================
   console.log("\n📍 Création des adresses...");
 
-  // On a enlevé "const address1 =" car on n'utilise pas la variable après
   await prisma.address.create({
     data: {
       userId: user1.id,
@@ -82,7 +81,6 @@ async function main() {
   });
   console.log("   ✓ Adresse principale pour", user1.email);
 
-  // On a enlevé "const address2 =" ici aussi
   await prisma.address.create({
     data: {
       userId: user1.id,
