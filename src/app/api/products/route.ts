@@ -2,22 +2,31 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
-import { withApiLogger, loggedErrorResponse, loggedSuccessResponse, productLogger, LogMessages } from "@/lib/logger/exports";
+import { ZodError, z } from "zod";
 import { Prisma } from "@prisma/client";
+import {
+  productLogger,
+  LogMessages,
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+} from "@/lib/logger/exports";
+import { getPriceBreakdown } from "@/lib/tva-utils";
+
+export const dynamic = 'force-dynamic';
 
 const productSchema = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  description: z.string().optional(),
-  price: z.number().positive(),
+  name: z.string().min(1, "Le nom est requis"),
+  slug: z.string().min(1, "Le slug est requis"),
+  description: z.string().optional().nullable(),
+  price: z.number().positive("Le prix doit être positif"),
   comparePrice: z.number().positive().optional(),
   sku: z.string().optional(),
   stock: z.number().int().min(0).default(0),
   images: z.array(z.string()).default([]),
   featured: z.boolean().default(false),
   active: z.boolean().default(true),
-  categoryId: z.string().optional(),
+  categoryId: z.string().min(1, "La catégorie est requise").optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
   tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]).default("TVA_20"),
   priority: z.number().int().default(0),
@@ -30,22 +39,45 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
     const featured = searchParams.get("featured");
+
     const where: Prisma.ProductWhereInput = {};
     if (categoryId) where.categoryId = categoryId;
     if (featured === "true") where.featured = true;
 
     const products = await prisma.product.findMany({
       where,
-      include: { category: { select: { id: true, name: true, slug: true } } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        comparePrice: true,
+        stock: true,
+        images: true,
+        featured: true,
+        createdAt: true,
+        categoryId: true,
+        category: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
 
-    const serializedProducts = products.map(p => ({
-      ...p,
-      price: p.price.toNumber(),
-      comparePrice: p.comparePrice?.toNumber() || null,
-      image: p.images[0] || null,
-    }));
+    const serializedProducts = products.map((product) => {
+      const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
+      const breakdown = getPriceBreakdown(priceHT, "TVA_20");
+      return {
+        ...product,
+        price: priceHT,
+        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+        tva: "TVA_20",
+        priceTTC: breakdown.priceTTC,
+        priceBreakdown: breakdown,
+        image: product.images?.[0] || null,
+      };
+    });
 
     productLogger.info(`${serializedProducts.length} produits récupérés`);
     return loggedSuccessResponse({ products: serializedProducts }, "Liste des produits récupérée");
@@ -57,7 +89,9 @@ export const GET = withApiLogger(async (req: NextRequest) => {
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+    if (!session || session.user?.role !== "ADMIN") {
+      return loggedErrorResponse("Non autorisé", 403);
+    }
 
     const body = await req.json();
     const validatedData = productSchema.parse(body);
@@ -72,23 +106,36 @@ export const POST = withApiLogger(async (req: NextRequest) => {
 
     const product = await prisma.product.create({
       data: validatedData,
-      include: { category: { select: { id: true, name: true, slug: true } } },
+      include: {
+        category: { select: { id: true, name: true, slug: true } },
+      },
     });
+
+    const priceHT = Number(product.price);
+    const breakdown = getPriceBreakdown(priceHT, "TVA_20");
 
     const serializedProduct = {
       ...product,
-      price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
+      price: priceHT,
+      comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+      tva: "TVA_20",
+      priceTTC: breakdown.priceTTC,
+      priceBreakdown: breakdown,
       image: product.images[0] || null,
     };
 
     productLogger.info(LogMessages.product.produitCree(product.id, product.name));
-    return loggedSuccessResponse({ product: serializedProduct }, LogMessages.product.produitCree(product.id, product.name), 201);
+
+    return loggedSuccessResponse(
+      { product: serializedProduct },
+      LogMessages.product.produitCree(product.id, product.name),
+      201
+    );
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       return loggedErrorResponse(`Données invalides: ${error.issues.map(i => i.message).join(", ")}`, 400);
     }
-    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur inconnue", 500);
+    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur création produit", 500);
   }
 });
 
@@ -117,10 +164,16 @@ export const PATCH = withApiLogger(async (req: NextRequest) => {
       include: { category: { select: { id: true, name: true, slug: true } } },
     });
 
+    const priceHT = Number(updatedProduct.price);
+    const breakdown = getPriceBreakdown(priceHT, updatedProduct.tva ?? "TVA_20");
+
     const serializedProduct = {
       ...updatedProduct,
-      price: updatedProduct.price.toNumber(),
-      comparePrice: updatedProduct.comparePrice?.toNumber() || null,
+      price: priceHT,
+      comparePrice: updatedProduct.comparePrice ? Number(updatedProduct.comparePrice) : null,
+      tva: updatedProduct.tva ?? "TVA_20",
+      priceTTC: breakdown.priceTTC,
+      priceBreakdown: breakdown,
       image: updatedProduct.images[0] || null,
     };
 
