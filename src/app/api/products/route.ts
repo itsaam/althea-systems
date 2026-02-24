@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ZodError, z } from "zod";
+import { Prisma } from "@prisma/client";
 import {
   productLogger,
   LogMessages,
@@ -9,7 +11,6 @@ import {
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
-import { ZodError, z } from "zod";
 import { getPriceBreakdown } from "@/lib/tva-utils";
 
 export const dynamic = 'force-dynamic';
@@ -19,32 +20,46 @@ const productSchema = z.object({
   slug: z.string().min(1, "Le slug est requis"),
   description: z.string().optional().nullable(),
   price: z.number().positive("Le prix doit être positif"),
+  comparePrice: z.number().positive().optional(),
+  sku: z.string().optional(),
   stock: z.number().int().min(0).default(0),
-  categoryId: z.string().min(1, "La catégorie est requise"),
   images: z.array(z.string()).default([]),
   featured: z.boolean().default(false),
+  active: z.boolean().default(true),
+  categoryId: z.string().min(1, "La catégorie est requise").optional(),
+  status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
+  tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]).default("TVA_20"),
+  priority: z.number().int().default(0),
 });
 
-export const GET = withApiLogger(async (_req: NextRequest) => {
+const updateProductSchema = productSchema.partial();
+
+export const GET = withApiLogger(async (req: NextRequest) => {
   try {
+    const { searchParams } = new URL(req.url);
+    const categoryId = searchParams.get("categoryId");
+    const featured = searchParams.get("featured");
+
+    const where: Prisma.ProductWhereInput = {};
+    if (categoryId) where.categoryId = categoryId;
+    if (featured === "true") where.featured = true;
+
     const products = await prisma.product.findMany({
+      where,
       select: {
         id: true,
         name: true,
         slug: true,
         description: true,
         price: true,
+        comparePrice: true,
         stock: true,
         images: true,
-        featured: true, 
+        featured: true,
         createdAt: true,
         categoryId: true,
         category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
+          select: { id: true, name: true, slug: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -53,10 +68,10 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
     const serializedProducts = products.map((product) => {
       const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
       const breakdown = getPriceBreakdown(priceHT, "TVA_20");
-
       return {
         ...product,
         price: priceHT,
+        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
         tva: "TVA_20",
         priceTTC: breakdown.priceTTC,
         priceBreakdown: breakdown,
@@ -65,13 +80,9 @@ export const GET = withApiLogger(async (_req: NextRequest) => {
     });
 
     productLogger.info(`${serializedProducts.length} produits récupérés`);
-    return loggedSuccessResponse(
-      { products: serializedProducts },
-      `Liste des produits récupérée`
-    );
+    return loggedSuccessResponse({ products: serializedProducts }, "Liste des produits récupérée");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur récupération produits: ${message}`, 500);
+    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur inconnue", 500);
   }
 });
 
@@ -79,28 +90,24 @@ export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+      return loggedErrorResponse("Non autorisé", 403);
     }
 
     const body = await req.json();
-    
     const validatedData = productSchema.parse(body);
 
+    const existingProduct = await prisma.product.findUnique({ where: { slug: validatedData.slug } });
+    if (existingProduct) return loggedErrorResponse("Ce slug est déjà utilisé", 400);
+
+    if (validatedData.categoryId) {
+      const category = await prisma.category.findUnique({ where: { id: validatedData.categoryId } });
+      if (!category) return loggedErrorResponse("Catégorie non trouvée", 404);
+    }
+
     const product = await prisma.product.create({
-      data: {
-        name: validatedData.name,
-        slug: validatedData.slug,
-        description: validatedData.description,
-        price: validatedData.price,
-        stock: validatedData.stock,
-        images: validatedData.images,
-        featured: validatedData.featured,
-        categoryId: validatedData.categoryId,
-      },
+      data: validatedData,
       include: {
-        category: {
-          select: { id: true, name: true, slug: true },
-        },
+        category: { select: { id: true, name: true, slug: true } },
       },
     });
 
@@ -110,6 +117,7 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     const serializedProduct = {
       ...product,
       price: priceHT,
+      comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
       tva: "TVA_20",
       priceTTC: breakdown.priceTTC,
       priceBreakdown: breakdown,
@@ -125,9 +133,74 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     );
   } catch (error) {
     if (error instanceof ZodError) {
-      return loggedErrorResponse(error.issues[0].message, 400);
+      return loggedErrorResponse(`Données invalides: ${error.issues.map(i => i.message).join(", ")}`, 400);
     }
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur création produit: ${message}`, 500);
+    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur création produit", 500);
+  }
+});
+
+export const PATCH = withApiLogger(async (req: NextRequest) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+
+    const id = new URL(req.url).pathname.split("/").pop();
+    if (!id) return loggedErrorResponse("ID produit manquant", 400);
+
+    const body = await req.json();
+    const validatedData = updateProductSchema.parse(body);
+
+    const existingProduct = await prisma.product.findUnique({ where: { id } });
+    if (!existingProduct) return loggedErrorResponse("Produit non trouvé", 404);
+
+    if (validatedData.categoryId) {
+      const category = await prisma.category.findUnique({ where: { id: validatedData.categoryId } });
+      if (!category) return loggedErrorResponse("Catégorie non trouvée", 404);
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: validatedData,
+      include: { category: { select: { id: true, name: true, slug: true } } },
+    });
+
+    const priceHT = Number(updatedProduct.price);
+    const breakdown = getPriceBreakdown(priceHT, updatedProduct.tva ?? "TVA_20");
+
+    const serializedProduct = {
+      ...updatedProduct,
+      price: priceHT,
+      comparePrice: updatedProduct.comparePrice ? Number(updatedProduct.comparePrice) : null,
+      tva: updatedProduct.tva ?? "TVA_20",
+      priceTTC: breakdown.priceTTC,
+      priceBreakdown: breakdown,
+      image: updatedProduct.images[0] || null,
+    };
+
+    productLogger.info(LogMessages.product.produitModifie(updatedProduct.id));
+    return loggedSuccessResponse({ product: serializedProduct }, "Produit mis à jour");
+  } catch (error) {
+    if (error instanceof z.ZodError) return loggedErrorResponse(`Données invalides: ${error.issues.map(i => i.message).join(", ")}`, 400);
+    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur inconnue", 500);
+  }
+});
+
+export const DELETE = withApiLogger(async (req: NextRequest) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
+
+    const id = new URL(req.url).pathname.split("/").pop();
+    if (!id) return loggedErrorResponse("ID produit manquant", 400);
+
+    const existingProduct = await prisma.product.findUnique({ where: { id } });
+    if (!existingProduct) return loggedErrorResponse("Produit non trouvé", 404);
+
+    await prisma.product.delete({ where: { id } });
+    productLogger.info(LogMessages.product.produitSupprime(existingProduct.id));
+
+    return loggedSuccessResponse({ message: "Produit supprimé" }, "Produit supprimé");
+  } catch (error) {
+    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur inconnue", 500);
   }
 });

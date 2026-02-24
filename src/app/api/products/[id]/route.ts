@@ -9,9 +9,9 @@ import {
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
-import { getPriceBreakdown } from "@/lib/tva-utils";
+import { getPriceBreakdown, calculateTTC } from "@/lib/tva-utils";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
@@ -34,42 +34,32 @@ export const GET = withApiLogger(async (_req: NextRequest, context: unknown) => 
 
     const product = await prisma.product.findUnique({
       where: { id },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        price: true,
-        stock: true,
-        images: true,
-        categoryId: true,
-        featured: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         category: {
           select: { id: true, name: true, slug: true },
         },
       },
     });
 
-    if (!product) {
-      return loggedErrorResponse("Produit non trouvé", 404);
-    }
+    if (!product) return loggedErrorResponse("Produit non trouvé", 404);
 
-    const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
-    const breakdown = getPriceBreakdown(priceHT, "TVA_20");
-
-    const serializedProduct = {
-      ...product,
-      price: priceHT,
-      tva: "TVA_20",
-      priceTTC: breakdown.priceTTC,
-      priceBreakdown: breakdown,
-      image: product.images?.[0] || null,
-    };
+    const priceHT = product.price.toNumber();
+    const breakdown = getPriceBreakdown(priceHT, product.tva);
+    const comparePriceHT = product.comparePrice?.toNumber();
+    const comparePriceTTC = comparePriceHT
+      ? calculateTTC(comparePriceHT, product.tva)
+      : null;
 
     return loggedSuccessResponse({
-      product: serializedProduct,
+      product: {
+        ...product,
+        price: priceHT,
+        comparePrice: comparePriceHT ?? null,
+        priceTTC: breakdown.priceTTC,
+        priceBreakdown: breakdown,
+        comparePriceTTC,
+        image: product.images?.[0] || null,
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
@@ -85,62 +75,65 @@ export const PATCH = withApiLogger(async (req: NextRequest, context: unknown) =>
     }
 
     const { id } = await (context as RouteContext).params;
-    const body = await req.json() as Record<string, unknown>;
 
-    const { 
-      tva: _tva, 
-      priceTTC: _priceTTC, 
-      priceBreakdown: _priceBreakdown, 
-      createdAt: _createdAt, 
-      updatedAt: _updatedAt, 
-      ...rest 
+    const body = await req.json() as Record<string, unknown>;
+    const {
+      tva: _tva,
+      priceTTC: _priceTTC,
+      priceBreakdown: _priceBreakdown,
+      comparePriceTTC: _comparePriceTTC,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      ...rest
     } = body;
-    
+
     const validatedData = updateProductSchema.parse(rest);
+
+    const existingProduct = await prisma.product.findUnique({ where: { id } });
+    if (!existingProduct) return loggedErrorResponse("Produit non trouvé", 404);
 
     const product = await prisma.product.update({
       where: { id },
       data: validatedData,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        price: true,
-        stock: true,
-        images: true,
-        categoryId: true,
-        featured: true,
+      include: {
         category: {
           select: { id: true, name: true, slug: true },
         },
       },
     });
 
-    const priceHT = Number(product.price);
-    const breakdown = getPriceBreakdown(priceHT, "TVA_20");
-
-    const serializedProduct = {
-      ...product,
-      price: priceHT,
-      tva: "TVA_20",
-      priceTTC: breakdown.priceTTC,
-      priceBreakdown: breakdown,
-      image: product.images?.[0] || null,
-    };
-
     productLogger.info(`Produit ${id} mis à jour`);
 
+    const priceHT = product.price.toNumber();
+    const priceBreakdown = getPriceBreakdown(priceHT, product.tva);
+    const comparePriceHT = product.comparePrice?.toNumber();
+    const comparePriceTTC = comparePriceHT
+      ? calculateTTC(comparePriceHT, product.tva)
+      : null;
+
     return loggedSuccessResponse(
-      { product: serializedProduct },
+      {
+        product: {
+          ...product,
+          price: priceHT,
+          comparePrice: comparePriceHT ?? null,
+          priceTTC: priceBreakdown.priceTTC,
+          priceBreakdown,
+          comparePriceTTC,
+          image: product.images?.[0] || null,
+        },
+      },
       "Produit mis à jour avec succès"
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return loggedErrorResponse(error.issues[0].message, 400);
+      return loggedErrorResponse(
+        `Données invalides: ${error.issues.map((i) => i.message).join(", ")}`,
+        400
+      );
     }
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur mise à jour: ${message}`, 500);
+    return loggedErrorResponse(`Erreur mise à jour produit: ${message}`, 500);
   }
 });
 
@@ -157,14 +150,12 @@ export const DELETE = withApiLogger(async (_req: NextRequest, context: unknown) 
       where: { id },
       include: {
         _count: {
-          select: { orderItems: true }
-        }
-      }
+          select: { orderItems: true },
+        },
+      },
     });
 
-    if (!product) {
-      return loggedErrorResponse("Produit non trouvé", 404);
-    }
+    if (!product) return loggedErrorResponse("Produit non trouvé", 404);
 
     if (product._count.orderItems > 0) {
       return loggedErrorResponse(
@@ -182,6 +173,6 @@ export const DELETE = withApiLogger(async (_req: NextRequest, context: unknown) 
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur suppression: ${message}`, 500);
+    return loggedErrorResponse(`Erreur suppression produit: ${message}`, 500);
   }
 });

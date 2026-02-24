@@ -17,13 +17,8 @@ export const GET = withApiLogger(async (request: NextRequest) => {
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '8'));
     const categoryId = searchParams.get('categoryId');
 
-    const where: Prisma.ProductWhereInput = {
-      featured: true,
-    };
-
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
+    const where: Prisma.ProductWhereInput = { featured: true };
+    if (categoryId) where.categoryId = categoryId;
 
     const products = await prisma.product.findMany({
       where,
@@ -40,11 +35,7 @@ export const GET = withApiLogger(async (request: NextRequest) => {
         categoryId: true,
         createdAt: true,
         category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
+          select: { id: true, name: true, slug: true },
         },
       },
       orderBy: [{ createdAt: 'desc' }],
@@ -53,7 +44,6 @@ export const GET = withApiLogger(async (request: NextRequest) => {
     const serializedProducts = products.map((product) => {
       const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
       const breakdown = getPriceBreakdown(priceHT, "TVA_20");
-
       return {
         ...product,
         price: priceHT,
@@ -67,10 +57,7 @@ export const GET = withApiLogger(async (request: NextRequest) => {
     productLogger.info(`${serializedProducts.length} produits mis en avant récupérés`);
 
     return loggedSuccessResponse(
-      { 
-        products: serializedProducts,
-        count: serializedProducts.length 
-      },
+      { products: serializedProducts, count: serializedProducts.length },
       "Produits mis en avant récupérés"
     );
   } catch (error) {

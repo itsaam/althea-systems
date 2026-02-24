@@ -8,9 +8,10 @@ import {
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
 
+// GET Détails d'une adresse
 export const GET = withApiLogger(async (
-  req: NextRequest,
-  context: unknown
+  _req: NextRequest,
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +20,7 @@ export const GET = withApiLogger(async (
       return loggedErrorResponse("Non authentifié", 401);
     }
 
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = (context as { params: { id: string } }).params;
 
     const address = await prisma.address.findUnique({
       where: { id },
@@ -44,16 +45,16 @@ export const GET = withApiLogger(async (
     }
 
     return loggedSuccessResponse(address);
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    console.error("[Address GET] Erreur:", error);
-    return loggedErrorResponse(`Erreur récupération adresse : ${message}`, 500);
+    return loggedErrorResponse(`Erreur récupération adresse: ${message}`, 500);
   }
 });
 
+// PATCH Mise à jour d'une adresse
 export const PATCH = withApiLogger(async (
   req: NextRequest,
-  context: unknown
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -62,7 +63,7 @@ export const PATCH = withApiLogger(async (
       return loggedErrorResponse("Non authentifié", 401);
     }
 
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = (context as { params: { id: string } }).params;
     const body = await req.json();
 
     const currentAddress = await prisma.address.findUnique({
@@ -96,16 +97,16 @@ export const PATCH = withApiLogger(async (
     });
 
     return loggedSuccessResponse(updatedAddress, "Adresse mise à jour avec succès");
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    console.error("[Address PATCH] Erreur:", error);
-    return loggedErrorResponse(`Erreur mise à jour adresse : ${message}`, 500);
+    return loggedErrorResponse(`Erreur mise à jour adresse: ${message}`, 500);
   }
 });
 
+// DELETE Supprimer une adresse
 export const DELETE = withApiLogger(async (
-  req: NextRequest,
-  context: unknown
+  _req: NextRequest,
+  context?: unknown
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -114,7 +115,7 @@ export const DELETE = withApiLogger(async (
       return loggedErrorResponse("Non authentifié", 401);
     }
 
-    const { id } = await (context as { params: Promise<{ id: string }> }).params;
+    const { id } = (context as { params: { id: string } }).params;
 
     const address = await prisma.address.findUnique({
       where: { id },
@@ -144,9 +145,8 @@ export const DELETE = withApiLogger(async (
     });
 
     return loggedSuccessResponse({ message: 'Adresse supprimée avec succès' });
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    console.error("[Address DELETE] Erreur:", error);
-    return loggedErrorResponse(`Erreur suppression adresse : ${message}`, 500);
+    return loggedErrorResponse(`Erreur suppression adresse: ${message}`, 500);
   }
 });

@@ -22,7 +22,6 @@ async function main() {
       firstName: "Admin",
       lastName: "Althea",
       role: "ADMIN",
-      status: "ACTIVE",
       emailVerified: new Date(),
       twoFactorEnabled: true,
     },
@@ -67,7 +66,6 @@ async function main() {
   // ============================================
   console.log("\n📍 Création des adresses...");
 
-  // On a enlevé "const address1 =" car on n'utilise pas la variable après
   await prisma.address.create({
     data: {
       userId: user1.id,
@@ -83,7 +81,6 @@ async function main() {
   });
   console.log("   ✓ Adresse principale pour", user1.email);
 
-  // On a enlevé "const address2 =" ici aussi
   await prisma.address.create({
     data: {
       userId: user1.id,
@@ -236,7 +233,6 @@ Origine : USA`,
           "https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/products/stethoscope-3m-littmann-classic-iii-zoom.jpg",
         ],
         featured: true,
-        status: "PUBLISHED",
         categoryId: categories[0].id,
       },
     }),
@@ -278,7 +274,6 @@ Garantie : 3 ans`,
           "https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/products/tensiometre-omron-m6-brassard.jpg",
         ],
         featured: true,
-        status: "PUBLISHED",
         categoryId: categories[0].id,
       },
     }),
@@ -318,7 +313,6 @@ Couleur : Bleu`,
           "https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/products/gants-nitrile-bleu-boite.jpg",
         ],
         featured: false,
-        status: "PUBLISHED",
         categoryId: categories[1].id,
       },
     }),
