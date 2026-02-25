@@ -36,7 +36,7 @@ export const PUT = withApiLogger(async (req: NextRequest) => {
         prisma.category.update({
           where: { id: item.id },
           data: {
-
+            order: item.order, 
             updatedAt: new Date(),
           },
         })
