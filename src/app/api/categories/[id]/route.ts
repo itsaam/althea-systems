@@ -21,10 +21,6 @@ const updateCategorySchema = z.object({
   parentId: z.string().optional().nullable(),
 });
 
-/**
- * Interface pour typer proprement le contexte sans utiliser 'any'
- * pour satisfaire à la fois ESLint et Next.js 15.
- */
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
