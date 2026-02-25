@@ -1,6 +1,68 @@
-import { NextResponse } from "next/server";
+import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
+import {
+  productLogger,
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+} from "@/lib/logger/exports";
+import { getPriceBreakdown } from "@/lib/tva-utils";
 
-export async function GET() {
-  // TODO: Fetch featured products
-  return NextResponse.json({ products: [] });
-}
+export const dynamic = 'force-dynamic';
+
+export const GET = withApiLogger(async (request: NextRequest) => {
+  try {
+    const { searchParams } = new URL(request.url);
+    const limit = Math.max(1, parseInt(searchParams.get('limit') || '8'));
+    const categoryId = searchParams.get('categoryId');
+
+    const where: Prisma.ProductWhereInput = { featured: true };
+    if (categoryId) where.categoryId = categoryId;
+
+    const products = await prisma.product.findMany({
+      where,
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        stock: true,
+        images: true,
+        featured: true,
+        categoryId: true,
+        createdAt: true,
+        category: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
+      orderBy: [{ createdAt: 'desc' }],
+    });
+
+    const serializedProducts = products.map((product) => {
+      const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
+      const breakdown = getPriceBreakdown(priceHT, "TVA_20");
+      return {
+        ...product,
+        price: priceHT,
+        tva: "TVA_20",
+        priceTTC: breakdown.priceTTC,
+        priceBreakdown: breakdown,
+        image: product.images?.[0] || null,
+      };
+    });
+
+    productLogger.info(`${serializedProducts.length} produits mis en avant récupérés`);
+
+    return loggedSuccessResponse(
+      { products: serializedProducts, count: serializedProducts.length },
+      "Produits mis en avant récupérés"
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    productLogger.error(`Erreur récupération produits mis en avant: ${message}`);
+    return loggedErrorResponse(`Erreur récupération produits mis en avant: ${message}`, 500);
+  }
+});

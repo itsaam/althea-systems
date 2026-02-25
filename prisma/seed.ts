@@ -22,7 +22,6 @@ async function main() {
       firstName: "Admin",
       lastName: "Althea",
       role: "ADMIN",
-      status: "ACTIVE",
       emailVerified: new Date(),
       twoFactorEnabled: true,
     },
@@ -62,12 +61,12 @@ async function main() {
   });
   console.log("   ✓ User B2B 2:", user2.email, "(Hôpital du Nord - PENDING)");
 
-  // ============================================
+ // ============================================
   // 2. ADRESSES
   // ============================================
   console.log("\n📍 Création des adresses...");
 
-  const address1 = await prisma.address.create({
+  await prisma.address.create({
     data: {
       userId: user1.id,
       firstName: "Martin",
@@ -82,7 +81,7 @@ async function main() {
   });
   console.log("   ✓ Adresse principale pour", user1.email);
 
-  const address2 = await prisma.address.create({
+  await prisma.address.create({
     data: {
       userId: user1.id,
       firstName: "Martin",
@@ -96,7 +95,7 @@ async function main() {
     },
   });
   console.log("   ✓ Adresse secondaire pour", user1.email);
-
+  
   // ============================================
   // 3. CATÉGORIES
   // ============================================
@@ -234,7 +233,6 @@ Origine : USA`,
           "https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/products/stethoscope-3m-littmann-classic-iii-zoom.jpg",
         ],
         featured: true,
-        status: "PUBLISHED",
         categoryId: categories[0].id,
       },
     }),
@@ -276,7 +274,6 @@ Garantie : 3 ans`,
           "https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/products/tensiometre-omron-m6-brassard.jpg",
         ],
         featured: true,
-        status: "PUBLISHED",
         categoryId: categories[0].id,
       },
     }),
@@ -316,7 +313,6 @@ Couleur : Bleu`,
           "https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/products/gants-nitrile-bleu-boite.jpg",
         ],
         featured: false,
-        status: "PUBLISHED",
         categoryId: categories[1].id,
       },
     }),

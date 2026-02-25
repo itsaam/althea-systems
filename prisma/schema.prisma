@@ -95,7 +95,7 @@ model Address {
   street     String
   street2    String?
   city       String
-  region     String? // Région - CDC Section X
+  region     String? 
   postalCode String
   country    String
   phone      String?
