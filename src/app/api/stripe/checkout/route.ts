@@ -3,34 +3,46 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getUserCurrency, convertFromEur, isCurrencySupported } from "@/lib/currency";
+
+interface PriceData {
+  currency: string;
+  unit_amount: number;
+  product_data?: {
+    name: string;
+    metadata?: {
+      productId?: string;
+    };
+  };
+}
+
+interface CheckoutItem {
+  price_data: PriceData;
+  quantity: number;
+}
 
 export async function POST(req: Request) {
   try {
-    console.log("🔵 [CHECKOUT] Starting checkout process");
-    
     const authSession = await getServerSession(authOptions);
-    console.log("🔵 [CHECKOUT] Auth session:", authSession);
     
     if (!authSession || !authSession.user?.id) {
-      console.log("❌ [CHECKOUT] Unauthorized - No session or user ID");
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const userId = authSession.user.id;
-    console.log("🔵 [CHECKOUT] User ID:", userId);
-
     const body = await req.json();
-    console.log("🔵 [CHECKOUT] Body received:", { items: body.items?.length, orderId: body.orderId });
-    
-    const { items, orderId } = body;
+    const { items, orderId } = body as { items: CheckoutItem[]; orderId: string };
 
     if (!items || !orderId) {
-      console.log("❌ [CHECKOUT] Missing parameters");
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
     }
 
-    console.log("🔵 [CHECKOUT] Vérification du stock...");
+    let currency = await getUserCurrency(userId, prisma);
     
+    if (!isCurrencySupported(currency)) {
+      currency = "eur";
+    }
+
     for (const item of items) {
       const productId = item.price_data?.product_data?.metadata?.productId;
       const quantity = item.quantity;
@@ -42,7 +54,6 @@ export async function POST(req: Request) {
         });
 
         if (!product) {
-          console.log(`❌ [CHECKOUT] Produit non trouvé: ${productId}`);
           return NextResponse.json(
             { error: `Produit non trouvé` },
             { status: 404 }
@@ -50,7 +61,6 @@ export async function POST(req: Request) {
         }
 
         if (product.stock < quantity) {
-          console.log(`❌ [CHECKOUT] Stock insuffisant: ${product.name} (demandé: ${quantity}, disponible: ${product.stock})`);
           return NextResponse.json(
             { 
               error: `Stock insuffisant pour ${product.name}. Disponible: ${product.stock}`,
@@ -61,81 +71,75 @@ export async function POST(req: Request) {
             { status: 400 }
           );
         }
-
-        if (product.stock === 0) {
-          console.log(`❌ [CHECKOUT] Produit en rupture de stock: ${product.name}`);
-          return NextResponse.json(
-            { 
-              error: `${product.name} est en rupture de stock`,
-              productName: product.name,
-            },
-            { status: 400 }
-          );
-        }
-
-        console.log(`✅ [CHECKOUT] Stock OK pour ${product.name}: ${product.stock} disponible(s)`);
       }
     }
 
-    console.log("🔵 [CHECKOUT] Looking for user in database...");
     const user = await prisma.user.findUnique({ 
       where: { id: userId } 
     });
 
     if (!user) {
-      console.log("❌ [CHECKOUT] User not found in database");
       return new NextResponse("User not found", { status: 404 });
     }
-
-    console.log("🔵 [CHECKOUT] User found:", user.email);
 
     let stripeCustomerId = user.stripeCustomerId;
 
     if (!stripeCustomerId) {
-      console.log("🔵 [CHECKOUT] Creating Stripe customer...");
       const customer = await stripe.instance.customers.create({
         email: user.email || "",
         metadata: { userId },
       });
       stripeCustomerId = customer.id;
       
-      console.log("🔵 [CHECKOUT] Updating user with Stripe customer ID...");
       await prisma.user.update({
         where: { id: userId },
         data: { stripeCustomerId },
       });
     }
 
+    const convertedItems = items.map((item: CheckoutItem) => {
+      const originalAmount = item.price_data.unit_amount;
+      const convertedAmount = currency === "eur" 
+        ? originalAmount 
+        : convertFromEur(originalAmount, currency);
+
+      return {
+        ...item,
+        price_data: {
+          ...item.price_data,
+          currency: currency,
+          unit_amount: convertedAmount,
+        },
+      };
+    });
+
     const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
 
-    console.log("🔵 [CHECKOUT] Creating Stripe checkout session...");
     const checkoutSession = await stripe.instance.checkout.sessions.create({
       customer: stripeCustomerId,
-      line_items: items,
+      line_items: convertedItems,
       mode: "payment",
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
       payment_intent_data: {
         setup_future_usage: "off_session",
-        metadata: { orderId },
+        metadata: { orderId, currency },
       },
       metadata: {
         orderId,
+        currency,
       },
     });
 
-    console.log("✅ [CHECKOUT] Success! Checkout URL:", checkoutSession.url);
-    return NextResponse.json({ url: checkoutSession.url });
+    return NextResponse.json({ 
+      url: checkoutSession.url,
+      currency: currency,
+    });
     
   } catch (error: unknown) {
-    console.error("❌ [CHECKOUT] Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    
-    console.error("❌ [CHECKOUT] Error stack:", errorStack);
     return NextResponse.json({ 
       error: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? errorStack : undefined 
     }, { status: 500 });
   }
 }
