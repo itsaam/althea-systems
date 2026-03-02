@@ -18,6 +18,25 @@ const contactSchema = z.object({
   message: z.string().min(10, 'Le message doit contenir au moins 10 caractères'),
 });
 
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const limit = rateLimitMap.get(ip);
+
+  if (!limit || now > limit.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + 3600000 }); // 1 heure
+    return true;
+  }
+
+  if (limit.count >= 5) {
+    return false;
+  }
+
+  limit.count++;
+  return true;
+}
+
 // GET Liste des messages (Admin uniquement)
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
@@ -62,9 +81,18 @@ export const GET = withApiLogger(async (req: NextRequest) => {
   }
 });
 
-// POST Créer un message de contact 
+// POST Créer un message 
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
+
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return loggedErrorResponse(
+        'Trop de messages envoyés. Veuillez réessayer dans une heure.',
+        429
+      );
+    }
+
     const body = await req.json();
     const validatedData = contactSchema.parse(body);
 
