@@ -29,6 +29,54 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
     }
 
+    console.log("🔵 [CHECKOUT] Vérification du stock...");
+    
+    for (const item of items) {
+      const productId = item.price_data?.product_data?.metadata?.productId;
+      const quantity = item.quantity;
+
+      if (productId) {
+        const product = await prisma.product.findUnique({
+          where: { id: productId },
+          select: { id: true, name: true, stock: true },
+        });
+
+        if (!product) {
+          console.log(`❌ [CHECKOUT] Produit non trouvé: ${productId}`);
+          return NextResponse.json(
+            { error: `Produit non trouvé` },
+            { status: 404 }
+          );
+        }
+
+        if (product.stock < quantity) {
+          console.log(`❌ [CHECKOUT] Stock insuffisant: ${product.name} (demandé: ${quantity}, disponible: ${product.stock})`);
+          return NextResponse.json(
+            { 
+              error: `Stock insuffisant pour ${product.name}. Disponible: ${product.stock}`,
+              productName: product.name,
+              available: product.stock,
+              requested: quantity,
+            },
+            { status: 400 }
+          );
+        }
+
+        if (product.stock === 0) {
+          console.log(`❌ [CHECKOUT] Produit en rupture de stock: ${product.name}`);
+          return NextResponse.json(
+            { 
+              error: `${product.name} est en rupture de stock`,
+              productName: product.name,
+            },
+            { status: 400 }
+          );
+        }
+
+        console.log(`✅ [CHECKOUT] Stock OK pour ${product.name}: ${product.stock} disponible(s)`);
+      }
+    }
+
     console.log("🔵 [CHECKOUT] Looking for user in database...");
     const user = await prisma.user.findUnique({ 
       where: { id: userId } 
