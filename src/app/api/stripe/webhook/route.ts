@@ -3,6 +3,7 @@ import { constructWebhookEvent, stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { OrderStatus, PaymentStatus } from "@prisma/client";
 import type Stripe from "stripe";
+import { apiLogger } from "@/lib/logger/exports";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -13,7 +14,8 @@ export async function POST(request: Request) {
   try {
     event = await constructWebhookEvent(body, signature);
   } catch (err: unknown) {
-    console.error("❌ [WEBHOOK] Webhook signature verification failed:", err);
+    const message = err instanceof Error ? err.message : "Erreur inconnue";
+    apiLogger.error(`Webhook signature verification failed: ${message}`);
     return NextResponse.json({ error: "Webhook Error" }, { status: 400 });
   }
 
@@ -25,35 +27,14 @@ export async function POST(request: Request) {
       case "checkout.session.completed":
       case "payment_intent.succeeded": {
         if (orderId) {
-          const paymentIntentId = 
+          const paymentIntentId =
             "payment_intent" in session && typeof session.payment_intent === "string"
               ? session.payment_intent
               : session.id;
 
-          console.log("🔵 [WEBHOOK] Décrémentation du stock pour commande:", orderId);
-          
-          const order = await prisma.order.findUnique({
-            where: { id: orderId },
-            include: { items: true },
-          });
-
-          if (order) {
-            for (const item of order.items) {
-              await prisma.product.update({
-                where: { id: item.productId },
-                data: {
-                  stock: {
-                    decrement: item.quantity,
-                  },
-                },
-              });
-              console.log(`✅ [WEBHOOK] Stock décrémenté: ${item.name} (-${item.quantity})`);
-            }
-          }
-
           await prisma.order.update({
             where: { id: orderId },
-            data: { 
+            data: {
               status: OrderStatus.CONFIRMED,
               paymentStatus: PaymentStatus.PAID,
               paymentIntentId,
@@ -62,6 +43,8 @@ export async function POST(request: Request) {
             },
           });
 
+          apiLogger.info(`Paiement confirmé pour commande ${orderId}`);
+
           const customerId = "customer" in session ? session.customer : null;
           if (customerId && typeof customerId === "string") {
             await stripe.instance.invoices.create({
@@ -69,6 +52,7 @@ export async function POST(request: Request) {
               description: `Invoice for order #${orderId}`,
               auto_advance: true,
             });
+            apiLogger.info(`Facture créée pour commande ${orderId}`);
           }
         }
         break;
@@ -76,9 +60,26 @@ export async function POST(request: Request) {
 
       case "payment_intent.payment_failed": {
         if (orderId) {
+          const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { items: true },
+          });
+
+          if (order) {
+            await Promise.all(
+              order.items.map((item) =>
+                prisma.product.update({
+                  where: { id: item.productId },
+                  data: { stock: { increment: item.quantity } },
+                })
+              )
+            );
+            apiLogger.warn(`Stock restauré après échec paiement commande ${orderId}`);
+          }
+
           await prisma.order.update({
             where: { id: orderId },
-            data: { 
+            data: {
               status: OrderStatus.CANCELLED,
               paymentStatus: PaymentStatus.FAILED,
               updatedAt: new Date(),
@@ -90,38 +91,33 @@ export async function POST(request: Request) {
 
       case "charge.refunded": {
         if (orderId) {
-
-          console.log("🔵 [WEBHOOK] Restauration du stock pour commande remboursée:", orderId);
-          
           const order = await prisma.order.findUnique({
             where: { id: orderId },
             include: { items: true },
           });
 
           if (order) {
-            for (const item of order.items) {
-              await prisma.product.update({
-                where: { id: item.productId },
-                data: {
-                  stock: {
-                    increment: item.quantity,
-                  },
-                },
-              });
-              console.log(`✅ [WEBHOOK] Stock restauré: ${item.name} (+${item.quantity})`);
-            }
+            await Promise.all(
+              order.items.map((item) =>
+                prisma.product.update({
+                  where: { id: item.productId },
+                  data: { stock: { increment: item.quantity } },
+                })
+              )
+            );
+            apiLogger.info(`Stock restauré après remboursement commande ${orderId}`);
           }
 
           await prisma.order.update({
             where: { id: orderId },
-            data: { 
+            data: {
               status: OrderStatus.CANCELLED,
               paymentStatus: PaymentStatus.REFUNDED,
               updatedAt: new Date(),
             },
           });
         } else {
-          const paymentIntentId = 
+          const paymentIntentId =
             "payment_intent" in session && typeof session.payment_intent === "string"
               ? session.payment_intent
               : null;
@@ -145,14 +141,15 @@ export async function POST(request: Request) {
         const paymentMethodId = "payment_method" in session ? session.payment_method : null;
 
         if (
-          customerId && 
-          typeof customerId === "string" && 
-          paymentMethodId && 
+          customerId &&
+          typeof customerId === "string" &&
+          paymentMethodId &&
           typeof paymentMethodId === "string"
         ) {
           await stripe.instance.customers.update(customerId, {
             invoice_settings: { default_payment_method: paymentMethodId },
           });
+          apiLogger.info(`Carte par défaut mise à jour pour customer ${customerId}`);
         }
         break;
       }
@@ -160,8 +157,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (error: unknown) {
-    console.error("❌ [WEBHOOK] Error processing webhook:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    apiLogger.error(`Erreur traitement webhook ${event.type}: ${message}`);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

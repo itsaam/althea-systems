@@ -1,86 +1,86 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import {
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+  apiLogger,
+} from "@/lib/logger/exports";
 
 const addressSchema = z.object({
-  userId: z.string(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  street: z.string().min(1),
+  firstName: z.string().min(1, "Prénom requis"),
+  lastName: z.string().min(1, "Nom requis"),
+  street: z.string().min(1, "Rue requise"),
   street2: z.string().optional(),
-  city: z.string().min(1),
+  city: z.string().min(1, "Ville requise"),
   region: z.string().optional(),
-  postalCode: z.string().min(1),
-  country: z.string().min(1),
+  postalCode: z.string().min(1, "Code postal requis"),
+  country: z.string().min(1, "Pays requis"),
   phone: z.string().optional(),
   isDefault: z.boolean().optional(),
 });
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return String(error);
-}
-
-// GET Liste des adresses
-export async function GET(request: NextRequest) {
+export const GET = withApiLogger(async (req: NextRequest) => {
   try {
-    const { searchParams } = new URL(request.url);
+    const session = await getServerSession(authOptions); 
+    if (!session) return loggedErrorResponse("Non authentifié", 401);
+
+    const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId est requis' },
-        { status: 400 }
-      );
-    }
+    const targetUserId = session.user.role === "ADMIN" && userId
+      ? userId
+      : session.user.id;
 
     const addresses = await prisma.address.findMany({
-      where: { userId },
+      where: { userId: targetUserId },
       orderBy: [{ isDefault: 'desc' }],
     });
 
-    return NextResponse.json(addresses);
-  } catch (error: unknown) {
-    return NextResponse.json(
-      { error: `Erreur lors de la récupération des adresses : ${getErrorMessage(error)}` },
-      { status: 500 }
-    );
+    return loggedSuccessResponse({ addresses }); 
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    apiLogger.error(`GET addresses error: ${message}`);
+    return loggedErrorResponse(`Erreur récupération adresses: ${message}`, 500);
   }
-}
+});
 
-// POST Créer une adresse
-export async function POST(request: NextRequest) {
+export const POST = withApiLogger(async (req: NextRequest) => {
   try {
-    const body = await request.json();
-    const validatedData = addressSchema.parse(body);
+    const session = await getServerSession(authOptions);
+    if (!session) return loggedErrorResponse("Non authentifié", 401);
+
+    const body = await req.json();
+    const validatedData = addressSchema.parse(body); 
 
     if (validatedData.isDefault) {
       await prisma.address.updateMany({
-        where: {
-          userId: validatedData.userId,
-          isDefault: true,
-        },
-        data: {
-          isDefault: false,
-        },
+        where: { userId: session.user.id, isDefault: true },
+        data: { isDefault: false },
       });
     }
 
     const address = await prisma.address.create({
-      data: validatedData,
+      data: {
+        ...validatedData,
+        userId: session.user.id, 
+      },
     });
 
-    return NextResponse.json(address, { status: 201 });
-  } catch (error: unknown) {
+    apiLogger.info(`Adresse créée pour user ${session.user.id}`);
+    return loggedSuccessResponse({ address }, "Adresse créée avec succès", 201);
+  } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Données invalides', details: error.issues },
-        { status: 400 }
+      return loggedErrorResponse(
+        `Données invalides: ${error.issues.map(i => i.message).join(", ")}`,
+        400
       );
     }
-    return NextResponse.json(
-      { error: `Erreur lors de la création de l'adresse : ${getErrorMessage(error)}` },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Erreur inconnue";
+    apiLogger.error(`POST address error: ${message}`);
+    return loggedErrorResponse(`Erreur création adresse: ${message}`, 500);
   }
-}
+});
