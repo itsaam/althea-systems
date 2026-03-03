@@ -17,7 +17,10 @@ export const GET = withApiLogger(async (request: NextRequest) => {
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '8'));
     const categoryId = searchParams.get('categoryId');
 
-    const where: Prisma.ProductWhereInput = { featured: true };
+    const where: Prisma.ProductWhereInput = {
+      featured: true,
+      status: 'PUBLISHED',
+    };
     if (categoryId) where.categoryId = categoryId;
 
     const products = await prisma.product.findMany({
@@ -29,25 +32,25 @@ export const GET = withApiLogger(async (request: NextRequest) => {
         slug: true,
         description: true,
         price: true,
+        comparePrice: true,
+        tva: true, 
         stock: true,
         images: true,
         featured: true,
         categoryId: true,
         createdAt: true,
-        category: {
-          select: { id: true, name: true, slug: true },
-        },
+        category: { select: { id: true, name: true, slug: true } },
       },
-      orderBy: [{ createdAt: 'desc' }],
+      orderBy: { createdAt: 'desc' },
     });
 
     const serializedProducts = products.map((product) => {
-      const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
-      const breakdown = getPriceBreakdown(priceHT, "TVA_20");
+      const priceHT = Number(product.price);
+      const breakdown = getPriceBreakdown(priceHT, product.tva); 
       return {
         ...product,
         price: priceHT,
-        tva: "TVA_20",
+        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
         priceTTC: breakdown.priceTTC,
         priceBreakdown: breakdown,
         image: product.images?.[0] || null,

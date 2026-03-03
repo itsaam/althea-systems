@@ -58,6 +58,7 @@ export const GET = withApiLogger(async (req: NextRequest) => {
         featured: true,
         createdAt: true,
         categoryId: true,
+        tva: true, 
         category: {
           select: { id: true, name: true, slug: true },
         },
@@ -67,12 +68,11 @@ export const GET = withApiLogger(async (req: NextRequest) => {
 
     const serializedProducts = products.map((product) => {
       const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
-      const breakdown = getPriceBreakdown(priceHT, "TVA_20");
+      const breakdown = getPriceBreakdown(priceHT, product.tva); 
       return {
         ...product,
         price: priceHT,
         comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
-        tva: "TVA_20",
         priceTTC: breakdown.priceTTC,
         priceBreakdown: breakdown,
         image: product.images?.[0] || null,
@@ -112,13 +112,12 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     });
 
     const priceHT = Number(product.price);
-    const breakdown = getPriceBreakdown(priceHT, "TVA_20");
+    const breakdown = getPriceBreakdown(priceHT, product.tva); 
 
     const serializedProduct = {
       ...product,
       price: priceHT,
       comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
-      tva: "TVA_20",
       priceTTC: breakdown.priceTTC,
       priceBreakdown: breakdown,
       image: product.images[0] || null,
@@ -165,13 +164,12 @@ export const PATCH = withApiLogger(async (req: NextRequest) => {
     });
 
     const priceHT = Number(updatedProduct.price);
-    const breakdown = getPriceBreakdown(priceHT, updatedProduct.tva ?? "TVA_20");
+    const breakdown = getPriceBreakdown(priceHT, updatedProduct.tva); 
 
     const serializedProduct = {
       ...updatedProduct,
       price: priceHT,
       comparePrice: updatedProduct.comparePrice ? Number(updatedProduct.comparePrice) : null,
-      tva: updatedProduct.tva ?? "TVA_20",
       priceTTC: breakdown.priceTTC,
       priceBreakdown: breakdown,
       image: updatedProduct.images[0] || null,

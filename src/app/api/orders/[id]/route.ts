@@ -163,6 +163,14 @@ export const PATCH = withApiLogger(async (
       },
     });
 
+    const cartItems: CartItem[] = order.items.map((item) => ({
+      priceHT: Number(item.price),
+      tvaRate: item.product.tva,
+      quantity: item.quantity,
+    }));
+
+    const totals = calculateCartTotals(cartItems, Number(order.shippingCost));
+
     const serializedOrder = {
       ...order,
       subtotal: Number(order.subtotal),
@@ -176,6 +184,7 @@ export const PATCH = withApiLogger(async (
       invoice: order.invoice
         ? { ...order.invoice, amount: Number(order.invoice.amount) }
         : null,
+      tvaBreakdown: totals.tvaBreakdown,
     };
 
     return loggedSuccessResponse(
