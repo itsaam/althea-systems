@@ -25,7 +25,6 @@ const productSchema = z.object({
   stock: z.number().int().min(0).default(0),
   images: z.array(z.string()).default([]),
   featured: z.boolean().default(false),
-  active: z.boolean().default(true),
   categoryId: z.string().min(1, "La catégorie est requise").optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
   tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]).default("TVA_20"),
@@ -138,67 +137,4 @@ export const POST = withApiLogger(async (req: NextRequest) => {
   }
 });
 
-export const PATCH = withApiLogger(async (req: NextRequest) => {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
 
-    const id = new URL(req.url).pathname.split("/").pop();
-    if (!id) return loggedErrorResponse("ID produit manquant", 400);
-
-    const body = await req.json();
-    const validatedData = updateProductSchema.parse(body);
-
-    const existingProduct = await prisma.product.findUnique({ where: { id } });
-    if (!existingProduct) return loggedErrorResponse("Produit non trouvé", 404);
-
-    if (validatedData.categoryId) {
-      const category = await prisma.category.findUnique({ where: { id: validatedData.categoryId } });
-      if (!category) return loggedErrorResponse("Catégorie non trouvée", 404);
-    }
-
-    const updatedProduct = await prisma.product.update({
-      where: { id },
-      data: validatedData,
-      include: { category: { select: { id: true, name: true, slug: true } } },
-    });
-
-    const priceHT = Number(updatedProduct.price);
-    const breakdown = getPriceBreakdown(priceHT, updatedProduct.tva); 
-
-    const serializedProduct = {
-      ...updatedProduct,
-      price: priceHT,
-      comparePrice: updatedProduct.comparePrice ? Number(updatedProduct.comparePrice) : null,
-      priceTTC: breakdown.priceTTC,
-      priceBreakdown: breakdown,
-      image: updatedProduct.images[0] || null,
-    };
-
-    productLogger.info(LogMessages.product.produitModifie(updatedProduct.id));
-    return loggedSuccessResponse({ product: serializedProduct }, "Produit mis à jour");
-  } catch (error) {
-    if (error instanceof z.ZodError) return loggedErrorResponse(`Données invalides: ${error.issues.map(i => i.message).join(", ")}`, 400);
-    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur inconnue", 500);
-  }
-});
-
-export const DELETE = withApiLogger(async (req: NextRequest) => {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== "ADMIN") return loggedErrorResponse("Non autorisé", 403);
-
-    const id = new URL(req.url).pathname.split("/").pop();
-    if (!id) return loggedErrorResponse("ID produit manquant", 400);
-
-    const existingProduct = await prisma.product.findUnique({ where: { id } });
-    if (!existingProduct) return loggedErrorResponse("Produit non trouvé", 404);
-
-    await prisma.product.delete({ where: { id } });
-    productLogger.info(LogMessages.product.produitSupprime(existingProduct.id));
-
-    return loggedSuccessResponse({ message: "Produit supprimé" }, "Produit supprimé");
-  } catch (error) {
-    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur inconnue", 500);
-  }
-});
