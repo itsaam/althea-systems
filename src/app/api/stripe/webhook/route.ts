@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { constructWebhookEvent, stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { OrderStatus, PaymentStatus } from "@prisma/client";
+import { OrderStatus, PaymentStatus, InvoiceStatus } from "@prisma/client";
 import type Stripe from "stripe";
 import { apiLogger } from "@/lib/logger/exports";
+
+function generateInvoiceNumber(): string {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+  return `INV-${year}${month}-${random}`;
+}
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -32,7 +40,7 @@ export async function POST(request: Request) {
               ? session.payment_intent
               : session.id;
 
-          await prisma.order.update({
+          const order = await prisma.order.update({
             where: { id: orderId },
             data: {
               status: OrderStatus.CONFIRMED,
@@ -46,13 +54,33 @@ export async function POST(request: Request) {
           apiLogger.info(`Paiement confirmé pour commande ${orderId}`);
 
           const customerId = "customer" in session ? session.customer : null;
+
+          let stripeInvoice: Stripe.Invoice | null = null;
           if (customerId && typeof customerId === "string") {
-            await stripe.instance.invoices.create({
+            stripeInvoice = await stripe.instance.invoices.create({
               customer: customerId,
               description: `Invoice for order #${orderId}`,
               auto_advance: true,
             });
-            apiLogger.info(`Facture créée pour commande ${orderId}`);
+            apiLogger.info(`Facture Stripe créée: ${stripeInvoice.id} pour commande ${orderId}`);
+          }
+
+          const existingInvoice = await prisma.invoice.findUnique({
+            where: { orderId },
+          });
+
+          if (!existingInvoice) {
+            const invoice = await prisma.invoice.create({
+              data: {
+                invoiceNumber: generateInvoiceNumber(),
+                orderId,
+                userId: order.userId,
+                amount: order.total,
+                status: InvoiceStatus.PAID,
+                pdfUrl: stripeInvoice?.invoice_pdf ?? null,
+              },
+            });
+            apiLogger.info(`Invoice DB créée: ${invoice.invoiceNumber} pour commande ${orderId}`);
           }
         }
         break;

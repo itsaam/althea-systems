@@ -31,8 +31,6 @@ const productSchema = z.object({
   priority: z.number().int().default(0),
 });
 
-const updateProductSchema = productSchema.partial();
-
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url);
