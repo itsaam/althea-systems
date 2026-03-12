@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { getUserCurrency, convertFromEur, isCurrencySupported } from "@/lib/currency";
 
 interface PriceData {
@@ -23,22 +21,15 @@ interface CheckoutItem {
 
 export async function POST(req: Request) {
   try {
-    const authSession = await getServerSession(authOptions);
-    
-    if (!authSession || !authSession.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const userId = authSession.user.id;
     const body = await req.json();
-    const { items, orderId } = body as { items: CheckoutItem[]; orderId: string };
+    const { items, orderId, userId } = body as { items: CheckoutItem[]; orderId: string; userId: string };
 
-    if (!items || !orderId) {
+    if (!items || !orderId || !userId) {
       return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
     }
 
     let currency = await getUserCurrency(userId, prisma);
-    
+
     if (!isCurrencySupported(currency)) {
       currency = "eur";
     }
@@ -54,15 +45,12 @@ export async function POST(req: Request) {
         });
 
         if (!product) {
-          return NextResponse.json(
-            { error: `Produit non trouvé` },
-            { status: 404 }
-          );
+          return NextResponse.json({ error: `Produit non trouvé` }, { status: 404 });
         }
 
         if (product.stock < quantity) {
           return NextResponse.json(
-            { 
+            {
               error: `Stock insuffisant pour ${product.name}. Disponible: ${product.stock}`,
               productName: product.name,
               available: product.stock,
@@ -74,9 +62,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const user = await prisma.user.findUnique({ 
-      where: { id: userId } 
-    });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
       return new NextResponse("User not found", { status: 404 });
@@ -90,7 +76,7 @@ export async function POST(req: Request) {
         metadata: { userId },
       });
       stripeCustomerId = customer.id;
-      
+
       await prisma.user.update({
         where: { id: userId },
         data: { stripeCustomerId },
@@ -99,15 +85,14 @@ export async function POST(req: Request) {
 
     const convertedItems = items.map((item: CheckoutItem) => {
       const originalAmount = item.price_data.unit_amount;
-      const convertedAmount = currency === "eur" 
-        ? originalAmount 
-        : convertFromEur(originalAmount, currency);
+      const convertedAmount =
+        currency === "eur" ? originalAmount : convertFromEur(originalAmount, currency);
 
       return {
         ...item,
         price_data: {
           ...item.price_data,
-          currency: currency,
+          currency,
           unit_amount: convertedAmount,
         },
       };
@@ -125,21 +110,12 @@ export async function POST(req: Request) {
         setup_future_usage: "off_session",
         metadata: { orderId, currency },
       },
-      metadata: {
-        orderId,
-        currency,
-      },
+      metadata: { orderId, currency },
     });
 
-    return NextResponse.json({ 
-      url: checkoutSession.url,
-      currency: currency,
-    });
-    
+    return NextResponse.json({ url: checkoutSession.url, currency });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ 
-      error: errorMessage,
-    }, { status: 500 });
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
