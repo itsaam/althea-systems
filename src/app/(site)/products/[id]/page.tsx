@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { productLogger } from "@/lib/logger/exports";
 import SimilarProducts from "@/components/products/similar-products";
 import StockBadge from "@/components/products/stock-badge";
-import { Button } from "@/components/ui/button";
+import AddToCartButton from "@/components/cart/add-to-cart-button";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -165,9 +165,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </span>
           </div>
 
-          <Button size="lg" className="w-full md:w-auto" disabled={product.stock === 0}>
-            {product.stock === 0 ? "Rupture de stock" : "Ajouter au panier"}
-          </Button>
+          <div className="w-full md:w-auto">
+            <AddToCartButton
+              productId={product.id}
+              productName={product.name}
+              price={product.price}
+              image={product.image || undefined}
+              disabled={product.stock === 0}
+            />
+          </div>
         </div>
       </div>
 

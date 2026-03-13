@@ -1,3 +1,5 @@
+"use client";
+
 import ProductCard from "@/components/products/product-card";
 
 interface Product {

@@ -1,3 +1,5 @@
+"use client";
+
 import ProductCarousel from "@/components/products/product-carousel";
 
 interface Product {

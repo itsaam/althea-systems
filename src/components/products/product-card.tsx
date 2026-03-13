@@ -1,7 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import StockBadge from "@/components/products/stock-badge";
+import AddToCartButton from "@/components/cart/add-to-cart-button";
 
 interface ProductCardProps {
   id: string;
@@ -39,9 +41,13 @@ export default function ProductCard({
         <p className="text-lg font-bold">{price.toFixed(2)} €</p>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full" disabled={stock === 0}>
-          Ajouter au panier
-        </Button>
+        <AddToCartButton
+          productId={id}
+          productName={name}
+          price={price}
+          image={image}
+          disabled={stock === 0}
+        />
       </CardFooter>
     </Card>
   );
