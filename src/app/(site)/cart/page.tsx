@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CartItem from "@/components/cart/cart-item";
 import CartSummary from "@/components/cart/cart-summary";
@@ -9,10 +10,15 @@ import { useCart } from "@/hooks/use-cart";
 const SHIPPING_COST = 9.9;
 
 export default function CartPage() {
+  const router = useRouter();
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } = useCart();
 
   const shipping = itemCount > 0 ? SHIPPING_COST : 0;
   const grandTotal = total + shipping;
+
+  const handleCheckout = () => {
+    router.push("/checkout");
+  };
 
   return (
     <div className="container py-8">
@@ -72,10 +78,8 @@ export default function CartPage() {
               shipping={shipping}
               total={grandTotal}
               actionLabel="Passer au checkout"
+              onActionClick={handleCheckout}
             />
-            <Button asChild variant="outline" className="w-full mt-3">
-              <Link href="/checkout">Aller au checkout</Link>
-            </Button>
           </div>
         </div>
       )}
