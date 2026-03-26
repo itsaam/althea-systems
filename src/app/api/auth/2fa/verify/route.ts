@@ -11,8 +11,8 @@ import { rateLimitMiddleware } from "@/lib/rate-limit";
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting pour éviter les attaques par force brute
-    const rateLimitResult = await rateLimitMiddleware(request, "auth");
-    if (rateLimitResult) return rateLimitResult;
+    const rateLimitResult = await rateLimitMiddleware(request);
+    if (rateLimitResult.blocked && rateLimitResult.response) return rateLimitResult.response;
 
     const session = await getServerSession(authOptions);
     const { code, isSetup } = await request.json();
