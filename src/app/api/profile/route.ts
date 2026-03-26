@@ -89,6 +89,14 @@ export async function PUT(request: NextRequest) {
         );
       }
 
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        return NextResponse.json(
+          { error: "Le mot de passe doit contenir au moins 12 caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial" },
+          { status: 400 }
+        );
+      }
+
       const hashedPassword = await bcrypt.hash(newPassword, 12);
       await prisma.user.update({
         where: { id: user.id },
