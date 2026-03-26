@@ -22,7 +22,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "security:audit": "tsx scripts/security-audit.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
