@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionProvider from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import CookieBanner from "@/components/cookie-banner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,6 +89,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           {children}
+          <CookieBanner />
           <Toaster position="top-right" />
           <Analytics />
         </SessionProvider>
