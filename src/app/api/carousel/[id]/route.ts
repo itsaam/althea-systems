@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { carouselSlideSchema } from "@/lib/validators/common";
+import { z } from "zod";
 
 export async function GET(
   request: Request,
@@ -36,22 +38,28 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { title, subtitle, image, link, order, active } = body;
+    const validatedData = carouselSlideSchema.partial().parse(body);
 
     const slide = await prisma.carouselSlide.update({
       where: { id },
       data: {
-        ...(title && { title }),
-        ...(subtitle !== undefined && { subtitle }),
-        ...(image && { image }),
-        ...(link !== undefined && { link }),
-        ...(order !== undefined && { order }),
-        ...(active !== undefined && { active }),
+        ...(validatedData.title && { title: validatedData.title }),
+        ...(validatedData.subtitle !== undefined && { subtitle: validatedData.subtitle }),
+        ...(validatedData.image && { image: validatedData.image }),
+        ...(validatedData.link !== undefined && { link: validatedData.link }),
+        ...(validatedData.order !== undefined && { order: validatedData.order }),
+        ...(validatedData.active !== undefined && { active: validatedData.active }),
       },
     });
 
     return NextResponse.json(slide);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Données invalides", details: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Error updating carousel slide:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }

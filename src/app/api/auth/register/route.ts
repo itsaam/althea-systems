@@ -4,26 +4,16 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { authLogger, LogMessages } from "@/lib/logger/exports";
 import { sendVerificationEmail } from "@/lib/email";
+import { registerSchema } from "@/lib/validators/auth";
+import { z } from "zod";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { firstName, lastName, email, password } = body;
 
-    // Validation
-    if (!email || !password || !firstName || !lastName) {
-      return NextResponse.json(
-        { error: "Tous les champs sont requis" },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Le mot de passe doit contenir au moins 8 caractères" },
-        { status: 400 }
-      );
-    }
+    // Validation with Zod
+    const validatedData = registerSchema.parse(body);
+    const { firstName, lastName, email, password } = validatedData;
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -90,6 +80,13 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Données invalides", details: error.issues },
+        { status: 400 }
+      );
+    }
+
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     authLogger.error(LogMessages.auth.inscriptionEchouee(message));
 
