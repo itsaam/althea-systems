@@ -47,3 +47,13 @@ logs/
 *.log
 
 # Rapport soutenance (temporaire)
+
+# BMAD
+_bmad/
+_bmad-output/
+
+# IDE
+.vscode/
+
+# Agents doc
+AGENTS.md
