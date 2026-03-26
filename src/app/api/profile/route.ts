@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { profileUpdateSchema } from "@/lib/validators/common";
+import { z } from "zod";
 
 // GET - Récupérer le profil de l'utilisateur connecté
 export async function GET() {
@@ -44,72 +46,77 @@ export async function GET() {
 
 // PUT - Mettre à jour le profil
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  try {
+    const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
-
-  const body = await request.json();
-  const { firstName, lastName, phone, currentPassword, newPassword } = body;
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
-
-  if (!user) {
-    return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
-  }
-
-  // Si changement de mot de passe demandé
-  if (newPassword) {
-    if (!user.password) {
-      return NextResponse.json(
-        { error: "Impossible de changer le mot de passe pour un compte OAuth" },
-        { status: 400 }
-      );
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    if (!currentPassword) {
-      return NextResponse.json(
-        { error: "Mot de passe actuel requis" },
-        { status: 400 }
-      );
-    }
+    const body = await request.json();
+    const validatedData = profileUpdateSchema.parse(body);
+    const { firstName, lastName, phone, currentPassword, newPassword } = validatedData;
 
-    const isValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isValid) {
-      return NextResponse.json(
-        { error: "Mot de passe actuel incorrect" },
-        { status: 400 }
-      );
-    }
-
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: "Le nouveau mot de passe doit contenir au moins 8 caractères" },
-        { status: 400 }
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashedPassword },
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
     });
 
-    return NextResponse.json({ message: "Mot de passe mis à jour" });
+    if (!user) {
+      return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
+    }
+
+    // Si changement de mot de passe demandé
+    if (newPassword) {
+      if (!user.password) {
+        return NextResponse.json(
+          { error: "Impossible de changer le mot de passe pour un compte OAuth" },
+          { status: 400 }
+        );
+      }
+
+      if (!currentPassword) {
+        return NextResponse.json(
+          { error: "Mot de passe actuel requis" },
+          { status: 400 }
+        );
+      }
+
+      const isValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isValid) {
+        return NextResponse.json(
+          { error: "Mot de passe actuel incorrect" },
+          { status: 400 }
+        );
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword },
+      });
+
+      return NextResponse.json({ message: "Mot de passe mis à jour" });
+    }
+
+    // Mise à jour des infos profil
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        firstName: firstName || user.firstName,
+        lastName: lastName || user.lastName,
+        phone: phone || user.phone,
+      },
+    });
+
+    return NextResponse.json({ message: "Profil mis à jour" });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Données invalides", details: error.issues },
+        { status: 400 }
+      );
+    }
+    console.error("Erreur profil:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  // Mise à jour des infos profil
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      firstName: firstName || user.firstName,
-      lastName: lastName || user.lastName,
-      phone: phone || user.phone,
-    },
-  });
-
-  return NextResponse.json({ message: "Profil mis à jour" });
 }

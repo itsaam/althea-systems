@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 import crypto from "crypto";
+import { forgotPasswordApiSchema } from "@/lib/validators/common";
+import { z } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
-
-    if (!email) {
-      return NextResponse.json({ error: "Email requis" }, { status: 400 });
-    }
+    const body = await request.json();
+    const { email } = forgotPasswordApiSchema.parse(body);
 
     // Vérifier si l'utilisateur existe
     const user = await prisma.user.findUnique({
@@ -59,6 +58,12 @@ export async function POST(request: NextRequest) {
         "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation",
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Données invalides", details: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Erreur forgot-password:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
