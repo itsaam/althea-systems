@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://althea-systems.fr";
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages

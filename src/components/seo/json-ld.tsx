@@ -56,7 +56,7 @@ export function ProductJsonLd({
 }
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://althea-systems.fr";
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me";
 
 export function OrganizationJsonLd() {
   const structuredData = {

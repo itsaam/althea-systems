@@ -15,7 +15,7 @@ graph TB
         BROWSER[Navigateur Web<br/>React 19 + Next.js 16]
     end
 
-    subgraph "Vercel Edge Network"
+    subgraph "VPS Docker / Dokploy"
         MIDDLEWARE[Middleware Next.js<br/>Auth + Security Headers<br/>+ Rate Limiting]
         SSR[Next.js App Router<br/>SSR + RSC + API Routes]
     end
@@ -29,8 +29,8 @@ graph TB
 
     subgraph "Data Layer"
         PRISMA[Prisma ORM v6]
-        DB[(PostgreSQL 16<br/>Neon)]
-        REDIS[(Redis<br/>Upstash)]
+        DB[(PostgreSQL 16<br/>Docker PostgreSQL)]
+        REDIS[(Redis<br/>Docker Redis)]
         R2[(Cloudflare R2<br/>Images S3-compatible)]
     end
 
@@ -275,9 +275,9 @@ erDiagram
 | Technologie | Justification |
 |------------|---------------|
 | **PostgreSQL 16** | ACID, relations complexes, JSON, full-text search, standard industrie |
-| **Redis (Upstash)** | Cache ultra-rapide, rate limiting, sessions, serverless-compatible |
+| **Redis (Docker Redis)** | Cache ultra-rapide, rate limiting, sessions |
 | **Cloudflare R2** | S3-compatible, 0€ egress, CDN mondial intégré, stockage images |
-| **Vercel** | Déploiement automatique, Edge Network, serverless, analytics intégrés |
+| **Dokploy + Docker** | Déploiement sur VPS, Docker Compose, SSL Let's Encrypt, contrôle total |
 | **GitHub Actions** | CI/CD natif GitHub, marketplace actions, gratuit pour repos publics |
 
 ### Pourquoi PAS
@@ -369,12 +369,12 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 ### Résumé
 - **Mises à jour** : Audit npm hebdomadaire, MAJ mineures bimensuelles
 - **Backups** : Quotidiens (BDD), rétention 30 jours
-- **Monitoring** : UptimeRobot (uptime), Vercel Analytics (perf), Sentry (erreurs)
-- **Scaling** : Serverless Vercel (auto), Redis Upstash (auto), PostgreSQL Neon (branches)
+- **Monitoring** : UptimeRobot (uptime), Winston logs (erreurs)
+- **Scaling** : Serverless Dokploy (auto), Redis Docker Redis (auto), PostgreSQL Docker PostgreSQL (branches)
 - **SLA** : 99.9% uptime, <200ms API (P95), <2s LCP
 
 ### Évolutivité technique
-- Architecture serverless → scaling horizontal automatique
+- Architecture Docker → scaling horizontal via load balancer
 - Cache Redis → réduction charge BDD
 - CDN Cloudflare → distribution mondiale des assets
 - Prisma → migrations versionnées, rollback possible

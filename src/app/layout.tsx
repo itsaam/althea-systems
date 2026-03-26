@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { Analytics } from "@vercel/analytics/next";
 import CookieBanner from "@/components/cookie-banner";
 
 const geistSans = Geist({
@@ -17,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://althea-systems.fr";
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -91,7 +90,6 @@ export default function RootLayout({
           {children}
           <CookieBanner />
           <Toaster position="top-right" />
-          <Analytics />
         </SessionProvider>
       </body>
     </html>

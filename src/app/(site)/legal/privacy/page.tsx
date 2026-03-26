@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
             <strong>Adresse :</strong> France
           </li>
           <li>
-            <strong>Contact DPO :</strong> dpo@althea-systems.fr
+            <strong>Contact DPO :</strong> dpo@vjuya.me
           </li>
         </ul>
       </section>
@@ -214,7 +214,7 @@ export default function PrivacyPolicyPage() {
         </ul>
         <p>
           Pour exercer vos droits, contactez notre DPO a{" "}
-          <strong>dpo@althea-systems.fr</strong> ou utilisez les fonctionnalites
+          <strong>dpo@vjuya.me</strong> ou utilisez les fonctionnalites
           disponibles dans votre espace compte :
         </p>
         <ul>
