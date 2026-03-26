@@ -1,6 +1,7 @@
 /**
- * Analytics helpers for Vercel Analytics
- * RGPD-compliant: no third-party cookies, data stays on Vercel infrastructure
+ * Analytics helpers — standalone (pas de dépendance Vercel)
+ * RGPD-compliant: events côté client uniquement, pas de cookies tiers
+ * Compatible Plausible, Umami, ou custom backend
  */
 
 type AnalyticsEventName =
@@ -17,33 +18,25 @@ type AnalyticsEventName =
   | "newsletter_subscribe";
 
 interface AnalyticsEventProperties {
-  // Cart events
   productId?: string;
   productName?: string;
   quantity?: number;
   price?: number;
   currency?: string;
-
-  // Search events
   query?: string;
   resultsCount?: number;
-
-  // Category events
   categoryId?: string;
   categoryName?: string;
-
-  // Purchase events
   orderId?: string;
   total?: number;
   itemCount?: number;
-
-  // Generic
   [key: string]: string | number | boolean | undefined;
 }
 
 /**
- * Track a custom analytics event via Vercel Analytics.
- * This function is safe to call server-side (it will no-op).
+ * Track un event analytics custom.
+ * No-op côté serveur. Log en console en dev.
+ * En production, peut être connecté à Plausible/Umami/custom.
  */
 export function trackEvent(
   name: AnalyticsEventName,
@@ -52,13 +45,19 @@ export function trackEvent(
   if (typeof window === "undefined") return;
 
   try {
-    // Vercel Analytics track function is injected globally
-    // We use the official @vercel/analytics track export
-    import("@vercel/analytics").then(({ track }) => {
-      track(name, properties ?? {});
-    });
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[Analytics] ${name}`, properties ?? {});
+    }
+
+    // Plausible integration (si installé)
+    if (typeof window !== "undefined" && "plausible" in window) {
+      const plausible = (window as Record<string, unknown>).plausible as
+        | ((name: string, opts: { props: unknown }) => void)
+        | undefined;
+      plausible?.(name, { props: properties ?? {} });
+    }
   } catch {
-    // Silent fail -- analytics should never break the app
+    // Silent fail — analytics ne doit jamais casser l'app
   }
 }
 

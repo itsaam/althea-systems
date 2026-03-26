@@ -25,9 +25,8 @@ const twoFactorPages = ["/admin/settings/2fa", "/admin/verify-2fa"];
 // ==================== CORS CONFIGURATION ====================
 
 const ALLOWED_ORIGINS = [
-  process.env.NEXT_PUBLIC_APP_URL || "https://althea-systems.fr",
-  "https://www.althea-systems.fr",
-  "https://althea-systems.vercel.app",
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me",
+  "https://www.vjuya.me",
 ];
 
 if (process.env.NODE_ENV === "development") {

@@ -96,7 +96,7 @@ export async function GET() {
         format: "RGPD-compliant personal data export",
         regulation: "RGPD Art. 20 - Droit a la portabilite",
         controller: "Althea Systems",
-        contactDpo: "dpo@althea-systems.fr",
+        contactDpo: "dpo@vjuya.me",
       },
       personalData: {
         id: user.id,

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://althea-systems.fr";
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me";
 
 export default function robots(): MetadataRoute.Robots {
   return {

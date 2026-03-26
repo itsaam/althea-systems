@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_APP_URL || "https://althea-systems.fr";
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;

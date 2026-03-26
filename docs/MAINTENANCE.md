@@ -30,7 +30,6 @@ npm test       # Vérifier que les tests passent
 
 ### Base de données Prisma
 ```bash
-# Mettre à jour Prisma
 npm install prisma@latest @prisma/client@latest
 npx prisma generate
 npx prisma validate
@@ -40,108 +39,116 @@ npx prisma validate
 
 ## 2. Stratégie de Backup BDD
 
-### PostgreSQL (Production)
+### PostgreSQL (Container Docker)
 
 | Paramètre | Valeur |
 |-----------|--------|
 | **Fréquence** | Backup complet quotidien à 3h00 UTC |
-| **Rétention** | 30 jours (backups quotidiens), 12 mois (backups mensuels) |
-| **Type** | pg_dump (logique) + WAL archiving (point-in-time recovery) |
-| **Stockage** | Cloudflare R2 (bucket dédié `althea-backups`) |
+| **Rétention** | 30 jours (quotidiens), 12 mois (mensuels) |
+| **Type** | pg_dump (logique) |
+| **Stockage** | `/opt/backups/althea/` sur le VPS |
 
-### Commandes backup
+### Script backup
 ```bash
-# Backup manuel
-pg_dump -h $DB_HOST -U $DB_USER -d althea_db -F c -f backup_$(date +%Y%m%d).dump
+#!/bin/bash
+# /opt/scripts/backup-althea.sh
+DATE=$(date +%Y%m%d_%H%M)
+BACKUP_DIR=/opt/backups/althea
+mkdir -p $BACKUP_DIR
 
-# Restauration
-pg_restore -h $DB_HOST -U $DB_USER -d althea_db backup_YYYYMMDD.dump
+docker exec althea-postgres pg_dump -U althea althea_db -F c > $BACKUP_DIR/althea_$DATE.dump
+
+# Garder les 30 derniers
+ls -t $BACKUP_DIR/*.dump | tail -n +31 | xargs rm -f 2>/dev/null
 ```
 
-### Si Neon/Supabase (recommandé)
-- Backups automatiques inclus dans le plan
-- Point-in-time recovery disponible
-- Branching pour tester les migrations
+### Cron
+```bash
+0 3 * * * /opt/scripts/backup-althea.sh >> /var/log/althea-backup.log 2>&1
+```
+
+### Restauration
+```bash
+docker exec -i althea-postgres pg_restore -U althea -d althea_db --clean < backup.dump
+```
 
 ---
 
 ## 3. Plan de Rollback
 
-### Rollback Application (Vercel)
-1. **Instant Rollback** : Dashboard Vercel → Deployments → cliquer "Redeploy" sur le déploiement précédent
-2. Temps de rollback : **< 30 secondes**
+### Rollback Application (Docker/Dokploy)
+1. **Via Dokploy** : Redeploy sur le déploiement précédent
+2. **Via Docker** :
+```bash
+docker compose -f docker/docker-compose.yml down
+git checkout <commit-stable>
+docker compose -f docker/docker-compose.yml up -d --build
+```
+3. Temps de rollback : **< 5 min**
 
 ### Rollback Base de Données
 1. Identifier la migration problématique
-2. `npx prisma migrate resolve --rolled-back <migration_name>`
+2. `docker exec althea-app npx prisma migrate resolve --rolled-back <migration_name>`
 3. Restaurer le backup si nécessaire
-4. Redéployer la version précédente de l'application
-
-### Rollback Git
-```bash
-# Identifier le commit stable
-git log --oneline -10
-
-# Revert du commit problématique
-git revert <commit-hash>
-git push origin main
-# Vercel redéploie automatiquement
-```
 
 ### Procédure d'urgence
-1. 🔴 **Détection** : Alerte monitoring (UptimeRobot, Sentry)
+1. 🔴 **Détection** : Alerte monitoring (UptimeRobot)
 2. 🟡 **Évaluation** : < 5 min pour identifier la cause
-3. 🟢 **Rollback** : Instant rollback Vercel si nécessaire
+3. 🟢 **Rollback** : Redeploy Dokploy ou git checkout + rebuild
 4. 📋 **Post-mortem** : Documenter l'incident dans `docs/reports/`
 
 ---
 
 ## 4. Monitoring Uptime et Alertes
 
-### UptimeRobot (recommandé — gratuit jusqu'à 50 monitors)
+### UptimeRobot (gratuit)
 | Monitor | URL | Intervalle | Alerte |
 |---------|-----|-----------|--------|
-| Homepage | `https://althea-systems.fr` | 5 min | Email + SMS |
-| API Health | `https://althea-systems.fr/api/health` | 2 min | Email + SMS |
-| Admin | `https://althea-systems.fr/admin` | 5 min | Email |
-| Stripe Webhook | `https://althea-systems.fr/api/stripe/webhook` | 10 min | Email |
+| Homepage | `https://althea.vjuya.me` | 5 min | Email + SMS |
+| API Health | `https://althea.vjuya.me/api/products` | 5 min | Email |
 
-### Sentry (erreurs applicatives)
-- Capture automatique des erreurs JS côté client et serveur
-- Alertes si taux d'erreur > 1%
-- Source maps pour debug en production
+### Vérification VPS
+```bash
+# Status containers
+docker compose -f docker/docker-compose.yml ps
 
-### Vercel Analytics
-- Web Vitals (LCP, FID, CLS)
-- Temps de réponse API
-- Alertes si dégradation performance
+# Logs temps réel
+docker compose -f docker/docker-compose.yml logs -f app
+
+# Espace disque
+df -h
+
+# RAM/CPU
+htop
+```
+
+### Logs applicatifs
+- Winston écrit dans `/logs/` (combined.log, error.log)
+- Rotation automatique (max 20MB par fichier)
+- Accès : `docker exec althea-app cat logs/error.log`
 
 ---
 
 ## 5. Stratégie de Scaling
 
-### Horizontal Scaling (Load Balancer)
-- **Vercel** : Scaling automatique serverless (aucune config nécessaire)
-- Les fonctions API sont déployées en Edge/Serverless
-- Auto-scaling selon le trafic
+### Scaling Vertical (le plus simple)
+| Ressource | Actuel | Si besoin |
+|-----------|--------|-----------|
+| VPS RAM | 2 GB | 4-8 GB |
+| VPS CPU | 2 vCPU | 4 vCPU |
+| VPS Disque | 20 GB | 50 GB |
+| PostgreSQL | Container local | VPS dédié ou managed (Neon) |
+| Redis | Container local | VPS dédié ou Upstash |
 
-### Vertical Scaling
-| Service | Plan actuel | Upgrade si besoin |
-|---------|------------|-------------------|
-| Vercel | Hobby/Pro | Enterprise |
-| PostgreSQL (Neon) | Free → Pro | Scale (auto-scaling) |
-| Redis (Upstash) | Free | Pay-as-you-go |
-| Cloudflare R2 | Free (10GB) | Pay-as-you-go |
+### Scaling Horizontal (si forte croissance)
+- Load balancer (Nginx/HAProxy) devant plusieurs instances app
+- PostgreSQL : replica read-only pour les requêtes de lecture
+- Redis : Cluster mode (ou migration vers Upstash)
 
 ### CDN pour Assets Statiques
-- **Vercel Edge Network** : CDN intégré pour les pages et assets statiques
+- **Cloudflare** : Proxy DNS activé → CDN automatique
 - **Cloudflare R2** : CDN mondial pour les images produits
-- **next/image** : Optimisation automatique des images (WebP, AVIF, lazy loading)
-
-### Redis Cluster (si croissance)
-- **Phase 1** (actuel) : Instance unique Upstash (suffisant jusqu'à ~10K req/s)
-- **Phase 2** : Redis cluster Upstash (scaling automatique)
-- **Phase 3** : Redis cluster dédié si > 100K req/s
+- **next/image** : Optimisation automatique des images
 
 ---
 
@@ -155,14 +162,14 @@ git push origin main
 
 ### Moyen terme (Q3-Q4 2026)
 - [ ] Programme fidélité (points, récompenses)
-- [ ] Recommandations produits (ML basique)
-- [ ] Chat en temps réel support client (WebSocket)
-- [ ] Application mobile (React Native ou PWA)
+- [ ] Recommandations produits
+- [ ] Chat en temps réel support client
+- [ ] Application mobile (PWA)
 
 ### Long terme (2027)
 - [ ] Marketplace multi-vendeurs
 - [ ] API publique partenaires
-- [ ] BI Dashboard avancé (analytics métier)
+- [ ] BI Dashboard avancé
 
 ---
 
@@ -171,35 +178,29 @@ git push origin main
 ### Phase Développement (actuelle)
 | Service | Coût mensuel |
 |---------|-------------|
-| Vercel (Hobby) | Gratuit |
-| Neon PostgreSQL (Free) | Gratuit |
-| Upstash Redis (Free) | Gratuit |
+| VPS (déjà existant) | ~5-10 €/mois |
 | Cloudflare R2 (10GB) | Gratuit |
-| UptimeRobot (Free) | Gratuit |
 | GitHub (Free) | Gratuit |
-| **Total** | **0 €/mois** |
+| UptimeRobot (Free) | Gratuit |
+| **Total** | **~5-10 €/mois** |
 
 ### Phase Production (lancement)
 | Service | Coût mensuel |
 |---------|-------------|
-| Vercel Pro | ~20 €/mois |
-| Neon Pro (PostgreSQL) | ~19 €/mois |
-| Upstash Pro (Redis) | ~10 €/mois |
+| VPS (2GB RAM) | ~10 €/mois |
 | Cloudflare R2 (100GB) | ~5 €/mois |
 | Resend (emails) | ~20 €/mois |
-| Sentry (erreurs) | Gratuit (tier dev) |
-| Domaine + DNS | ~15 €/an |
-| **Total** | **~75 €/mois** |
+| Domaine vjuya.me | ~10 €/an |
+| **Total** | **~35-40 €/mois** |
 
 ### Phase Croissance
 | Service | Coût mensuel |
 |---------|-------------|
-| Vercel Enterprise | ~150 €/mois |
-| Neon Scale | ~69 €/mois |
-| Upstash Pay-as-you-go | ~30 €/mois |
+| VPS (8GB RAM) | ~30 €/mois |
 | Cloudflare R2 (1TB) | ~15 €/mois |
-| Sentry Business | ~26 €/mois |
-| **Total** | **~300 €/mois** |
+| Managed PostgreSQL (Neon) | ~19 €/mois |
+| Upstash Redis | ~10 €/mois |
+| **Total** | **~80 €/mois** |
 
 ---
 
@@ -208,9 +209,9 @@ git push origin main
 | Métrique | Objectif | Mesure |
 |----------|---------|--------|
 | **Uptime** | 99.9% (max 8.7h downtime/an) | UptimeRobot |
-| **Temps réponse API** | < 200ms (P95) | Vercel Analytics |
-| **Temps chargement page** | < 2s (LCP) | Lighthouse / Web Vitals |
-| **Temps de rollback** | < 5 min | Procédure Vercel |
+| **Temps réponse API** | < 200ms (P95) | Logs Winston |
+| **Temps chargement page** | < 2s (LCP) | Lighthouse |
+| **Temps de rollback** | < 5 min | Dokploy redeploy |
 | **RTO** (Recovery Time Objective) | < 30 min | Procédure rollback |
 | **RPO** (Recovery Point Objective) | < 24h | Backup quotidien BDD |
 | **Résolution bug critique** | < 4h | Process incident |

@@ -42,9 +42,8 @@ export function sanitizeObject<T>(obj: T): T {
 // ==================== CORS ====================
 
 const ALLOWED_ORIGINS = [
-  process.env.NEXT_PUBLIC_APP_URL || "https://althea-systems.fr",
-  "https://www.althea-systems.fr",
-  "https://althea-systems.vercel.app",
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me",
+  "https://www.vjuya.me",
 ];
 
 // In development, allow localhost
