@@ -1,272 +1,286 @@
-# Guide de deploiement - Althea Systems
+# Guide de Déploiement Production — Althea Systems
 
-## Plateformes supportees
+## 1. Architecture de Déploiement
 
-| Plateforme | Type | Recommandation |
-|------------|------|----------------|
-| Vercel | PaaS | Production recommandee |
-| Docker | Self-hosted | Serveur dedie / VPS |
-| Dokploy | Self-hosted | Alternative Docker simplifiee |
+```mermaid
+graph TB
+    subgraph "Cloudflare"
+        DNS[DNS + CDN]
+        R2[R2 Storage<br/>Images produits]
+    end
 
-## Deploiement Vercel (recommande)
+    subgraph "Vercel"
+        APP[Next.js App<br/>SSR + API Routes]
+        EDGE[Edge Functions<br/>Middleware]
+    end
 
-### 1. Configuration initiale
+    subgraph "Services managés"
+        DB[(Neon PostgreSQL)]
+        REDIS[(Upstash Redis)]
+    end
 
-```bash
-# Installer Vercel CLI
-npm i -g vercel
+    subgraph "Services tiers"
+        STRIPE[Stripe<br/>Paiements]
+        RESEND[Resend<br/>Emails]
+    end
 
-# Lier le projet
-vercel link
+    DNS --> APP
+    APP --> DB
+    APP --> REDIS
+    APP --> R2
+    APP --> STRIPE
+    APP --> RESEND
+    EDGE --> APP
 ```
 
-### 2. Variables d'environnement
+## 2. Configuration Vercel
 
-Configurer dans le dashboard Vercel (Settings > Environment Variables) :
+### Import du projet
+1. Aller sur [vercel.com](https://vercel.com)
+2. "Import Project" → sélectionner le repo `itsaam/althea-systems`
+3. Framework Preset : **Next.js** (détection automatique)
+4. Root Directory : `.` (racine)
+5. Build Command : `prisma generate && next build`
+6. Install Command : `npm install`
 
-**Obligatoires :**
+### Settings Vercel
+| Paramètre | Valeur |
+|-----------|--------|
+| Node.js Version | 20.x |
+| Build Command | `prisma generate && next build` |
+| Output Directory | `.next` |
+| Install Command | `npm install` |
+
+---
+
+## 3. Variables d'Environnement Production
+
+Configurer dans **Vercel → Settings → Environment Variables** :
+
+### Base de données
 ```
-DATABASE_URL=postgresql://...         # Neon ou Supabase
-REDIS_URL=redis://...                 # Upstash
-NEXTAUTH_URL=https://votre-domaine.com
-NEXTAUTH_SECRET=...                   # openssl rand -base64 32
+DATABASE_URL=postgresql://user:password@host:5432/althea_db?sslmode=require
+```
+
+### Authentification
+```
+NEXTAUTH_SECRET=<générer avec: openssl rand -base64 32>
+NEXTAUTH_URL=https://althea-systems.fr
+```
+
+### OAuth Providers
+```
+GOOGLE_CLIENT_ID=<Google Cloud Console>
+GOOGLE_CLIENT_SECRET=<Google Cloud Console>
+GITHUB_CLIENT_ID=<GitHub OAuth App>
+GITHUB_CLIENT_SECRET=<GitHub OAuth App>
+```
+
+### Stripe (Paiements)
+```
 STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+```
+
+### Redis
+```
+REDIS_URL=rediss://default:password@host:6379
+```
+
+### Cloudflare R2 (Images)
+```
+R2_ACCOUNT_ID=<Cloudflare Dashboard>
+R2_ACCESS_KEY_ID=<R2 API Token>
+R2_SECRET_ACCESS_KEY=<R2 API Token>
+```
+
+### Emails
+```
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=no-reply@votre-domaine.com
+RESEND_FROM_EMAIL=noreply@althea-systems.fr
 ```
 
-**Cloudflare R2 :**
+### Logging
 ```
-R2_ACCOUNT_ID=...
-R2_ACCESS_KEY_ID=...
-R2_SECRET_ACCESS_KEY=...
-R2_BUCKET_NAME=althea-images
-R2_PUBLIC_URL=https://...r2.dev
+LOG_LEVEL=warn
+LOG_DIR=logs
 ```
 
-**OAuth (optionnel) :**
-```
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-```
+---
 
-### 3. Configuration build
+## 4. Base de Données — Neon PostgreSQL
 
-Le fichier `next.config.ts` est deja configure avec `output: "standalone"` pour des builds optimises.
-
-Le script `build` dans `package.json` execute `prisma generate && next build`.
-
-### 4. Deployer
-
+### Setup
+1. Créer un compte sur [neon.tech](https://neon.tech)
+2. Créer un nouveau projet "althea-systems"
+3. Copier la connection string dans `DATABASE_URL`
+4. Exécuter les migrations :
 ```bash
-# Preview
-vercel
-
-# Production
-vercel --prod
+DATABASE_URL="postgresql://..." npx prisma migrate deploy
+DATABASE_URL="postgresql://..." npx prisma db seed
 ```
 
-Ou via push sur la branche `main` (deploy automatique si connecte a GitHub).
+### Avantages Neon
+- Serverless (scale to zero)
+- Branching pour tester les migrations
+- Point-in-time recovery
+- Auto-suspend quand inactif (économies)
 
-### 5. Post-deploiement
+### Alternative : Supabase
+- PostgreSQL managé + dashboard
+- Auth intégré (pas utilisé ici, on a NextAuth)
+- Connection string compatible Prisma
 
+---
+
+## 5. Redis — Upstash
+
+### Setup
+1. Créer un compte sur [upstash.com](https://upstash.com)
+2. Créer une base Redis, région `eu-west-1` (Europe)
+3. Copier l'URL TLS dans `REDIS_URL`
+4. Format : `rediss://default:TOKEN@host:6379`
+
+### Usage dans le projet
+- Rate limiting API
+- Cache produits/catégories/recherche
+- Sessions (optionnel)
+
+---
+
+## 6. Cloudflare R2 — Stockage Images
+
+### Setup
+1. Dashboard Cloudflare → R2 → Créer bucket `althea-images`
+2. Créer un API Token (R2 read/write)
+3. Configurer les variables `R2_*`
+4. Activer le domaine public pour le bucket (CDN automatique)
+
+### Structure des dossiers
+```
+althea-images/
+├── products/       # Images produits
+├── categories/     # Images catégories
+├── carousel/       # Slides homepage
+└── users/          # Avatars utilisateurs
+```
+
+---
+
+## 7. SSL/TLS
+
+### Vercel (automatique)
+- Certificat SSL gratuit automatique
+- Renouvellement automatique
+- HTTP/2 + HTTP/3 activés
+- Redirection HTTP → HTTPS automatique
+
+### Domaine custom
+1. Vercel → Settings → Domains → Ajouter `althea-systems.fr`
+2. Configurer les DNS :
+   - `A` → `76.76.21.21`
+   - `CNAME www` → `cname.vercel-dns.com`
+3. Attendre la propagation DNS (quelques minutes à 48h)
+
+---
+
+## 8. Backups BDD Automatiques
+
+### Neon (inclus)
+- Backups automatiques quotidiens
+- Point-in-time recovery (7 jours sur Free, 30 jours sur Pro)
+- Branching pour tester avant migration
+
+### Backup manuel supplémentaire (recommandé)
 ```bash
-# Appliquer les migrations en production
-npx prisma migrate deploy
+# Script cron hebdomadaire
+pg_dump $DATABASE_URL -F c -f backup_$(date +%Y%m%d).dump
+
+# Upload vers R2
+aws s3 cp backup_*.dump s3://althea-backups/ \
+  --endpoint-url https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com
 ```
 
-## Deploiement Docker
+---
 
-### 1. Build de l'image
-
-```bash
-docker build -f docker/Dockerfile -t althea-systems .
-```
-
-L'image utilise un build multi-stage :
-- **deps** : Installation des dependances (`npm ci`)
-- **builder** : Generation Prisma + build Next.js
-- **runner** : Image minimale Alpine avec output standalone
-
-### 2. Lancer avec Docker Compose
-
-```bash
-cd docker
-docker compose up -d
-```
-
-Services :
-- `althea-app` : port 3000
-- `althea-postgres` : port 5432
-- `althea-redis` : port 6379
-
-### 3. Appliquer les migrations
-
-```bash
-docker exec althea-app npx prisma migrate deploy
-docker exec althea-app npm run db:seed  # Premiere installation uniquement
-```
-
-## Base de donnees production
-
-### Option 1 : Neon (recommande)
-
-1. Creer un projet sur [neon.tech](https://neon.tech)
-2. Copier la connection string
-3. Configurer `DATABASE_URL` avec le parametre `?sslmode=require`
-
-Avantages : serverless, autoscaling, branching, gratuit jusqu'a 0.5GB.
-
-### Option 2 : Supabase
-
-1. Creer un projet sur [supabase.com](https://supabase.com)
-2. Aller dans Settings > Database > Connection string
-3. Utiliser le mode "Transaction" pour les serverless functions
-
-### Migrations
-
-```bash
-# Generer une migration
-npx prisma migrate dev --name description_changement
-
-# Appliquer en production (pas de prompt interactif)
-npx prisma migrate deploy
-```
-
-## Redis production
-
-### Upstash (recommande pour Vercel)
-
-1. Creer une base sur [upstash.com](https://upstash.com)
-2. Copier l'URL Redis (format `rediss://...`)
-3. Configurer `REDIS_URL`
-
-Avantages : serverless, pay-per-request, compatible TLS.
-
-### Redis Cloud
-
-1. Creer une instance sur [redis.io/cloud](https://redis.io/cloud)
-2. Configurer le endpoint et le mot de passe
-
-## SSL / TLS
-
-### Vercel
-SSL automatique avec certificat Let's Encrypt. Rien a configurer.
-
-### Docker (auto-heberge)
-Utiliser un reverse proxy (Nginx, Caddy, Traefik) avec Let's Encrypt :
-
-```nginx
-server {
-    listen 443 ssl;
-    server_name votre-domaine.com;
-
-    ssl_certificate /etc/letsencrypt/live/votre-domaine.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/votre-domaine.com/privkey.pem;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-## DNS
-
-1. Ajouter un enregistrement A ou CNAME vers votre hebergeur
-2. Si Vercel : ajouter le domaine dans Project Settings > Domains
-3. Attendre la propagation DNS (jusqu'a 48h)
-
-## Monitoring
+## 9. Monitoring Uptime
 
 ### UptimeRobot (gratuit)
-1. Creer un moniteur HTTP(S) vers `https://votre-domaine.com`
-2. Intervalle de verification : 5 minutes
-3. Configurer les alertes email/SMS
+1. Créer un compte sur [uptimerobot.com](https://uptimerobot.com)
+2. Ajouter les monitors :
 
-### Vercel Analytics
-Active par defaut. Dashboard disponible dans le projet Vercel.
+| Monitor | Type | URL | Intervalle |
+|---------|------|-----|-----------|
+| Site | HTTPS | `https://althea-systems.fr` | 5 min |
+| API | HTTPS | `https://althea-systems.fr/api/products` | 5 min |
+| Health | HTTPS | `https://althea-systems.fr/api/health` | 2 min |
 
-### Logs
-- **Vercel** : onglet Logs dans le dashboard (temps reel)
-- **Docker** : `docker logs -f althea-app`
-- **Winston** : fichiers dans `logs/combined.log` et `logs/error.log`
+3. Configurer alertes : Email + SMS
 
-## Backups BDD
+### Status page
+- UptimeRobot fournit une page de statut publique gratuite
+- URL : `https://stats.uptimerobot.com/althea-systems`
 
-### Neon
-Backups automatiques inclus (point-in-time recovery jusqu'a 7 jours sur le plan gratuit).
+---
 
-### Supabase
-Backups automatiques quotidiens (7 jours de retention sur le plan gratuit).
+## 10. Rollback Strategy
 
-### Docker (auto-heberge)
-Script de backup automatique :
+### Vercel Instant Rollback
+1. Dashboard Vercel → Deployments
+2. Trouver le dernier déploiement stable
+3. Cliquer "..." → "Promote to Production"
+4. **Temps de rollback : < 30 secondes**
+
+### Rollback BDD
+```bash
+# Si migration problématique
+npx prisma migrate resolve --rolled-back <migration_name>
+
+# Restauration backup
+pg_restore -d $DATABASE_URL backup_YYYYMMDD.dump
+```
+
+### Procédure complète
+1. Rollback app via Vercel (immédiat)
+2. Si BDD impactée : restaurer le backup
+3. Investiguer la cause
+4. Fix + redéploiement normal
+
+---
+
+## 11. Checklist Pré-Déploiement
+
+- [ ] Toutes les variables d'environnement configurées dans Vercel
+- [ ] `npm run build` passe en local
+- [ ] `npx prisma validate` OK
+- [ ] Migrations appliquées sur la BDD production
+- [ ] Seed data (si premier déploiement)
+- [ ] Stripe webhook configuré avec l'URL production
+- [ ] OAuth providers mis à jour avec l'URL production
+- [ ] DNS configuré et propagé
+- [ ] SSL actif
+- [ ] Monitoring configuré (UptimeRobot)
+- [ ] Backup BDD vérifié
+- [ ] Tests critiques passent (auth, checkout, admin)
+
+---
+
+## 12. Commandes Utiles
 
 ```bash
-#!/bin/bash
-# backup-db.sh
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/backups"
-docker exec althea-postgres pg_dump -U althea althea_db | gzip > "$BACKUP_DIR/althea_$DATE.sql.gz"
-# Garder les 30 derniers backups
-ls -t $BACKUP_DIR/althea_*.sql.gz | tail -n +31 | xargs rm -f
+# Déployer manuellement
+vercel --prod
+
+# Voir les logs production
+vercel logs --follow
+
+# Vérifier le build
+npm run build
+
+# Appliquer migrations en production
+DATABASE_URL="..." npx prisma migrate deploy
+
+# Vérifier la santé de l'app
+curl -s https://althea-systems.fr/api/products | head -c 200
 ```
-
-Ajouter en crontab :
-```
-0 2 * * * /path/to/backup-db.sh
-```
-
-## Rollback
-
-### Vercel
-1. Aller dans Deployments
-2. Trouver le deploiement stable precedent
-3. Cliquer "Promote to Production"
-
-### Docker
-```bash
-# Lister les images disponibles
-docker images althea-systems
-
-# Revenir a une version precedente
-docker compose down
-docker tag althea-systems:previous althea-systems:latest
-docker compose up -d
-```
-
-### Base de donnees
-```bash
-# Voir l'historique des migrations
-npx prisma migrate status
-
-# En cas de probleme, restaurer un backup
-gunzip < backup_file.sql.gz | docker exec -i althea-postgres psql -U althea althea_db
-```
-
-## Checklist pre-deploiement
-
-- [ ] Variables d'environnement configurees
-- [ ] `NEXTAUTH_SECRET` genere de maniere securisee
-- [ ] `NEXTAUTH_URL` pointe vers le bon domaine
-- [ ] Stripe en mode live (pas test)
-- [ ] Webhook Stripe configure avec l'URL de production
-- [ ] Domaine email configure dans Resend
-- [ ] Bucket R2 cree et accessible
-- [ ] Migrations appliquees
-- [ ] Seed admin execute (premiere installation)
-- [ ] SSL/TLS actif
-- [ ] Monitoring configure
-- [ ] Backups BDD actifs
