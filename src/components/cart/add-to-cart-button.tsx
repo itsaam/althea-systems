@@ -19,6 +19,7 @@ export default function AddToCartButton({
   productName,
   price,
   image,
+  productId: _productId,
   disabled,
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
@@ -47,6 +48,8 @@ export default function AddToCartButton({
     if (quantity > 1) {
       setQuantity((prev) => prev - 1);
     }
+    // TODO: Add to cart logic using _productId
+    console.log("Add to cart:", _productId);
   };
 
   return (

@@ -1,133 +1,138 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ZodError, z } from "zod";
+import { Prisma } from "@prisma/client";
 import {
   productLogger,
-  apiLogger,
   LogMessages,
   withApiLogger,
   loggedErrorResponse,
   loggedSuccessResponse,
 } from "@/lib/logger/exports";
+import { getPriceBreakdown } from "@/lib/tva-utils";
 
-// GET /api/products - Récupérer tous les produits
+export const dynamic = 'force-dynamic';
+
+const productSchema = z.object({
+  name: z.string().min(1, "Le nom est requis"),
+  slug: z.string().min(1, "Le slug est requis"),
+  description: z.string().optional().nullable(),
+  price: z.number().positive("Le prix doit être positif"),
+  comparePrice: z.number().positive().optional(),
+  sku: z.string().optional(),
+  stock: z.number().int().min(0).default(0),
+  images: z.array(z.string()).default([]),
+  featured: z.boolean().default(false),
+  categoryId: z.string().min(1, "La catégorie est requise").optional(),
+  status: z.enum(["DRAFT", "PUBLISHED"]).default("DRAFT"),
+  tva: z.enum(["TVA_20", "TVA_10", "TVA_5_5", "TVA_0"]).default("TVA_20"),
+  priority: z.number().int().default(0),
+});
+
 export const GET = withApiLogger(async (req: NextRequest) => {
   try {
+    const { searchParams } = new URL(req.url);
+    const categoryId = searchParams.get("categoryId");
+    const featured = searchParams.get("featured");
+
+    const where: Prisma.ProductWhereInput = {};
+    if (categoryId) where.categoryId = categoryId;
+    if (featured === "true") where.featured = true;
+
     const products = await prisma.product.findMany({
-      include: {
+      where,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        price: true,
+        comparePrice: true,
+        stock: true,
+        images: true,
+        featured: true,
+        createdAt: true,
+        categoryId: true,
+        tva: true, 
         category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
+          select: { id: true, name: true, slug: true },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
-    const serializedProducts = products.map((product) => ({
-      ...product,
-      price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
-      image: product.images[0] || null,
-    }));
+    const serializedProducts = products.map((product) => {
+      const priceHT = typeof product.price === 'object' ? Number(product.price) : product.price;
+      const breakdown = getPriceBreakdown(priceHT, product.tva); 
+      return {
+        ...product,
+        price: priceHT,
+        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+        priceTTC: breakdown.priceTTC,
+        priceBreakdown: breakdown,
+        image: product.images?.[0] || null,
+      };
+    });
 
     productLogger.info(`${serializedProducts.length} produits récupérés`);
-    return loggedSuccessResponse(
-      { products: serializedProducts },
-      `Liste des produits récupérée`
-    );
+    return loggedSuccessResponse({ products: serializedProducts }, "Liste des produits récupérée");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    return loggedErrorResponse(`Erreur récupération produits: ${message}`, 500);
+    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur inconnue", 500);
   }
 });
 
-// POST /api/products - Créer un produit (admin only)
 export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session || session.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+      return loggedErrorResponse("Non autorisé", 403);
     }
 
     const body = await req.json();
-    const { name, slug, price, stock, description, categoryId, image } = body;
+    const validatedData = productSchema.parse(body);
 
-    if (!name || !slug) {
-      apiLogger.warn(LogMessages.api.erreurValidation("name, slug requis"));
-      return loggedErrorResponse("Nom et slug requis", 400);
+    const existingProduct = await prisma.product.findUnique({ where: { slug: validatedData.slug } });
+    if (existingProduct) return loggedErrorResponse("Ce slug est déjà utilisé", 400);
+
+    if (validatedData.categoryId) {
+      const category = await prisma.category.findUnique({ where: { id: validatedData.categoryId } });
+      if (!category) return loggedErrorResponse("Catégorie non trouvée", 404);
     }
 
-    if (!price || price <= 0) {
-      apiLogger.warn(LogMessages.api.erreurValidation("prix invalide"));
-      return loggedErrorResponse("Prix invalide", 400);
-    }
-
-    if (!categoryId) {
-      apiLogger.warn(LogMessages.api.erreurValidation("categoryId requis"));
-      return loggedErrorResponse("Catégorie requise", 400);
-    }
-
-    const existingProduct = await prisma.product.findUnique({
-      where: { slug },
-    });
-
-    if (existingProduct) {
-      apiLogger.warn(`Slug déjà utilisé: ${slug}`);
-      return loggedErrorResponse("Ce slug est déjà utilisé", 400);
-    }
-
-    // Créer le produit
     const product = await prisma.product.create({
-      data: {
-        name,
-        slug,
-        description: description || null,
-        price,
-        stock: stock || 0,
-        images: image ? [image] : [],
-        categoryId,
-        status: "PUBLISHED",
-        featured: false,
-      },
+      data: validatedData,
       include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
+        category: { select: { id: true, name: true, slug: true } },
       },
     });
+
+    const priceHT = Number(product.price);
+    const breakdown = getPriceBreakdown(priceHT, product.tva); 
 
     const serializedProduct = {
       ...product,
-      price: product.price.toNumber(),
-      comparePrice: product.comparePrice?.toNumber() || null,
+      price: priceHT,
+      comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+      priceTTC: breakdown.priceTTC,
+      priceBreakdown: breakdown,
       image: product.images[0] || null,
     };
 
-    productLogger.info(LogMessages.product.produitCree(product.id, name), {
-      price,
-      categoryId,
-      stock,
-    });
+    productLogger.info(LogMessages.product.produitCree(product.id, product.name));
 
     return loggedSuccessResponse(
       { product: serializedProduct },
-      LogMessages.product.produitCree(product.id, name),
+      LogMessages.product.produitCree(product.id, product.name),
       201
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    productLogger.error(`Erreur création produit: ${message}`);
-    return loggedErrorResponse(`Erreur création produit: ${message}`, 500);
+    if (error instanceof ZodError) {
+      return loggedErrorResponse(`Données invalides: ${error.issues.map(i => i.message).join(", ")}`, 400);
+    }
+    return loggedErrorResponse(error instanceof Error ? error.message : "Erreur création produit", 500);
   }
 });
+
+

@@ -88,18 +88,6 @@ services:
     profiles:
       - dev
 
-  # ==================== MAILHOG (Dev) ====================
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: althea-mailhog
-    ports:
-      - "1025:1025" # SMTP
-      - "8025:8025" # Web UI
-    networks:
-      - althea-network
-    profiles:
-      - dev
-
 # ==================== VOLUMES ====================
 volumes:
   postgres_data:

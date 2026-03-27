@@ -1,13 +1,65 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not defined");
+let stripeInstance: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error("STRIPE_SECRET_KEY is not defined");
+    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-12-15.clover",
+      typescript: true,
+    });
+  }
+  return stripeInstance;
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-11-17.clover",
-  typescript: true,
-});
+// Export pour compatibilité avec le code existant
+export const stripe = {
+  get instance() {
+    return getStripe();
+  },
+  checkout: {
+    sessions: {
+      create: (params: Stripe.Checkout.SessionCreateParams) =>
+        getStripe().checkout.sessions.create(params),
+      retrieve: (id: string) => getStripe().checkout.sessions.retrieve(id),
+    },
+  },
+  paymentIntents: {
+    create: (params: Stripe.PaymentIntentCreateParams) =>
+      getStripe().paymentIntents.create(params),
+    retrieve: (id: string) => getStripe().paymentIntents.retrieve(id),
+    update: (id: string, params: Stripe.PaymentIntentUpdateParams) =>
+      getStripe().paymentIntents.update(id, params),
+  },
+  setupIntents: {
+    create: (params: Stripe.SetupIntentCreateParams) =>
+      getStripe().setupIntents.create(params),
+  },
+customers: {
+  create: (params: Stripe.CustomerCreateParams) =>
+    getStripe().customers.create(params),
+  retrieve: (id: string) =>  
+    getStripe().customers.retrieve(id),
+  update: (id: string, params: Stripe.CustomerUpdateParams) =>  
+    getStripe().customers.update(id, params),
+},
+  invoices: {
+    create: (params: Stripe.InvoiceCreateParams) =>
+      getStripe().invoices.create(params),
+  },
+  webhooks: {
+    constructEvent: (
+      payload: string | Buffer,
+      signature: string,
+      secret: string
+    ) => getStripe().webhooks.constructEvent(payload, signature, secret),
+  },
+};
+
+// --- Fonctions utilitaires ---
 
 export async function createCheckoutSession(params: {
   lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
@@ -16,7 +68,7 @@ export async function createCheckoutSession(params: {
   cancelUrl: string;
   metadata?: Record<string, string>;
 }) {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: params.lineItems,
     mode: "payment",
@@ -29,6 +81,32 @@ export async function createCheckoutSession(params: {
   return session;
 }
 
+export async function createPaymentIntent(params: {
+  amount: number;
+  orderId: string;
+  customerId?: string;
+  metadata?: Record<string, string>;
+}) {
+  return await getStripe().paymentIntents.create({
+    amount: Math.round(params.amount * 100),
+    currency: "eur",
+    customer: params.customerId,
+    setup_future_usage: "off_session", // Pour enregistrer la carte (PCI-DSS)
+    metadata: {
+      ...params.metadata,
+      orderId: params.orderId,
+    },
+    automatic_payment_methods: { enabled: true },
+  });
+}
+
+export async function createSetupIntent(customerId: string) {
+  return await getStripe().setupIntents.create({
+    customer: customerId,
+    usage: "off_session", // Pour enregistrement sans débit
+  });
+}
+
 export async function constructWebhookEvent(
   payload: string | Buffer,
   signature: string
@@ -37,7 +115,7 @@ export async function constructWebhookEvent(
     throw new Error("STRIPE_WEBHOOK_SECRET is not defined");
   }
 
-  return stripe.webhooks.constructEvent(
+  return getStripe().webhooks.constructEvent(
     payload,
     signature,
     process.env.STRIPE_WEBHOOK_SECRET

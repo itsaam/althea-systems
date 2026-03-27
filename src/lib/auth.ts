@@ -1,4 +1,4 @@
-import NextAuth, { type NextAuthOptions, type User } from "next-auth";
+import { type NextAuthOptions, type User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
@@ -16,14 +16,12 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
     }),
 
     // GitHub OAuth
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID || "",
       clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
     }),
 
     // Email/Password
@@ -125,23 +123,30 @@ export const authOptions: NextAuthOptions = {
         token.twoFactorEnabled = user.twoFactorEnabled || false;
         token.twoFactorVerified = false; // Toujours false à la connexion
       }
-      
+
       // Recharger le rôle depuis la BDD pour refléter les changements en temps réel
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, twoFactorEnabled: true, name: true, firstName: true, lastName: true },
+          select: {
+            role: true,
+            twoFactorEnabled: true,
+            name: true,
+            firstName: true,
+            lastName: true,
+          },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.twoFactorEnabled = dbUser.twoFactorEnabled;
           // Mettre à jour le nom (OAuth = name, Credentials = firstName + lastName)
-          token.name = dbUser.firstName && dbUser.lastName
-            ? `${dbUser.firstName} ${dbUser.lastName}`
-            : dbUser.name || token.name;
+          token.name =
+            dbUser.firstName && dbUser.lastName
+              ? `${dbUser.firstName} ${dbUser.lastName}`
+              : dbUser.name || token.name;
         }
       }
-      
+
       // Mise à jour de la session si demandée (ex: après vérification 2FA)
       if (trigger === "update" && session) {
         if (session.user?.name) token.name = session.user.name;

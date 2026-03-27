@@ -1,7 +1,11 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { carouselSlideSchema } from "@/lib/validators/common";
+import { z } from "zod";
 
 export async function GET() {
   try {
@@ -25,21 +29,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, subtitle, image, link, order, active } = body;
-
-    if (!title || !image) {
-      return NextResponse.json(
-        { error: "Titre et image requis" },
-        { status: 400 }
-      );
-    }
+    const validatedData = carouselSlideSchema.parse(body);
 
     // Vérifier qu'on n'a pas plus de 3 slides actifs
     const activeCount = await prisma.carouselSlide.count({
       where: { active: true },
     });
 
-    if (activeCount >= 3 && active !== false) {
+    if (activeCount >= 3 && validatedData.active !== false) {
       return NextResponse.json(
         { error: "Maximum 3 slides actifs autorisés" },
         { status: 400 }
@@ -48,17 +45,23 @@ export async function POST(request: NextRequest) {
 
     const slide = await prisma.carouselSlide.create({
       data: {
-        title,
-        subtitle: subtitle || null,
-        image,
-        link: link || null,
-        order: order ?? activeCount,
-        active: active ?? true,
+        title: validatedData.title,
+        subtitle: validatedData.subtitle || null,
+        image: validatedData.image,
+        link: validatedData.link || null,
+        order: validatedData.order ?? activeCount,
+        active: validatedData.active ?? true,
       },
     });
 
     return NextResponse.json(slide, { status: 201 });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Données invalides", details: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Error creating carousel slide:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }

@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Search, ShoppingBag, ChevronLeft, ChevronRight, User, LogOut, Settings } from "lucide-react";
+import {
+  Search,
+  ShoppingBag,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  LogOut,
+  Settings,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +43,9 @@ interface HeroCanvasRevealProps {
   initialSlides?: Slide[];
 }
 
-export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProps) {
+export default function HeroCanvasReveal({
+  initialSlides,
+}: HeroCanvasRevealProps) {
   const { data: session, status } = useSession();
   const [slides, setSlides] = useState<Slide[]>(initialSlides || []);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -53,7 +63,7 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
   useEffect(() => {
     // Ne fetch que si pas de slides initiales
     if (initialSlides && initialSlides.length > 0) return;
-    
+
     async function fetchSlides() {
       try {
         const res = await fetch("/api/carousel");
@@ -80,7 +90,8 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
   }, [slides.length]);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  const prevSlide = () =>
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
   const slide = slides[currentSlide];
 
@@ -94,7 +105,7 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
           style={{ backgroundImage: `url(${slide.image})` }}
         />
       )}
-      
+
       {/* Overlay for readability */}
       <div className="absolute inset-0 bg-black/60" />
 
@@ -104,8 +115,8 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
         <nav className="w-full flex items-center p-6 md:p-8">
           {/* Logo */}
           <div className="flex-1">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="text-white font-bold text-xl md:text-2xl tracking-tight hover:text-[#00a8b5] transition-colors"
             >
               Althea Systems
@@ -157,14 +168,23 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
+                <DropdownMenuContent
+                  className="w-56 mt-2"
+                  align="end"
+                  forceMount
+                >
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-medium">{session.user.name}</p>
-                    <p className="text-xs text-muted-foreground">{session.user.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {session.user.email}
+                    </p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer flex items-center">
+                    <Link
+                      href="/profile"
+                      className="cursor-pointer flex items-center"
+                    >
                       <User className="mr-2 h-4 w-4" />
                       Mon profil
                     </Link>
@@ -173,7 +193,10 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href="/admin" className="cursor-pointer flex items-center">
+                        <Link
+                          href="/admin"
+                          className="cursor-pointer flex items-center"
+                        >
                           <Settings className="mr-2 h-4 w-4" />
                           Administration
                         </Link>
@@ -199,7 +222,7 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
                 </Link>
                 <Link href="/register">
                   <button className="h-8 px-4 rounded-full text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
-                    S'inscrire
+                    S&apos;inscrire
                   </button>
                 </Link>
               </div>
@@ -207,8 +230,18 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
 
             {/* Mobile menu button */}
             <button className="md:hidden flex items-center justify-center h-9 w-9 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
           </div>
@@ -216,21 +249,24 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
 
         {/* Hero text - centered with slide transition */}
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-          <h1 
+          <h1
             key={slide?.id + "-title"}
             className="text-[12vw] md:text-[8vw] font-bold text-white uppercase tracking-tighter leading-none transition-opacity duration-500"
           >
             {slide?.title}
           </h1>
-          <p 
+          <p
             key={slide?.id + "-subtitle"}
             className="mt-4 text-lg md:text-2xl text-white/80 max-w-2xl transition-opacity duration-500"
           >
             {slide?.subtitle}
           </p>
-          
+
           {/* CTA Text */}
-          <p className="mt-10 text-sm md:text-base text-white/50 animate-pulse" style={{ animationDuration: '3s' }}>
+          <p
+            className="mt-10 text-sm md:text-base text-white/50 animate-pulse"
+            style={{ animationDuration: "3s" }}
+          >
             Des solutions innovantes pour les professionnels de santé
           </p>
 
@@ -255,13 +291,13 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
         {/* Carousel arrows - left and right edges */}
         {slides.length > 1 && (
           <>
-            <button 
+            <button
               onClick={prevSlide}
               className="absolute left-6 md:left-8 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-white/5 hover:bg-white/20 text-white/20 hover:text-white backdrop-blur-sm border border-white/10 hover:border-white/30 flex items-center justify-center transition-all duration-300"
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
-            <button 
+            <button
               onClick={nextSlide}
               className="absolute right-6 md:right-8 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-white/5 hover:bg-white/20 text-white/20 hover:text-white backdrop-blur-sm border border-white/10 hover:border-white/30 flex items-center justify-center transition-all duration-300"
             >
@@ -284,9 +320,7 @@ export default function HeroCanvasReveal({ initialSlides }: HeroCanvasRevealProp
             ))}
           </div>
           <div>
-            <span className="text-white/50 text-sm">
-              © 2025 Althea Systems
-            </span>
+            <span className="text-white/50 text-sm">© 2025 Althea Systems</span>
           </div>
         </footer>
       </div>

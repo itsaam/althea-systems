@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import ContactForm from "@/components/contact/contact-form";
 import Chatbot from "@/components/contact/chatbot";
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description:
+    "Contactez l'equipe Althea Systems pour toute question sur nos equipements medicaux. Reponse rapide garantie.",
+  alternates: {
+    canonical: "/contact",
+  },
+};
 
 export default function ContactPage() {
   return (

@@ -1,756 +1,429 @@
-# API Documentation - Althea Systems
+# Documentation API - Althea Systems
 
-Documentation complète de l'API REST de l'application Althea Systems.
+Base URL : `http://localhost:3000/api`
 
-## Base URL
-
-```
-Development: http://localhost:3000/api
-Production: https://althea.vjuya.me/api
-```
-
-## Statut des APIs
-
-| Symbole | Signification |
-|---------|---------------|
-| ✅ | API fonctionnelle |
-| ⚠️ TODO | API stub, non implémentée |
+Toutes les reponses suivent le format JSON. Les erreurs retournent `{ error: string, message?: string }`.
 
 ## Authentification
 
-L'API utilise NextAuth.js pour l'authentification. Les routes protégées nécessitent un cookie de session valide.
-
-### Headers requis
-
-```
-Content-Type: application/json
-```
+L'API utilise NextAuth.js avec des sessions JWT. Les routes protegees necessitent un cookie de session valide.
 
 ---
 
-## 🔐 Auth API
+## Auth
+
+### POST /api/auth/[...nextauth]
+NextAuth.js handler (login/logout/session).
+
+**Providers disponibles :**
+- `credentials` (email + password)
+- `google` (OAuth)
+- `github` (OAuth)
 
 ### POST /api/auth/register
+Creer un nouveau compte utilisateur.
 
-Créer un nouveau compte utilisateur.
+| Champ | Type | Requis | Validation |
+|-------|------|--------|------------|
+| `firstName` | string | oui | min 2 caracteres |
+| `lastName` | string | oui | min 2 caracteres |
+| `email` | string | oui | email valide |
+| `password` | string | oui | min 8 chars, 1 majuscule, 1 chiffre |
+| `confirmPassword` | string | oui | doit matcher password |
 
-**Request Body:**
-
-```json
-{
-  "firstName": "Jean",
-  "lastName": "Dupont",
-  "email": "jean@example.com",
-  "password": "MonMotDePasse123"
-}
-```
-
-**Response (201):**
-
-```json
-{
-  "message": "Compte créé avec succès",
-  "user": {
-    "id": "clx...",
-    "email": "jean@example.com",
-    "name": "Jean Dupont"
-  }
-}
-```
-
-**Errors:**
-
-- `400`: Validation error
-- `409`: Email already exists
-
----
+**Reponses :** `201 Created` | `400 Validation Error` | `409 Email deja utilise`
 
 ### POST /api/auth/forgot-password
+Envoyer un email de reinitialisation de mot de passe.
 
-Demander un lien de réinitialisation de mot de passe.
+| Champ | Type | Requis |
+|-------|------|--------|
+| `email` | string | oui |
 
-**Request Body:**
-
-```json
-{
-  "email": "jean@example.com"
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation"
-}
-```
-
----
+**Reponse :** `200` (toujours, pour eviter l'enumeration d'emails)
 
 ### POST /api/auth/reset-password
+Reinitialiser le mot de passe avec un token.
 
-Réinitialiser le mot de passe avec un token valide.
-
-**Request Body:**
-
-```json
-{
-  "token": "abc123...",
-  "password": "NouveauMotDePasse123"
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "Mot de passe réinitialisé avec succès"
-}
-```
-
-**Errors:**
-
-- `400`: Token invalide ou expiré
-
----
+| Champ | Type | Requis |
+|-------|------|--------|
+| `token` | string | oui |
+| `password` | string | oui |
+| `confirmPassword` | string | oui |
 
 ### POST /api/auth/verify-email
-
-Vérifier l'email avec un token.
-
-**Request Body:**
-
-```json
-{
-  "token": "abc123..."
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "Email vérifié avec succès"
-}
-```
-
----
-
 ### GET /api/auth/verify-email?token=xxx
-
-Vérifier l'email via lien (depuis l'email).
-
-**Response:** Redirection vers `/verify-email?success=true` ou `/verify-email?error=xxx`
-
----
-
-## 🔒 2FA API (Admin)
+Verifier l'adresse email d'un utilisateur.
 
 ### POST /api/auth/2fa/setup
+Configurer l'authentification a deux facteurs (TOTP). Retourne un QR code.
 
-Initialiser la configuration 2FA. Requiert authentification admin.
-
-**Response (200):**
-
-```json
-{
-  "secret": "ABCDEF123456",
-  "otpauthUrl": "otpauth://totp/AltheaSystems:user@email.com?secret=...",
-  "message": "Scannez le QR code avec votre application d'authentification"
-}
-```
-
----
+**Auth requise :** oui (ADMIN)
 
 ### POST /api/auth/2fa/verify
+Verifier un code TOTP pour la 2FA.
 
-Vérifier un code 2FA.
-
-**Request Body:**
-
-```json
-{
-  "code": "123456",
-  "isSetup": true
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "2FA activé avec succès",
-  "enabled": true
-}
-```
+| Champ | Type | Requis |
+|-------|------|--------|
+| `code` | string | oui |
 
 ---
 
-## 👤 Profile API
-
-### GET /api/profile
-
-Récupérer le profil de l'utilisateur connecté.
-
-**Response (200):**
-
-```json
-{
-  "user": {
-    "id": "clx...",
-    "email": "jean@example.com",
-    "firstName": "Jean",
-    "lastName": "Dupont",
-    "phone": "+33612345678",
-    "image": "url...",
-    "hasPassword": true
-  }
-}
-```
-
----
-
-### PUT /api/profile
-
-Mettre à jour le profil ou changer le mot de passe.
-
-**Request Body (infos):**
-
-```json
-{
-  "firstName": "Jean",
-  "lastName": "Dupont",
-  "phone": "+33612345678"
-}
-```
-
-**Request Body (mot de passe):**
-
-```json
-{
-  "currentPassword": "AncienMdp123",
-  "newPassword": "NouveauMdp123"
-}
-```
-
-**Errors:**
-
-- `400`: Mot de passe actuel incorrect ou compte OAuth
-- `401`: Non authentifié
-
----
-
-## 👤 Users API (Admin)
-
-### GET /api/users
-
-Liste tous les utilisateurs (Admin only).
-
-**Query Parameters:**
-
-- `page` (number): Page number (default: 1)
-- `limit` (number): Items per page (default: 10)
-- `search` (string): Search by name or email
-- `role` (string): Filter by role (USER, ADMIN)
-
-**Response (200):**
-
-```json
-{
-  "users": [...],
-  "total": 100,
-  "page": 1,
-  "totalPages": 10
-}
-```
-
----
-
-### GET /api/users/:id
-
-Obtenir un utilisateur spécifique.
-
-**Response (200):**
-
-```json
-{
-  "id": "clx...",
-  "email": "jean@example.com",
-  "firstName": "Jean",
-  "lastName": "Dupont",
-  "role": "USER",
-  "createdAt": "2024-01-01T00:00:00.000Z"
-}
-```
-
----
-
-### PUT /api/users/:id
-
-Mettre à jour un utilisateur.
-
-**Request Body:**
-
-```json
-{
-  "firstName": "Jean",
-  "lastName": "Dupont",
-  "phone": "+33612345678"
-}
-```
-
----
-
-## 📦 Products API
+## Produits
 
 ### GET /api/products
+Lister les produits avec pagination et filtres.
 
-Liste tous les produits.
-
-**Query Parameters:**
-
-- `page` (number): Page number
-- `limit` (number): Items per page
-- `search` (string): Search by name
-- `category` (string): Filter by category ID
-- `featured` (boolean): Filter featured products
-- `minPrice` (number): Minimum price
-- `maxPrice` (number): Maximum price
-- `sort` (string): Sort field (price, name, createdAt)
-- `order` (string): Sort order (asc, desc)
-
-**Response (200):**
-
-```json
-{
-  "products": [...],
-  "total": 50,
-  "page": 1,
-  "totalPages": 5
-}
-```
-
----
+| Parametre | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | number | 1 | Page courante |
+| `limit` | number | 12 | Produits par page |
+| `category` | string | - | Slug categorie |
+| `status` | string | - | DRAFT / PUBLISHED |
+| `search` | string | - | Recherche texte |
+| `sort` | string | - | Champ de tri |
+| `order` | string | asc | asc / desc |
 
 ### GET /api/products/:id
+Recuperer un produit par son ID.
 
-Obtenir un produit spécifique.
+### POST /api/products
+Creer un produit. **Auth requise : ADMIN**
 
----
-
-### POST /api/products (Admin)
-
-Créer un nouveau produit.
-
-**Request Body:**
-
-```json
-{
-  "name": "Produit Test",
-  "slug": "produit-test",
-  "description": "Description du produit",
-  "price": 29.99,
-  "stock": 100,
-  "categoryId": "clx...",
-  "images": ["url1", "url2"],
-  "featured": false
-}
-```
-
----
-
-### PUT /api/products/:id (Admin)
-
-Mettre à jour un produit.
-
----
-
-### DELETE /api/products/:id (Admin)
-
-Supprimer un produit.
-
----
-
-## 🎠 Carousel API
-
-### GET /api/carousel
-
-Liste les slides du carrousel (max 3 actifs).
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": "clx...",
-    "title": "Bienvenue",
-    "subtitle": "Découvrez nos produits",
-    "image": "/images/slide1.jpg",
-    "link": "/categories/nouveautes",
-    "order": 0,
-    "active": true
-  }
-]
-```
-
----
-
-### POST /api/carousel (Admin)
-
-Créer un nouveau slide.
-
-**Request Body:**
-
-```json
-{
-  "title": "Nouveau Slide",
-  "subtitle": "Description optionnelle",
-  "image": "/images/slide.jpg",
-  "link": "/categories/promo",
-  "order": 0,
-  "active": true
-}
-```
-
-**Errors:**
-
-- `400`: Maximum 3 slides actifs autorisés
-
----
-
-### PUT /api/carousel/:id (Admin)
-
-Mettre à jour un slide.
-
----
-
-### DELETE /api/carousel/:id (Admin)
-
-Supprimer un slide.
-
----
-
-## 📁 Categories API
-
-### GET /api/categories
-
-Liste toutes les catégories.
-
-**Response (200):**
-
-```json
-{
-  "categories": [
-    {
-      "id": "clx...",
-      "name": "Électronique",
-      "slug": "electronique",
-      "children": [...]
-    }
-  ]
-}
-```
-
----
-
-### POST /api/categories (Admin)
-
-Créer une catégorie.
-
----
-
-### PUT /api/categories/:id (Admin)
-
-Mettre à jour une catégorie.
-
----
-
-### DELETE /api/categories/:id (Admin)
-
-Supprimer une catégorie.
-
----
-
-## 🛒 Cart API
-
-### GET /api/cart
-
-Obtenir le panier de l'utilisateur connecté.
-
----
-
-### POST /api/cart
-
-Ajouter un item au panier.
-
-**Request Body:**
-
-```json
-{
-  "productId": "clx...",
-  "quantity": 2
-}
-```
-
----
-
-### PUT /api/cart/:itemId
-
-Mettre à jour la quantité d'un item.
-
----
-
-### DELETE /api/cart/:itemId
-
-Supprimer un item du panier.
-
----
-
-## 🧾 Orders API
-
-### GET /api/orders
-
-Liste les commandes de l'utilisateur (ou toutes pour admin).
-
----
-
-### GET /api/orders/:id
-
-Obtenir une commande spécifique.
-
----
-
-### POST /api/orders
-
-Créer une nouvelle commande.
-
-**Request Body:**
-
-```json
-{
-  "addressId": "clx...",
-  "paymentMethod": "stripe",
-  "notes": "Sonner à l'interphone"
-}
-```
-
----
-
-### PUT /api/orders/:id/status (Admin)
-
-Mettre à jour le statut d'une commande.
-
-**Request Body:**
-
-```json
-{
-  "status": "SHIPPED",
-  "trackingNumber": "ABC123"
-}
-```
-
----
-
-## 📍 Addresses API
-
-### GET /api/addresses
-
-Liste les adresses de l'utilisateur.
-
----
-
-### POST /api/addresses
-
-Ajouter une adresse.
-
-**Request Body:**
-
-```json
-{
-  "firstName": "Jean",
-  "lastName": "Dupont",
-  "street": "123 Rue Example",
-  "city": "Paris",
-  "postalCode": "75001",
-  "country": "France",
-  "phone": "+33612345678",
-  "isDefault": true
-}
-```
-
----
-
-### PUT /api/addresses/:id
-
-Mettre à jour une adresse.
-
----
-
-### DELETE /api/addresses/:id
-
-Supprimer une adresse.
-
----
-
-## 💳 Stripe API
-
-### POST /api/stripe/checkout
-
-> ⚠️ **TODO** - Non implémenté
-
-Créer une session Stripe Checkout.
-
----
-
-### POST /api/stripe/webhook
-
-Webhook Stripe pour les événements de paiement.
-
----
-
-## 🧾 Invoices API (Admin)
-
-### GET /api/invoices
-
-> ⚠️ **TODO** - Non implémenté
-
-Liste toutes les factures.
-
----
-
-### GET /api/invoices/:id/pdf
-
-> ⚠️ **TODO** - Non implémenté
-
-Télécharger une facture en PDF.
-
----
-
-## 💸 Credits API (Admin)
-
-### GET /api/credits
-
-> ⚠️ **TODO** - Non implémenté
-
-Liste tous les avoirs.
-
----
-
-### POST /api/credits
-
-> ⚠️ **TODO** - Non implémenté
-
-Créer un avoir.
-
----
-
-## 📊 Stats API (Admin)
-
-### GET /api/stats
-
-Obtenir les statistiques du dashboard.
-
-**Response (200):**
-
-```json
-{
-  "totalSales": 12500.00,
-  "totalOrders": 150,
-  "totalUsers": 500,
-  "totalProducts": 75,
-  "recentOrders": [...],
-  "salesByMonth": [...],
-  "topProducts": [...]
-}
-```
-
----
-
-## 📞 Contact API
-
-### POST /api/contact
-
-Envoyer un message de contact.
-
-**Request Body:**
-
-```json
-{
-  "name": "Jean Dupont",
-  "email": "jean@example.com",
-  "subject": "Question",
-  "message": "Mon message..."
-}
-```
-
----
-
-## 🖼️ Upload API
-
-### POST /api/upload
-
-Uploader une image.
-
-**Request:** FormData avec champ `file`
-
-**Response (200):**
-
-```json
-{
-  "url": "/images/products/xxx.jpg",
-  "filename": "xxx.jpg"
-}
-```
-
----
-
-## 🔍 Search API
+### PATCH /api/products/:id
+Modifier un produit. **Auth requise : ADMIN**
 
 ### GET /api/products/search
+Recherche de produits (fulltext).
 
-> ⚠️ **TODO** - Non implémenté (stub)
-
-Recherche avancée de produits.
-
-**Query Parameters:**
-
-- `q` (string): Query de recherche
-
----
-
-## ⭐ Featured Products API
+| Parametre | Type | Description |
+|-----------|------|-------------|
+| `q` | string | Terme de recherche |
 
 ### GET /api/products/featured
+Produits mis en avant (featured = true).
 
-> ⚠️ **TODO** - Non implémenté (stub)
-
-Liste les produits vedettes.
+### POST /api/products/:id/images
+Upload d'images produit vers Cloudflare R2. **Auth requise : ADMIN**
 
 ---
 
-## Codes d'erreur
+## Produits Admin
 
-| Code | Description           |
-| ---- | --------------------- |
-| 200  | Succès                |
-| 201  | Créé avec succès      |
-| 400  | Requête invalide      |
-| 401  | Non authentifié       |
-| 403  | Accès interdit        |
-| 404  | Ressource non trouvée |
-| 409  | Conflit (doublon)     |
-| 500  | Erreur serveur        |
+### GET /api/admin/products
+Liste des produits pour l'administration avec filtres avances.
+
+| Parametre | Type | Description |
+|-----------|------|-------------|
+| `page` | number | Pagination |
+| `limit` | number | Limite par page |
+| `status` | string | Filtre statut |
+| `category` | string | Filtre categorie |
+| `search` | string | Recherche |
+| `sort` | string | Champ de tri |
+| `order` | string | Direction |
+| `minPrice` | number | Prix minimum |
+| `maxPrice` | number | Prix maximum |
+
+### GET /api/admin/products/:id
+Detail produit (admin).
+
+### PUT /api/admin/products/:id
+Mise a jour complete d'un produit. **Auth requise : ADMIN**
+
+### DELETE /api/admin/products/:id
+Supprimer un produit. **Auth requise : ADMIN**
+
+### PATCH /api/admin/products/bulk
+Actions en masse sur les produits (changer statut, categorie).
+
+### DELETE /api/admin/products/bulk
+Suppression en masse de produits.
+
+### GET /api/admin/products/export
+Exporter les produits au format XLSX (Excel).
+
+---
+
+## Categories
+
+### GET /api/categories
+Lister toutes les categories (avec cache Redis).
+
+### POST /api/categories
+Creer une categorie. **Auth requise : ADMIN**
+
+### GET /api/categories/:id
+Detail d'une categorie.
+
+### PUT /api/categories/:id
+Modifier une categorie. **Auth requise : ADMIN**
+
+### PUT /api/categories/reorder
+Reordonner les categories (drag & drop). **Auth requise : ADMIN**
+
+---
+
+## Commandes
+
+### GET /api/orders
+Lister les commandes de l'utilisateur connecte.
+
+**Auth requise :** oui
+
+### POST /api/orders
+Creer une commande.
+
+**Auth requise :** oui
+
+### GET /api/orders/:id
+Detail d'une commande.
+
+**Auth requise :** oui (proprietaire ou ADMIN)
+
+### PATCH /api/orders/:id
+Modifier le statut d'une commande. **Auth requise : ADMIN**
+
+### GET /api/orders/:id/invoice
+Telecharger la facture PDF d'une commande.
+
+---
+
+## Factures
+
+### GET /api/invoices
+Lister les factures.
+
+### GET /api/invoices/:id
+Detail d'une facture.
+
+### GET /api/invoices/:id/pdf
+Telecharger une facture au format PDF.
+
+---
+
+## Avoirs (Credit Notes)
+
+### GET /api/credits
+Lister les avoirs. **Auth requise : ADMIN**
+
+### PATCH /api/credits
+Creer / modifier un avoir. **Auth requise : ADMIN**
+
+### DELETE /api/credits
+Supprimer un avoir. **Auth requise : ADMIN**
+
+---
+
+## Adresses
+
+### GET /api/addresses
+Lister les adresses de l'utilisateur connecte.
+
+### POST /api/addresses
+Ajouter une adresse.
+
+### GET /api/addresses/:id
+Detail d'une adresse.
+
+### PATCH /api/addresses/:id
+Modifier une adresse.
+
+### DELETE /api/addresses/:id
+Supprimer une adresse.
+
+### POST /api/addresses/:id/set-default
+Definir une adresse comme adresse par defaut.
+
+---
+
+## Utilisateurs
+
+### GET /api/users
+Lister les utilisateurs. **Auth requise : ADMIN**
+
+### POST /api/users
+Creer un utilisateur (admin). **Auth requise : ADMIN**
+
+### GET /api/users/:id
+Detail utilisateur. **Auth requise : ADMIN**
+
+### PATCH /api/users/:id
+Modifier un utilisateur. **Auth requise : ADMIN**
+
+### DELETE /api/users/:id
+Supprimer un utilisateur. **Auth requise : ADMIN**
+
+### GET /api/users/me
+Profil de l'utilisateur connecte.
+
+### PUT /api/users/me
+Modifier son propre profil.
+
+---
+
+## Methodes de paiement
+
+### POST /api/users/me/payment-methods
+Enregistrer une nouvelle methode de paiement (Stripe SetupIntent).
+
+### DELETE /api/users/me/payment-methods/:id
+Supprimer une methode de paiement.
+
+### PUT /api/users/me/payment-methods/:id/default
+Definir une methode de paiement par defaut.
+
+---
+
+## Profil
+
+### GET /api/profile
+Recuperer le profil de l'utilisateur connecte.
+
+### PUT /api/profile
+Modifier son profil (nom, email, mot de passe).
+
+---
+
+## Stripe (Paiements)
+
+### POST /api/stripe/checkout
+Creer une session de checkout Stripe.
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `items` | array | Produits du panier |
+| `addressId` | string | Adresse de livraison |
+
+### POST /api/stripe/payment-saved-card
+Payer avec une carte enregistree.
+
+### POST /api/stripe/webhook
+Webhook Stripe (checkout.session.completed, payment_intent events).
+
+**Note :** Ce endpoint recoit les notifications Stripe et met a jour les commandes/factures.
+
+---
+
+## Panier
+
+### GET /api/cart
+Recuperer le panier de l'utilisateur.
+
+### POST /api/cart
+Ajouter un produit au panier.
+
+### PUT /api/cart
+Modifier la quantite d'un article.
+
+---
+
+## Carousel
+
+### GET /api/carousel
+Lister les slides du carousel (page d'accueil).
+
+### POST /api/carousel
+Creer un slide. **Auth requise : ADMIN**
+
+### GET /api/carousel/:id
+Detail d'un slide.
+
+### PUT /api/carousel/:id
+Modifier un slide. **Auth requise : ADMIN**
+
+### DELETE /api/carousel/:id
+Supprimer un slide. **Auth requise : ADMIN**
+
+---
+
+## Contact
+
+### GET /api/contact
+Lister les messages de contact. **Auth requise : ADMIN**
+
+### POST /api/contact
+Envoyer un message de contact.
+
+| Champ | Type | Requis |
+|-------|------|--------|
+| `name` | string | oui |
+| `email` | string | oui |
+| `subject` | string | oui |
+| `message` | string | oui |
+
+### PUT /api/contact/:id/status
+Marquer un message comme lu. **Auth requise : ADMIN**
+
+---
+
+## Upload
+
+### POST /api/upload
+Upload de fichier vers Cloudflare R2. **Auth requise : ADMIN**
+
+Accepte : `multipart/form-data` avec champ `file`.
+Retourne : `{ url: string }` (URL publique R2).
+
+---
+
+## Dashboard Admin
+
+### GET /api/admin/dashboard/kpis
+KPIs du dashboard (CA, commandes, clients, panier moyen).
+
+### GET /api/admin/dashboard/sales-chart
+Donnees du graphique de ventes.
+
+| Parametre | Type | Description |
+|-----------|------|-------------|
+| `period` | string | 7d, 30d, 90d, 1y |
+
+### GET /api/admin/dashboard/category-sales
+Repartition des ventes par categorie.
+
+### GET /api/admin/dashboard/cart-analysis
+Analyse des paniers (abandon, conversion).
+
+### GET /api/admin/stock/alerts
+Alertes de stock bas.
+
+---
+
+## Statistiques
+
+### GET /api/stats
+Statistiques generales.
+
+### GET /api/stats/revenue
+Statistiques de revenus.
+
+### GET /api/stats/customers
+Statistiques clients.
+
+---
 
 ## Rate Limiting
 
-L'API implémente un rate limiting via Redis :
+Toutes les routes API sont protegees par rate limiting Redis :
 
-- 100 requêtes par minute pour les utilisateurs authentifiés
-- 20 requêtes par minute pour les utilisateurs anonymes
+| Type de route | Limite | Fenetre |
+|---------------|--------|---------|
+| `/api/auth/*` | 5 requetes | 60 secondes |
+| `/api/admin/*` | 50 requetes | 60 secondes |
+| `/api/search` | 30 requetes | 60 secondes |
+| Autres `/api/*` | 100 requetes | 60 secondes |
 
-Headers de réponse :
+Headers de reponse :
+- `X-RateLimit-Limit` : Limite maximale
+- `X-RateLimit-Remaining` : Requetes restantes
+- `X-RateLimit-Reset` : Timestamp de reinitialisation
 
-```
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1699999999
+Reponse 429 :
+```json
+{
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Please try again later.",
+  "retryAfter": 45
+}
 ```

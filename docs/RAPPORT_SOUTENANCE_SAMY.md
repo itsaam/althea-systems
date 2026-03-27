@@ -3,7 +3,7 @@
 **Projet** : Althea Systems - Plateforme e-commerce B2B  
 **Auteur** : Samy  
 **Role** : DevOps - Auth et Infrastructure  
-**Date** : 19 decembre 2025
+**Date** : 8 janvier 2026 (mis a jour)
 
 ---
 
@@ -17,10 +17,13 @@
 6. [Systeme de cache Redis](#6-systeme-de-cache-redis)
 7. [Stockage des images (Cloudflare R2)](#7-stockage-des-images-cloudflare-r2)
 8. [Validation des variables d'environnement](#8-validation-des-variables-denvironnement)
-9. [Decisions techniques et justifications](#9-decisions-techniques-et-justifications)
-10. [Temps de developpement](#10-temps-de-developpement)
-11. [Difficultes rencontrees](#11-difficultes-rencontrees)
-12. [Pistes d'amelioration](#12-pistes-damelioration)
+9. [Securisation des endpoints API](#9-securisation-des-endpoints-api)
+10. [Integration Continue (GitHub Actions)](#10-integration-continue-github-actions)
+11. [Composant HeroCanvasReveal](#11-composant-herocanvasreveal)
+12. [Decisions techniques et justifications](#12-decisions-techniques-et-justifications)
+13. [Temps de developpement](#13-temps-de-developpement)
+14. [Difficultes rencontrees](#14-difficultes-rencontrees)
+15. [Pistes d'amelioration](#15-pistes-damelioration)
 
 ---
 
@@ -41,15 +44,18 @@ En tant que responsable Auth et Infrastructure, mes missions etaient :
 
 ### 1.3 Stack technique utilisee
 
-| Composant | Technologie | Version |
-|-----------|-------------|---------|
-| Framework | Next.js | 16.x |
-| Auth | NextAuth.js | 4.x |
-| ORM | Prisma | 5.x |
-| Cache | Redis / ioredis | 7.x |
-| Container | Docker | 24.x |
-| Base de donnees | PostgreSQL | 16 |
-| Base NoSQL | MongoDB | 7 |
+| Composant       | Technologie     | Version    |
+| --------------- | --------------- | ---------- |
+| Framework       | Next.js         | 15.x       |
+| Auth            | NextAuth.js     | 4.x        |
+| ORM             | Prisma          | 5.x        |
+| Cache           | Redis / ioredis | 7.x        |
+| Container       | Docker          | 24.x       |
+| Base de donnees | PostgreSQL      | 16         |
+| Runtime         | Node.js         | >=20.0.0   |
+| CI/CD           | GitHub Actions  | -          |
+| Stockage        | Cloudflare R2   | -          |
+| Paiement        | Stripe          | 2025-11-17 |
 
 ---
 
@@ -92,6 +98,7 @@ La strategie JWT a ete privilegiee pour plusieurs raisons :
 3. **Performance** : Pas de requete base de donnees pour valider la session
 
 Configuration appliquee :
+
 - Duree de session : 30 jours
 - Les informations utilisateur (id, role, statut 2FA) sont encodees directement dans le token JWT, qui est stocke cote client (cookie httpOnly)
 
@@ -108,6 +115,7 @@ Trois callbacks ont ete implementes :
 ### 2.5 Logging
 
 Integration d'un systeme de logging personnalise pour tracer :
+
 - Les connexions reussies
 - Les echecs d'authentification
 - Les deconnexions
@@ -124,11 +132,11 @@ Integration d'un systeme de logging personnalise pour tracer :
 
 Le middleware definit trois categories de routes :
 
-| Categorie | Routes | Protection |
-|-----------|--------|------------|
-| Admin | `/admin/*` | Role ADMIN + 2FA obligatoire |
-| Compte | `/profile`, `/orders`, `/addresses`, `/payments` | Utilisateur connecte |
-| Auth | `/login`, `/register`, `/forgot-password`, etc. | Redirection si deja connecte |
+| Categorie | Routes                                           | Protection                   |
+| --------- | ------------------------------------------------ | ---------------------------- |
+| Admin     | `/admin/*`                                       | Role ADMIN + 2FA obligatoire |
+| Compte    | `/profile`, `/orders`, `/addresses`, `/payments` | Utilisateur connecte         |
+| Auth      | `/login`, `/register`, `/forgot-password`, etc.  | Redirection si deja connecte |
 
 ### 3.3 Logique de protection
 
@@ -152,6 +160,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 ```
 
 Ces headers protegent contre :
+
 - Le clickjacking (X-Frame-Options)
 - Le MIME type sniffing (X-Content-Type-Options)
 - Les fuites de referrer (Referrer-Policy)
@@ -159,6 +168,7 @@ Ces headers protegent contre :
 ### 3.5 Exclusions du middleware
 
 Le matcher exclut les chemins suivants pour eviter les traitements inutiles :
+
 - `/api/*` (routes API)
 - `/_next/*` (assets Next.js)
 - Fichiers statiques (images, fonts, favicon)
@@ -174,11 +184,13 @@ Le 2FA utilise le standard TOTP (Time-based One-Time Password) via la librairie 
 ### 4.2 Flux de configuration
 
 **Etape 1 - Generation du secret** (`/api/auth/2fa/setup`)
+
 - Generation d'un secret Base32 avec `authenticator.generateSecret()`
 - Stockage temporaire dans Redis avec expiration de 10 minutes
 - Generation de l'URL otpauth pour le QR code
 
 **Etape 2 - Verification et activation** (`/api/auth/2fa/verify`)
+
 - Recuperation du secret depuis Redis
 - Verification du code TOTP saisi
 - Si valide : sauvegarde du secret en base et activation du 2FA
@@ -187,6 +199,7 @@ Le 2FA utilise le standard TOTP (Time-based One-Time Password) via la librairie 
 ### 4.3 Flux de verification a la connexion
 
 Lorsqu'un administrateur avec 2FA active se connecte :
+
 1. Le middleware detecte que le 2FA n'est pas verifie pour cette session
 2. Redirection vers `/admin/verify-2fa`
 3. L'utilisateur saisit le code de son application d'authentification
@@ -196,6 +209,7 @@ Lorsqu'un administrateur avec 2FA active se connecte :
 ### 4.4 Justification de l'obligation pour les admins
 
 Le 2FA est obligatoire pour les administrateurs car ils ont acces :
+
 - A la gestion des produits et du catalogue
 - Aux donnees clients et commandes
 - Aux parametres de l'application
@@ -210,12 +224,13 @@ Cette contrainte renforce la securite du back-office sans impacter l'experience 
 
 L'infrastructure de deploiement repose sur deux environnements distincts :
 
-| Environnement | Outil | Usage |
-|---------------|-------|-------|
-| Local | Docker Compose | Developpement et tests |
-| Production | Dokploy + Nixpacks | Deploiement automatise |
+| Environnement | Outil              | Usage                  |
+| ------------- | ------------------ | ---------------------- |
+| Local         | Docker Compose     | Developpement et tests |
+| Production    | Dokploy + Nixpacks | Deploiement automatise |
 
 En production, le deploiement est gere par Dokploy avec les caracteristiques suivantes :
+
 - Autodeploy declenche a chaque push sur la branche main
 - Build automatique via Nixpacks (detection automatique du framework Next.js)
 - Bases de donnees (PostgreSQL, MongoDB, Redis) hebergees sur Dokploy avec monitoring integre
@@ -226,12 +241,13 @@ Le Dockerfile et docker-compose.yml servent donc exclusivement a l'environnement
 
 Le fichier `docker/docker-compose.yml` definit les services pour le developpement :
 
-| Service | Image | Port | Role |
-|---------|-------|------|------|
-| app | Build custom | 3000 | Application Next.js |
+| Service  | Image              | Port | Role                       |
+| -------- | ------------------ | ---- | -------------------------- |
+| app      | Build custom       | 3000 | Application Next.js        |
 | postgres | postgres:16-alpine | 5432 | Base de donnees principale |
-| mongodb | mongo:7 | 27017 | Base de donnees logs/sessions |
-| redis | redis:7-alpine | 6379 | Cache et rate limiting |
+| redis    | redis:7-alpine     | 6379 | Cache et rate limiting     |
+
+Note : MongoDB a ete initialement prevu mais finalement retire du projet car non necessaire. PostgreSQL gere toutes les donnees relationnelles et Redis gere le cache.
 
 ### 5.3 Dockerfile pour le developpement local
 
@@ -239,12 +255,14 @@ Le Dockerfile utilise une approche multi-stage pour optimiser la taille de l'ima
 
 **Stage 1 - deps** : Installation des dependances npm
 
-**Stage 2 - builder** : 
+**Stage 2 - builder** :
+
 - Copie des node_modules
 - Generation du client Prisma
 - Build de l'application Next.js
 
 **Stage 3 - runner** :
+
 - Image de production minimale
 - Utilisateur non-root (nextjs:nodejs)
 - Copie des fichiers strictement necessaires
@@ -256,16 +274,13 @@ Note : En production, Nixpacks genere sa propre image optimisee. Ce Dockerfile s
 ### 5.4 Configuration des services locaux
 
 #### PostgreSQL
+
 - Volume persistant pour les donnees
 - Healthcheck configure pour verifier la disponibilite
 - Scripts d'initialisation dans `/docker-entrypoint-initdb.d`
 
-#### MongoDB
-- Authentification activee
-- Volume persistant
-- Healthcheck via commande ping
-
 #### Redis
+
 - Mode appendonly pour la persistance
 - Limite memoire de 256MB
 - Politique d'eviction allkeys-lru
@@ -279,6 +294,7 @@ L'application depend des trois bases de donnees avec condition `service_healthy`
 ### 5.6 Outils de developpement
 
 Trois services supplementaires sont disponibles en profil "dev" :
+
 - Adminer : Interface web pour PostgreSQL
 - Redis Commander : Interface web pour Redis
 - Mailhog : Serveur SMTP de test avec interface web
@@ -287,16 +303,16 @@ Trois services supplementaires sont disponibles en profil "dev" :
 
 La production utilise une approche differente :
 
-| Composant | Solution |
-|-----------|----------|
-| Build | Nixpacks (detection automatique Next.js) |
-| Hosting | Dokploy |
-| Trigger | Push sur branche main (autodeploy) |
-| PostgreSQL | Instance Dokploy avec monitoring |
-| MongoDB | Instance Dokploy avec monitoring |
-| Redis | Instance Dokploy avec monitoring |
+| Composant  | Solution                                 |
+| ---------- | ---------------------------------------- |
+| Build      | Nixpacks (detection automatique Next.js) |
+| Hosting    | Dokploy                                  |
+| Trigger    | Push sur branche main (autodeploy)       |
+| PostgreSQL | Instance Dokploy avec monitoring         |
+| Redis      | Instance Dokploy avec monitoring         |
 
 Cette separation permet :
+
 - Un environnement de dev identique pour toute l'equipe via Docker
 - Un deploiement simplifie sans gestion manuelle d'images Docker
 - Un monitoring centralise des bases de donnees en production
@@ -312,6 +328,7 @@ Le fichier `src/lib/redis.ts` implemente un systeme de cache complet avec plusie
 ### 6.2 Initialisation lazy
 
 L'instance Redis utilise un pattern Proxy pour une initialisation differee :
+
 - Evite les erreurs au build time
 - Connection etablie uniquement a la premiere utilisation
 - Configuration avec retry et ready check
@@ -319,28 +336,33 @@ L'instance Redis utilise un pattern Proxy pour une initialisation differee :
 ### 6.3 Fonctionnalites implementees
 
 #### Cache generique
+
 - `getCache<T>` : Recuperation avec typage generique
 - `setCache<T>` : Stockage avec TTL configurable
 - `deleteCache` : Suppression unitaire
 - `clearCachePattern` : Suppression par pattern
 
 #### Cache de recherche
+
 - Cle construite a partir de la requete et des filtres
 - TTL de 5 minutes
 - Invalidation globale disponible
 
 #### Gestion des sessions
+
 - Stockage des donnees de session utilisateur
 - TTL de 24 heures
 - Mise a jour de l'activite
 - Invalidation de toutes les sessions d'un utilisateur
 
 #### Rate limiting
+
 - Implementation basee sur INCR/EXPIRE
 - Retourne le nombre de requetes restantes
 - Reset automatique a la fin de la fenetre
 
 #### Cache produits et categories
+
 - TTL de 10 minutes pour les produits
 - TTL de 30 minutes pour les categories
 - Invalidation automatique du cache recherche lors de la modification
@@ -348,6 +370,7 @@ L'instance Redis utilise un pattern Proxy pour une initialisation differee :
 ### 6.4 Gestion des erreurs
 
 Toutes les fonctions encapsulent les erreurs Redis :
+
 - Logging des erreurs
 - Retour de valeurs par defaut
 - Pas de crash de l'application si Redis est indisponible
@@ -362,19 +385,20 @@ Le cahier des charges mentionnait l'utilisation de MongoDB pour le stockage des 
 
 **Pourquoi pas le stockage en base64 dans MongoDB ?**
 
-| Critere | Base64 MongoDB | Cloudflare R2 |
-|---------|----------------|---------------|
-| Taille stockage | +33% (encodage base64) | Taille originale |
+| Critere              | Base64 MongoDB           | Cloudflare R2     |
+| -------------------- | ------------------------ | ----------------- |
+| Taille stockage      | +33% (encodage base64)   | Taille originale  |
 | Performance requetes | Lente (documents lourds) | Instantanee (CDN) |
-| Bande passante DB | Elevee | Nulle |
-| Backup/Restore | Complexe et long | Independant |
-| CDN integre | Non | Oui (mondial) |
-| Cout | Stockage DB cher | Gratuit < 10GB |
-| Scalabilite | Limitee | Illimitee |
+| Bande passante DB    | Elevee                   | Nulle             |
+| Backup/Restore       | Complexe et long         | Independant       |
+| CDN integre          | Non                      | Oui (mondial)     |
+| Cout                 | Stockage DB cher         | Gratuit < 10GB    |
+| Scalabilite          | Limitee                  | Illimitee         |
 
 **Exemple concret** : Une image de 1MB en base64 devient 1.33MB. Avec 1000 images, la base MongoDB grossit de 1.33GB au lieu de stocker juste les URLs (quelques KB).
 
 **Problemes techniques du base64** :
+
 - Les images encodees en base64 augmentent de 33% en taille
 - Chaque requete de page charge les donnees binaires depuis MongoDB
 - Les index MongoDB deviennent inefficaces sur des documents volumineux
@@ -382,6 +406,7 @@ Le cahier des charges mentionnait l'utilisation de MongoDB pour le stockage des 
 - Pas de mise en cache CDN possible
 
 **Avantages de Cloudflare R2** :
+
 - Stockage objet compatible S3, gratuit jusqu'a 10GB/mois
 - CDN mondial integre pour des temps de chargement optimaux (< 50ms)
 - Pas de frais de bande passante sortante (contrairement a AWS S3)
@@ -406,12 +431,14 @@ const r2Client = new S3Client({
 ### 7.3 Fonctionnalites implementees
 
 **Upload d'image** :
+
 - Validation du type de fichier (JPEG, PNG, WebP, GIF)
 - Limite de taille a 5MB
 - Generation d'un nom unique avec timestamp
 - Retour de l'URL publique
 
 **Suppression d'image** :
+
 - Extraction de la cle depuis l'URL
 - Suppression du fichier sur R2
 
@@ -420,6 +447,7 @@ const r2Client = new S3Client({
 L'API `/api/upload` permet aux administrateurs d'uploader des images directement depuis le back-office. Les images sont stockees sur R2 et l'URL est sauvegardee en base de donnees (PostgreSQL).
 
 Cette architecture permet :
+
 - Un chargement rapide des images via le CDN Cloudflare
 - Une gestion simplifiee des metadonnees en base relationnelle
 - Une scalabilite sans impact sur les performances de la base
@@ -437,46 +465,209 @@ R2_PUBLIC_URL=https://pub-xxx.r2.dev
 
 ## 8. Validation des variables d'environnement
 
-### 8.1 Implementation
-
-Le fichier `src/lib/config/env.ts` utilise Zod pour valider les variables d'environnement au demarrage.
-
-### 7.2 Schema de validation
-
-Les variables sont categorisees par importance :
-
-**Obligatoires** :
-- DATABASE_URL, MONGODB_URI, REDIS_URL
-- NEXTAUTH_URL, NEXTAUTH_SECRET (minimum 32 caracteres)
-- NEXT_PUBLIC_APP_URL
-
-**Optionnelles** :
-- Credentials OAuth (Google, GitHub, Apple)
-- Configuration Stripe
-- Configuration SMTP
-
-### 7.3 Comportement selon l'environnement
-
-- **Production** : Erreur fatale si variables invalides
-- **Developpement** : Warning avec continuation
-- **Build** : Skip de la validation (variable SKIP_ENV_VALIDATION)
-
-### 7.4 Helper de fonctionnalites
-
-Un objet `features` expose l'etat des integrations :
-- `hasOAuth.google/github/apple` : OAuth configure
-- `hasStripe` : Paiement disponible
-- `hasEmail` : Envoi d'emails possible
-
-Cela permet d'adapter l'interface selon les fonctionnalites disponibles.
+Note : Le fichier de validation `src/lib/config/env.ts` a ete retire lors de la simplification du projet et de la suppression de MongoDB. La validation des variables est maintenant geree au niveau de chaque module (Redis, Stripe, etc.) avec des messages d'erreur explicites.
 
 ---
 
-## 9. Decisions techniques et justifications
+## 9. Securisation des endpoints API
 
-### 8.1 Choix de NextAuth.js
+### 9.1 Contexte
+
+Lors d'une revue de securite, plusieurs endpoints API ont ete identifies comme potentiellement vulnerables car ils ne verifiaient pas les permissions de l'utilisateur.
+
+### 9.2 Verification signature Stripe Webhook
+
+**Probleme** : Le webhook Stripe acceptait toutes les requetes sans verification de signature.
+
+**Commit** : `e52ef85` - 14 decembre 2025
+
+**Solution implementee** :
+
+```javascript
+export async function POST(request: Request) {
+  const body = await request.text();
+  const signature = request.headers.get("stripe-signature");
+
+  if (!signature) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  }
+
+  // Verification de la signature Stripe
+  const event = await constructWebhookEvent(body, signature);
+
+  // Traitement securise de l'evenement
+  switch (event.type) {
+    case "checkout.session.completed":
+      // Traiter la commande
+      break;
+    case "payment_intent.succeeded":
+      // Paiement reussi
+      break;
+  }
+}
+```
+
+Cette verification empeche un attaquant d'envoyer de fausses notifications de paiement.
+
+### 9.3 Protection des endpoints utilisateurs
+
+**Probleme** : Les routes `/api/users` et `/api/users/[id]` etaient accessibles sans authentification.
+
+**Commit** : `31171b6` - 14 decembre 2025
+
+**Solution** : Ajout d'une verification admin au debut de chaque handler :
+
+```javascript
+const session = await getServerSession(authOptions);
+if (!session || session.user.role !== "ADMIN") {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+```
+
+### 9.4 Protection de l'endpoint produits
+
+**Probleme** : La route POST `/api/products` permettait a n'importe qui de creer des produits.
+
+**Commit** : `248ae30` - 14 decembre 2025
+
+**Solution** : Meme pattern de verification admin avant la creation de produit.
+
+### 9.5 Suppression des logs sensibles
+
+**Probleme** : Un `console.log` dans le bouton d'ajout au panier exposait des informations en production.
+
+**Commit** : `6883c47` - 14 decembre 2025
+
+**Solution** : Suppression du log pour eviter les fuites d'information.
+
+---
+
+## 10. Integration Continue (GitHub Actions)
+
+### 10.1 Contexte
+
+Pour garantir la qualite du code et automatiser les verifications, un pipeline CI/CD complet a ete mis en place avec GitHub Actions.
+
+**Commit principal** : `6eda990` - 1er janvier 2026
+
+### 10.2 Workflow CI (Build & Lint)
+
+Fichier : `.github/workflows/ci.yml`
+
+Le workflow s'execute sur chaque push et pull request vers les branches `main` et `develop`.
+
+**Jobs implementes** :
+
+| Job             | Description                    | Dependances     |
+| --------------- | ------------------------------ | --------------- |
+| lint            | Execute ESLint sur le code     | -               |
+| typecheck       | Verifie les types TypeScript   | -               |
+| build           | Build de l'application Next.js | lint, typecheck |
+| prisma-validate | Valide le schema Prisma        | -               |
+
+**Optimisations** :
+
+- Utilisation du cache npm pour accelerer les installations
+- Concurrency group pour annuler les builds obsoletes
+- Variables d'environnement placeholder pour le build CI
+
+### 10.3 Workflow Security
+
+Fichier : `.github/workflows/security.yml`
+
+**Fonctionnalites** :
+
+- Audit des dependances npm (vulnerabilites high/critical)
+- Analyse CodeQL pour detecter les failles de securite dans le code
+- Execution hebdomadaire automatique (cron le lundi a 9h)
+
+### 10.4 Workflow Docker
+
+Fichier : `.github/workflows/docker.yml`
+
+Build automatique de l'image Docker pour valider le Dockerfile.
+
+### 10.5 Labeler automatique
+
+Fichier : `.github/workflows/label-pr.yml` + `.github/labeler.yml`
+
+Ajoute automatiquement des labels aux Pull Requests selon les fichiers modifies :
+
+- `frontend` pour les modifications dans `src/components/`
+- `backend` pour les modifications dans `src/app/api/`
+- `database` pour les modifications dans `prisma/`
+- `ci` pour les modifications dans `.github/`
+- etc.
+
+### 10.6 Difficultes rencontrees
+
+**Probleme 1** : Le build echouait car les variables d'environnement n'etaient pas disponibles en CI.
+
+**Commit** : `163362f`
+
+**Solution** : Ajout de variables placeholder dans le workflow :
+
+```yaml
+env:
+  NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-build-secret-placeholder' }}
+  NEXTAUTH_URL: http://localhost:3000
+  DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+```
+
+**Probleme 2** : Stripe crashait au build car il tentait d'initialiser une connexion.
+
+**Commit** : `01de9a0`
+
+**Solution** : Implementation du lazy loading pour Stripe (voir section 12.7).
+
+---
+
+## 11. Composant HeroCanvasReveal
+
+### 11.1 Contexte
+
+Pour ameliorer l'experience utilisateur sur la page d'accueil, un nouveau composant anime a ete developpe avec des effets visuels modernes.
+
+**Commits** : `47e347c`, `86c5497`, `c341d89` - 14 decembre 2025
+
+### 11.2 Fonctionnalites implementees
+
+**Composant de base** (`47e347c`) :
+
+- Animation Canvas avec effet de revelation
+- Integration avec la bibliotheque d'animations du projet
+- Design responsive adapte aux differentes tailles d'ecran
+
+**Gestion de l'authentification** (`86c5497`) :
+
+- Menu deroulant dynamique selon l'etat de connexion
+- Affichage du nom de l'utilisateur connecte
+- Liens vers le profil et la deconnexion
+- Boutons de connexion/inscription pour les visiteurs
+
+**Image de fond et lien admin** (`c341d89`) :
+
+- Ajout d'une image de fond stylisee
+- Lien rapide vers l'interface d'administration (visible uniquement pour les admins)
+- Amelioration de l'accessibilite
+
+### 11.3 Integration technique
+
+Le composant utilise :
+
+- React hooks pour la gestion de l'etat (`useState`, `useEffect`)
+- NextAuth pour verifier le statut de connexion (`useSession`)
+- CSS Modules pour les styles isoles
+- Canvas API pour les animations performantes
+
+---
+
+## 12. Decisions techniques et justifications
+
+### 12.1 Choix de NextAuth.js
 
 **Avantages** :
+
 - Integration native avec Next.js
 - Support de multiples providers
 - Gestion automatique des sessions JWT
@@ -485,18 +676,20 @@ Cela permet d'adapter l'interface selon les fonctionnalites disponibles.
 **Alternative consideree** : Clerk, Auth0
 **Raison du rejet** : Dependance a un service tiers, cout potentiel
 
-### 8.2 Choix de JWT vs Sessions base de donnees
+### 12.2 Choix de JWT vs Sessions base de donnees
 
 **Avantages du JWT** :
+
 - Pas de requete BDD pour valider une session
 - Scalabilite horizontale sans partage d'etat
 - Fonctionne avec l'Edge Runtime
 
 **Inconvenient accepte** : Revocation de session moins immediate
 
-### 8.3 Choix de Redis pour le cache
+### 12.3 Choix de Redis pour le cache
 
 **Avantages** :
+
 - Performance (operations en memoire)
 - Support des structures de donnees complexes
 - TTL natif sur les cles
@@ -505,9 +698,10 @@ Cela permet d'adapter l'interface selon les fonctionnalites disponibles.
 **Alternative consideree** : Cache en memoire Node.js
 **Raison du rejet** : Pas de partage entre instances, perte au redemarrage
 
-### 8.4 Choix de Dokploy et Nixpacks pour la production
+### 12.4 Choix de Dokploy et Nixpacks pour la production
 
 **Avantages** :
+
 - Deploiement automatise sans configuration manuelle
 - Nixpacks detecte automatiquement le framework et optimise le build
 - Monitoring integre pour les bases de donnees
@@ -516,60 +710,136 @@ Cela permet d'adapter l'interface selon les fonctionnalites disponibles.
 **Alternative consideree** : Deploiement Docker classique, Vercel
 **Raison du rejet** : Vercel impose des limites sur les fonctions serverless. Docker classique demande plus de maintenance.
 
-### 8.5 Docker Compose pour le developpement local
+### 12.5 Docker Compose pour le developpement local
 
 **Avantages** :
+
 - Environnement identique pour tous les developpeurs
 - Isolation des services
 - Demarrage en une commande
 
-### 8.6 2FA obligatoire pour les admins
+### 12.6 2FA obligatoire pour les admins
 
 **Justification** :
+
 - Le back-office contient des donnees sensibles (clients, commandes)
 - Le secteur medical impose des standards de securite eleves
 - Impact minimal sur l'experience (une seule configuration)
 
+### 12.7 Lazy loading pour Stripe et Redis
+
+**Probleme** : En CI et au build, les modules Stripe et Redis tentaient de s'initialiser immediatement, causant des erreurs car les variables d'environnement n'etaient pas disponibles.
+
+**Commit** : `01de9a0` (Stripe), `8381878` (Redis)
+
+**Solution** : Pattern singleton avec initialisation differee :
+
+```javascript
+// Stripe - Lazy loading
+let stripeInstance: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error("STRIPE_SECRET_KEY is not defined");
+    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-11-17.clover",
+    });
+  }
+  return stripeInstance;
+}
+```
+
+**Avantages** :
+
+- Pas d'erreur au build time
+- Connexion etablie uniquement a la premiere utilisation
+- Message d'erreur explicite si la variable manque a l'execution
+
+### 12.8 Suppression de MongoDB
+
+**Decision** : MongoDB a ete retire du projet.
+
+**Commit** : `0319d87` - 19 decembre 2025
+
+**Justification** :
+
+- PostgreSQL couvre tous les besoins de stockage relationnel
+- Redis gere le cache et les sessions temporaires
+- MongoDB ajoutait de la complexite sans apporter de valeur ajoutee
+- Reduction des couts d'hebergement et de maintenance
+
+**Fichiers modifies** :
+
+- `docker/docker-compose.yml` : Suppression du service MongoDB
+- `src/lib/config/env.ts` : Suppression de MONGODB_URI
+- Divers fichiers de documentation
+
+### 12.9 Migration vers Node.js 20
+
+**Commits** : `4e4d521`, `38e7788` - 4 decembre 2025
+
+**Justification** :
+
+- Node.js 20 est la version LTS actuelle
+- Corrections de vulnerabilites dans les dependances
+- Meilleures performances et support ES2023
+
+**Implementation** :
+
+- Ajout de `.nvmrc` avec la version 20
+- Configuration `engines` dans `package.json` : `"node": ">=20.0.0"`
+- Mise a jour des workflows CI pour utiliser Node 20
+
 ---
 
-## 10. Temps de developpement
+## 13. Temps de developpement
 
-| Tache | Duree estimee | Commentaire |
-|-------|---------------|-------------|
-| Configuration NextAuth de base | 4h | Providers, callbacks, types |
-| Integration OAuth (Google, GitHub, Apple) | 3h | Configuration console dev, tests |
-| Middleware de protection | 3h | Logique de redirection, edge runtime |
-| Implementation 2FA | 6h | Setup, verify, integration session |
-| Docker compose | 4h | Services, healthchecks, volumes |
-| Dockerfile multi-stage | 2h | Optimisation, debug |
-| Systeme de cache Redis | 5h | Helpers, patterns, tests |
-| Validation environnement | 2h | Schema Zod, comportement dev/prod |
-| Debug et corrections | 4h | Edge runtime, compatibilites |
-| Documentation | 3h | Ce rapport |
+| Tache                              | Duree estimee | Commentaire                          |
+| ---------------------------------- | ------------- | ------------------------------------ |
+| Configuration NextAuth de base     | 4h            | Providers, callbacks, types          |
+| Integration OAuth (Google, GitHub) | 2h            | Configuration console dev, tests     |
+| Middleware de protection           | 3h            | Logique de redirection, edge runtime |
+| Implementation 2FA                 | 6h            | Setup, verify, integration session   |
+| Docker compose                     | 4h            | Services, healthchecks, volumes      |
+| Dockerfile multi-stage             | 2h            | Optimisation, debug                  |
+| Systeme de cache Redis             | 5h            | Helpers, patterns, tests             |
+| Stockage images Cloudflare R2      | 3h            | Integration SDK S3, sanitization     |
+| Securisation endpoints API         | 2h            | Verification auth, signature Stripe  |
+| GitHub Actions CI/CD               | 4h            | Workflows, debug variables env       |
+| Composant HeroCanvasReveal         | 3h            | Animation, auth dropdown             |
+| Lazy loading Stripe/Redis          | 2h            | Pattern singleton, fix build         |
+| Suppression MongoDB                | 1h            | Nettoyage code et config             |
+| Debug et corrections               | 4h            | Edge runtime, compatibilites         |
+| Documentation                      | 4h            | Ce rapport                           |
 
-**Total estime** : 36 heures
+**Total estime** : 49 heures
 
 ---
 
-## 11. Difficultes rencontrees
+## 14. Difficultes rencontrees
 
-### 10.1 Compatibilite Edge Runtime
+### 14.1 Compatibilite Edge Runtime
 
 **Probleme** : Le middleware Next.js s'execute sur l'Edge Runtime qui ne supporte pas toutes les APIs Node.js. Le rate limiting via ioredis causait une erreur `Cannot read properties of undefined (reading 'charCodeAt')`.
 
+**Commit** : `63e707d` - 7 decembre 2025
+
 **Solution** : Retrait du rate limiting du middleware. Cette fonctionnalite reste disponible pour les routes API classiques qui s'executent sur le Node.js runtime.
 
-### 10.2 Gestion du 2FA dans la session
+### 14.2 Gestion du 2FA dans la session
 
 **Probleme** : Apres verification du code 2FA, la session devait etre mise a jour sans deconnecter l'utilisateur.
 
 **Solution** : Utilisation du trigger "update" de NextAuth avec `session.update()` cote client pour rafraichir les informations de session.
 
-### 10.4 Bug Redis Proxy en production
+### 14.3 Bug Redis Proxy en production
 
 **Probleme** : En production sur Dokploy, le 2FA retournait une erreur 500. Les logs montraient `connect ETIMEDOUT` et `Cannot read properties of undefined (reading 'select')`.
 
 **Diagnostic** :
+
 1. Verification des logs applicatifs sur Dokploy
 2. Confirmation que Redis etait bien lance et accessible (logs Redis OK)
 3. Test de connectivite entre les containers
@@ -607,11 +877,12 @@ export const redis = {
 
 **Lecon apprise** : Les patterns JavaScript avances (Proxy, Reflect) peuvent causer des problemes subtils avec des librairies tierces qui dependent du contexte `this`. En production, privilegier des solutions explicites et testables.
 
-### 11.5 Mapping des champs API Carrousel
+### 14.4 Mapping des champs API Carrousel
 
 **Probleme** : Apres avoir configure l'upload d'images sur Cloudflare R2, les images du carrousel ne s'affichaient pas sur le site. Le composant affichait le titre mais pas l'image.
 
 **Diagnostic** :
+
 1. Verification que l'image etait bien uploadee sur R2 (OK)
 2. Verification de l'URL stockee en base de donnees (OK)
 3. Inspection du composant `hero-carousel.tsx`
@@ -636,11 +907,12 @@ interface CarouselSlide {
 
 **Lecon apprise** : Toujours valider la coherence entre le schema de l'API et les interfaces TypeScript cote client. Un typage strict aurait detecte cette erreur a la compilation.
 
-### 11.6 Emojis dans les noms de fichiers images
+### 14.5 Emojis dans les noms de fichiers images
 
 **Probleme** : Les images uploadees dans le carrousel ne s'affichaient pas lorsque le nom du fichier original contenait des emojis ou des caracteres speciaux. L'URL generee par Cloudflare R2 etait invalide.
 
 **Diagnostic** :
+
 1. Upload d'une image avec emoji dans le nom (ex: `photo 📸 test.jpg`)
 2. L'image etait stockee sur R2 mais l'URL contenait des caracteres non encodes
 3. Le navigateur ne pouvait pas charger l'image
@@ -651,7 +923,7 @@ interface CarouselSlide {
 
 ```javascript
 // Nettoyer le nom de fichier (retirer emojis/caracteres speciaux)
-const cleanFileName = fileName.replace(/[^\w.-]/g, '_');
+const cleanFileName = fileName.replace(/[^\w.-]/g, "_");
 const key = `${Date.now()}-${cleanFileName}`;
 ```
 
@@ -659,13 +931,14 @@ La regex `/[^\w.-]/g` remplace tous les caracteres qui ne sont pas des lettres, 
 
 **Lecon apprise** : Toujours sanitizer les noms de fichiers uploades par les utilisateurs avant de les stocker. Les caracteres Unicode (emojis, accents) peuvent causer des problemes d'encodage dans les URLs.
 
-### 11.7 Suppression du provider Apple OAuth
+### 14.6 Suppression du provider Apple OAuth
 
 **Probleme** : Le provider Apple Sign In etait configure mais necessitait un compte Apple Developer payant (99$/an) pour fonctionner en production.
 
 **Decision** : Suppression complete du provider Apple pour eviter des erreurs de configuration et simplifier la maintenance.
 
 **Fichiers modifies** :
+
 - `src/lib/auth.ts` : Suppression du provider Apple de la configuration NextAuth
 - `src/lib/config/env.ts` : Suppression des variables d'environnement Apple (APPLE_ID, APPLE_SECRET)
 - `src/app/(auth)/login/page.tsx` : Suppression du bouton de connexion Apple
@@ -673,11 +946,12 @@ La regex `/[^\w.-]/g` remplace tous les caracteres qui ne sont pas des lettres, 
 
 **Lecon apprise** : Avant d'implementer une integration tierce, verifier les couts et prerequis (compte developer, certificats, etc.).
 
-### 11.8 Correction de l'affichage du nom dans le dropdown profil
+### 14.7 Correction de l'affichage du nom dans le dropdown profil
 
 **Probleme** : Apres une connexion OAuth (Google), le nom/prenom de l'utilisateur n'apparaissait plus dans le dropdown du header, seul l'email s'affichait.
 
 **Diagnostic** :
+
 1. Verification du composant `UserDropdown`
 2. Verification que les donnees firstName/lastName etaient bien presentes en session
 
@@ -686,16 +960,18 @@ La regex `/[^\w.-]/g` remplace tous les caracteres qui ne sont pas des lettres, 
 **Solution** : Modification du composant pour construire le nom complet a partir de firstName et lastName :
 
 ```typescript
-const fullName = session.user.firstName && session.user.lastName
-  ? `${session.user.firstName} ${session.user.lastName}`
-  : session.user.name;
+const fullName =
+  session.user.firstName && session.user.lastName
+    ? `${session.user.firstName} ${session.user.lastName}`
+    : session.user.name;
 ```
 
-### 11.9 Nettoyage du code mort
+### 14.8 Nettoyage du code mort
 
 **Probleme** : Plusieurs fonctions dans `src/lib/redis.ts` n'etaient jamais utilisees dans le projet, rendant le code plus difficile a maintenir.
 
 **Analyse** : Utilisation de grep pour identifier les fonctions non appelees :
+
 - `invalidateAllUserSessions` : 0 usages
 - `getCachedProduct` : 0 usages
 - `setCachedProduct` : 0 usages
@@ -708,6 +984,7 @@ const fullName = session.user.firstName && session.user.lastName
 - `invalidateSearchCache` : 0 usages
 
 **Decision** : Suppression de toutes les fonctions non utilisees, en gardant uniquement :
+
 - `invalidateSession` : Utilisee pour la gestion des sessions
 - Les fonctions de base du cache (getCache, setCache, deleteCache)
 
@@ -715,23 +992,47 @@ const fullName = session.user.firstName && session.user.lastName
 
 **Lecon apprise** : Appliquer le principe YAGNI (You Aren't Gonna Need It) - ne pas implementer de fonctionnalites "au cas ou".
 
+### 14.9 Variables d'environnement manquantes en CI
+
+**Probleme** : Le build GitHub Actions echouait car les variables d'environnement (DATABASE_URL, NEXTAUTH_SECRET) n'etaient pas definies.
+
+**Commit** : `163362f` - 1er janvier 2026
+
+**Solution** : Utilisation de valeurs placeholder avec fallback :
+
+```yaml
+env:
+  NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'ci-build-secret-placeholder' }}
+  DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+```
+
+**Lecon apprise** : Prevoir des valeurs par defaut pour le build CI, tout en s'assurant que ces placeholders ne fonctionnent pas en production.
+
+### 14.10 Crash Stripe au build
+
+**Probleme** : Meme apres les placeholders, le build echouait car Stripe tentait de s'initialiser et de valider sa cle API.
+
+**Commit** : `01de9a0` - 1er janvier 2026
+
+**Solution** : Refactoring complet de `src/lib/stripe.ts` pour utiliser le pattern lazy loading (voir section 12.7).
+
 ---
 
-## 12. Pistes d'amelioration
+## 15. Pistes d'amelioration
 
-### 12.1 Court terme
+### 15.1 Court terme
 
 - Ajouter un rate limiting compatible Edge Runtime (via Vercel KV ou Upstash)
 - Implementer la rotation des tokens JWT
 - Ajouter des backup codes pour le 2FA
 
-### 12.2 Moyen terme
+### 15.2 Moyen terme
 
 - Mettre en place un monitoring centralise (Sentry, Datadog)
 - Ajouter des tests d'integration pour l'authentification
 - Implementer la detection de connexions suspectes
 
-### 12.3 Long terme
+### 15.3 Long terme
 
 - Migration vers une solution de secrets management (Vault, AWS Secrets Manager)
 - Implementation d'un WAF (Web Application Firewall)
@@ -741,6 +1042,48 @@ const fullName = session.user.firstName && session.user.lastName
 
 ## Conclusion
 
-L'infrastructure d'authentification mise en place pour Althea Systems repond aux exigences de securite d'une plateforme e-commerce B2B dans le secteur medical. L'architecture choisie privileggie la scalabilite et la maintenabilite tout en offrant une experience utilisateur fluide.
+L'infrastructure d'authentification et DevOps mise en place pour Althea Systems repond aux exigences de securite d'une plateforme e-commerce B2B dans le secteur medical.
 
-Les choix techniques (NextAuth, JWT, Redis, Docker) constituent une stack moderne et eprouvee qui facilitera l'evolution de la plateforme.
+### Recapitulatif des realisations
+
+**Authentification et securite** :
+
+- Systeme NextAuth complet avec OAuth (Google, GitHub) et credentials
+- 2FA obligatoire pour les administrateurs via TOTP
+- Middleware de protection des routes avec verification des roles
+- Securisation des endpoints API (signature Stripe, verification admin)
+
+**Infrastructure** :
+
+- Docker Compose pour l'environnement de developpement local
+- Deploiement production automatise via Dokploy et Nixpacks
+- Systeme de cache Redis avec pattern lazy loading
+- Stockage des images sur Cloudflare R2 (CDN mondial)
+
+**DevOps et CI/CD** :
+
+- Workflows GitHub Actions (lint, typecheck, build, security)
+- Analyse CodeQL automatique pour la detection de vulnerabilites
+- Labeler automatique des Pull Requests
+
+**Composants front-end** :
+
+- HeroCanvasReveal avec animation et gestion de l'authentification
+
+### Lecons apprises
+
+1. **Tester en production-like** : Les problemes comme le Proxy Redis n'apparaissent qu'en conditions reelles
+2. **Lazy loading** : Initialiser les services a la demande pour eviter les crashes au build
+3. **YAGNI** : Ne pas implementer de fonctionnalites "au cas ou" (MongoDB, fonctions cache inutilisees)
+4. **Coherence API/Frontend** : Toujours valider les schemas entre backend et frontend
+
+### Statistiques
+
+| Metrique                | Valeur    |
+| ----------------------- | --------- |
+| Commits totaux          | 60        |
+| Fichiers modifies       | ~150      |
+| Lignes de code ajoutees | ~3000     |
+| Temps total estime      | 49 heures |
+
+Les choix techniques (NextAuth, JWT, Redis, Docker, GitHub Actions) constituent une stack moderne et eprouvee qui facilitera l'evolution de la plateforme.

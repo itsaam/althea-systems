@@ -45,9 +45,16 @@ const consoleFormat = winston.format.combine(
 // Format pour les fichiers (JSON)
 const fileFormat = winston.format.combine(baseFormat, winston.format.json());
 
-// Transport console
+// Format JSON pour la console en production
+const productionConsoleFormat = winston.format.combine(
+  baseFormat,
+  winston.format.json()
+);
+
+// Transport console : JSON en production, colore en dev
+const isProduction = process.env.NODE_ENV === "production";
 const consoleTransport = new winston.transports.Console({
-  format: consoleFormat,
+  format: isProduction ? productionConsoleFormat : consoleFormat,
 });
 
 // Factory pour créer un transport fichier
@@ -56,7 +63,7 @@ const createFileTransport = (filename: string, level?: string) => {
     filename: path.join(LOG_DIR, filename),
     format: fileFormat,
     level,
-    maxsize: 5 * 1024 * 1024, // 5MB
+    maxsize: 20 * 1024 * 1024, // 20MB
     maxFiles: 5,
   });
 };

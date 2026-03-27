@@ -28,7 +28,9 @@ export default function AdminCarouselPage() {
     link: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const editFileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const editFileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>(
+    {}
+  );
 
   useEffect(() => {
     fetchSlides();
@@ -76,7 +78,10 @@ export default function AdminCarouselPage() {
     }
   }
 
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>, slideId?: string) {
+  async function handleFileSelect(
+    e: React.ChangeEvent<HTMLInputElement>,
+    slideId?: string
+  ) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -155,10 +160,12 @@ export default function AdminCarouselPage() {
     }
   }
 
-  function updateSlideField(id: string, field: keyof CarouselSlide, value: string | boolean) {
-    setSlides(slides.map(s => 
-      s.id === id ? { ...s, [field]: value } : s
-    ));
+  function updateSlideField(
+    id: string,
+    field: keyof CarouselSlide,
+    value: string | boolean
+  ) {
+    setSlides(slides.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
   }
 
   if (loading) {
@@ -168,12 +175,16 @@ export default function AdminCarouselPage() {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Gestion du carrousel</h1>
-      <p className="text-muted-foreground">Maximum 3 slides actifs. Uploadez vos images directement.</p>
+      <p className="text-muted-foreground">
+        Maximum 3 slides actifs. Uploadez vos images directement.
+      </p>
 
       {/* Liste des slides existants */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Slides actuels ({slides.length}/3)</h2>
-        
+        <h2 className="text-xl font-semibold">
+          Slides actuels ({slides.length}/3)
+        </h2>
+
         {slides.length === 0 ? (
           <p className="text-muted-foreground">Aucun slide configuré</p>
         ) : (
@@ -182,16 +193,20 @@ export default function AdminCarouselPage() {
               <div className="flex items-start gap-4">
                 <div className="relative">
                   {slide.image ? (
-                    <img 
-                      src={slide.image} 
-                      alt={slide.title} 
+                    <img
+                      src={slide.image}
+                      alt={slide.title}
                       className="w-40 h-24 object-cover rounded cursor-pointer hover:opacity-80"
-                      onClick={() => editFileInputRefs.current[slide.id]?.click()}
+                      onClick={() =>
+                        editFileInputRefs.current[slide.id]?.click()
+                      }
                     />
                   ) : (
-                    <div 
+                    <div
                       className="w-40 h-24 bg-muted rounded flex items-center justify-center cursor-pointer hover:bg-muted/80"
-                      onClick={() => editFileInputRefs.current[slide.id]?.click()}
+                      onClick={() =>
+                        editFileInputRefs.current[slide.id]?.click()
+                      }
                     >
                       <Upload className="h-6 w-6 text-muted-foreground" />
                     </div>
@@ -200,10 +215,14 @@ export default function AdminCarouselPage() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    ref={(el) => { editFileInputRefs.current[slide.id] = el; }}
+                    ref={(el) => {
+                      editFileInputRefs.current[slide.id] = el;
+                    }}
                     onChange={(e) => handleFileSelect(e, slide.id)}
                   />
-                  <p className="text-xs text-muted-foreground mt-1 text-center">Cliquer pour changer</p>
+                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                    Cliquer pour changer
+                  </p>
                 </div>
                 <div className="flex-1 space-y-3">
                   <div className="grid grid-cols-2 gap-4">
@@ -211,14 +230,18 @@ export default function AdminCarouselPage() {
                       <Label>Titre</Label>
                       <Input
                         value={slide.title}
-                        onChange={(e) => updateSlideField(slide.id, "title", e.target.value)}
+                        onChange={(e) =>
+                          updateSlideField(slide.id, "title", e.target.value)
+                        }
                       />
                     </div>
                     <div>
                       <Label>Sous-titre</Label>
                       <Input
                         value={slide.subtitle || ""}
-                        onChange={(e) => updateSlideField(slide.id, "subtitle", e.target.value)}
+                        onChange={(e) =>
+                          updateSlideField(slide.id, "subtitle", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -226,7 +249,9 @@ export default function AdminCarouselPage() {
                     <Label>Lien (optionnel)</Label>
                     <Input
                       value={slide.link || ""}
-                      onChange={(e) => updateSlideField(slide.id, "link", e.target.value)}
+                      onChange={(e) =>
+                        updateSlideField(slide.id, "link", e.target.value)
+                      }
                       placeholder="/categories/..."
                     />
                   </div>
@@ -237,7 +262,9 @@ export default function AdminCarouselPage() {
                   <input
                     type="checkbox"
                     checked={slide.active}
-                    onChange={(e) => updateSlideField(slide.id, "active", e.target.checked)}
+                    onChange={(e) =>
+                      updateSlideField(slide.id, "active", e.target.checked)
+                    }
                   />
                   <span className="text-sm">Actif</span>
                 </label>
@@ -268,16 +295,16 @@ export default function AdminCarouselPage() {
       {slides.length < 3 && (
         <div className="border rounded-lg p-4 space-y-4">
           <h2 className="text-xl font-semibold">Ajouter un slide</h2>
-          
+
           {/* Upload image */}
           <div>
             <Label>Image *</Label>
             <div className="mt-2">
               {newSlide.image ? (
                 <div className="relative inline-block">
-                  <img 
-                    src={newSlide.image} 
-                    alt="Preview" 
+                  <img
+                    src={newSlide.image}
+                    alt="Preview"
                     className="w-48 h-28 object-cover rounded"
                   />
                   <Button
@@ -286,11 +313,11 @@ export default function AdminCarouselPage() {
                     className="mt-2"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    Changer l'image
+                    Changer l&apos;image
                   </Button>
                 </div>
               ) : (
-                <div 
+                <div
                   className="w-48 h-28 border-2 border-dashed rounded flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50"
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -299,7 +326,9 @@ export default function AdminCarouselPage() {
                   ) : (
                     <>
                       <Upload className="h-6 w-6 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground mt-1">Uploader</span>
+                      <span className="text-sm text-muted-foreground mt-1">
+                        Uploader
+                      </span>
                     </>
                   )}
                 </div>
@@ -319,7 +348,9 @@ export default function AdminCarouselPage() {
               <Label>Titre *</Label>
               <Input
                 value={newSlide.title}
-                onChange={(e) => setNewSlide({ ...newSlide, title: e.target.value })}
+                onChange={(e) =>
+                  setNewSlide({ ...newSlide, title: e.target.value })
+                }
                 placeholder="Titre du slide"
               />
             </div>
@@ -327,7 +358,9 @@ export default function AdminCarouselPage() {
               <Label>Sous-titre</Label>
               <Input
                 value={newSlide.subtitle}
-                onChange={(e) => setNewSlide({ ...newSlide, subtitle: e.target.value })}
+                onChange={(e) =>
+                  setNewSlide({ ...newSlide, subtitle: e.target.value })
+                }
                 placeholder="Sous-titre optionnel"
               />
             </div>
@@ -336,7 +369,9 @@ export default function AdminCarouselPage() {
             <Label>Lien</Label>
             <Input
               value={newSlide.link}
-              onChange={(e) => setNewSlide({ ...newSlide, link: e.target.value })}
+              onChange={(e) =>
+                setNewSlide({ ...newSlide, link: e.target.value })
+              }
               placeholder="/categories/..."
             />
           </div>

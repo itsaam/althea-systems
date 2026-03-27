@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyEmailSchema } from "@/lib/validators/common";
+import { z } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
-    const { token } = await request.json();
-
-    if (!token) {
-      return NextResponse.json({ error: "Token requis" }, { status: 400 });
-    }
+    const body = await request.json();
+    const { token } = verifyEmailSchema.parse(body);
 
     // Trouver le token de vérification
     const verificationToken = await prisma.verificationToken.findFirst({
@@ -57,6 +56,12 @@ export async function POST(request: NextRequest) {
       message: "Email vérifié avec succès",
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Données invalides", details: error.issues },
+        { status: 400 }
+      );
+    }
     console.error("Erreur verify-email:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }

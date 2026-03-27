@@ -1,5 +1,6 @@
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 
 export default function SiteLayout({
   children,
@@ -9,6 +10,8 @@ export default function SiteLayout({
   return (
     <>
       <Header />
+      <OrganizationJsonLd />
+      <WebSiteJsonLd />
       <main className="min-h-screen">{children}</main>
       <Footer />
     </>

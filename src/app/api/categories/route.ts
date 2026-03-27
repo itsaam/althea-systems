@@ -2,91 +2,103 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
+import { z } from "zod";
+import {
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+} from "@/lib/logger/exports";
 
-// GET - Récupérer toutes les catégories
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+const categorySchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  description: z.string().optional().nullable(),
+  image: z.string().optional().nullable(),
+  active: z.boolean().default(true),
+  parentId: z.string().optional().nullable(),
+});
+
+const CACHE_KEY = "categories:all";
+
+export const GET = withApiLogger(async () => {
   try {
+    try {
+      const cached = await redis.get(CACHE_KEY);
+      if (cached) {
+        return loggedSuccessResponse({ categories: JSON.parse(cached) });
+      }
+    } catch {
+      // Redis silencieux si erreur
+    }
+
     const categories = await prisma.category.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        image: true,
+        parentId: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
-          select: { products: true },
-        },
+          select: { products: true }
+        }
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        name: 'asc'
+      }
     });
 
-    return NextResponse.json({ categories });
-  } catch (error) {
-    console.error("[Categories GET] Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des catégories" },
-      { status: 500 }
-    );
-  }
-}
+    try {
+      await redis.set(CACHE_KEY, JSON.stringify(categories), "EX", 3600);
+    } catch {
+      // Cache skip
+    }
 
-// POST - Créer une nouvelle catégorie
-export async function POST(request: NextRequest) {
+    return loggedSuccessResponse({ categories });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erreur base de données";
+    return loggedErrorResponse(`Erreur catégories: ${message}`, 500);
+  }
+});
+
+export const POST = withApiLogger(async (req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Non autorisé. Accès admin requis." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { name, slug, description, image } = body;
-
-    if (!name || !name.trim()) {
-      return NextResponse.json(
-        { error: "Le nom de la catégorie est requis" },
-        { status: 400 }
-      );
-    }
-
-    if (!slug || !slug.trim()) {
-      return NextResponse.json(
-        { error: "Le slug est requis" },
-        { status: 400 }
-      );
-    }
-
-    const existingCategory = await prisma.category.findUnique({
-      where: { slug },
-    });
-
-    if (existingCategory) {
-      return NextResponse.json(
-        { error: "Ce slug existe déjà. Veuillez en choisir un autre." },
-        { status: 400 }
-      );
-    }
+    const body = await req.json();
+    const validatedData = categorySchema.parse(body);
 
     const category = await prisma.category.create({
       data: {
-        name: name.trim(),
-        slug: slug.trim(),
-        description: description?.trim() || "",
-        image: image || "",
-      },
+        name: validatedData.name,
+        slug: validatedData.slug,
+        description: validatedData.description,
+        image: validatedData.image,
+        active: validatedData.active,
+        parentId: validatedData.parentId,
+      }
     });
 
-    console.log(`[Categories POST] Catégorie créée: ${category.id} - ${category.name}`);
-
-    return NextResponse.json(
-      {
-        message: "Catégorie créée avec succès",
-        category,
-      },
-      { status: 201 }
-    );
+    try {
+      await redis.del(CACHE_KEY);
+    } catch {
+      // Cache skip
+    }
+    
+    return loggedSuccessResponse({ category }, "Catégorie créée", 201);
   } catch (error) {
-    console.error("[Categories POST] Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création de la catégorie" },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return loggedErrorResponse(error.issues[0].message, 400);
+    }
+    return loggedErrorResponse("Erreur lors de la création", 500);
   }
-}
+});
