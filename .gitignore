@@ -47,6 +47,11 @@ next-env.d.ts
 logs/
 *.log
 
+# Contrats locaux de développement (ne jamais commit)
+DEV1_CONTRACT.md
+*_CONTRACT.md
+
+# Rapport soutenance (temporaire)
 # Rapport soutenance (temporaire)
 
 # BMAD

@@ -1,8 +1,11 @@
+"use client";
+
 import ProductCarousel from "@/components/products/product-carousel";
 
 interface Product {
   id: string;
   name: string;
+  slug?: string;
   price: number;
   image?: string;
   stock: number;

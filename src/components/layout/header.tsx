@@ -24,10 +24,12 @@ import {
   Search,
 } from "lucide-react";
 import { useState } from "react";
+import { useCart } from "@/hooks/use-cart";
 
 export default function Header() {
   const { data: session, status } = useSession();
   const [searchOpen, setSearchOpen] = useState(false);
+  const { itemCount } = useCart();
 
   const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -90,6 +92,11 @@ export default function Header() {
                 className="h-9 w-9 text-muted-foreground hover:text-foreground relative"
               >
                 <ShoppingBag className="h-[18px] w-[18px]" />
+                {itemCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] px-1 flex items-center justify-center">
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </span>
+                ) : null}
               </Button>
             </Link>
 

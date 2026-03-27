@@ -12,12 +12,18 @@ interface CartSummaryProps {
   subtotal: number;
   shipping: number;
   total: number;
+  actionLabel?: string;
+  actionDisabled?: boolean;
+  onActionClick?: () => void;
 }
 
 export default function CartSummary({
   subtotal,
   shipping,
   total,
+  actionLabel = "Passer la commande",
+  actionDisabled = false,
+  onActionClick,
 }: CartSummaryProps) {
   return (
     <Card>
@@ -40,7 +46,13 @@ export default function CartSummary({
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full">Passer la commande</Button>
+        <Button 
+          className="w-full" 
+          disabled={actionDisabled}
+          onClick={onActionClick}
+        >
+          {actionLabel}
+        </Button>
       </CardFooter>
     </Card>
   );
