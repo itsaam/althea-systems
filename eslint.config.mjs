@@ -20,6 +20,12 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: ["**/pdf.tsx"],
+    rules: {
+      "jsx-a11y/alt-text": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

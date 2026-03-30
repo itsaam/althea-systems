@@ -97,22 +97,14 @@ const s = StyleSheet.create({
 });
 
 function InvoiceDoc({ data, logoBase64 }: { data: InvoiceData; logoBase64: string | null }) {
-  let totalHT = 0;
-  let totalTVA = 0;
+const rows = data.items.map((item) => {
+  const ht  = (item.unitPriceTTC / (1 + item.tvaRate)) * item.quantity;
+  const ttc = item.unitPriceTTC * item.quantity;
+  return { ...item, ht, ttc };
+});
 
-  const rows = data.items.map((item) => {
-    const ht  = (item.unitPriceTTC / (1 + item.tvaRate)) * item.quantity;
-    const ttc = item.unitPriceTTC * item.quantity;
-    totalHT  += ht;
-    totalTVA += ttc - ht;
-    return { ...item, ht, ttc };
-  });
-
-  if (data.shippingCost > 0) {
-    const shipHT = data.shippingCost / 1.2;
-    totalHT  += shipHT;
-    totalTVA += data.shippingCost - shipHT;
-  }
+const totalHT = rows.reduce((acc, r) => acc + r.ht, 0) + (data.shippingCost > 0 ? data.shippingCost / 1.2 : 0);
+const totalTVA = rows.reduce((acc, r) => acc + (r.ttc - r.ht), 0) + (data.shippingCost > 0 ? data.shippingCost - data.shippingCost / 1.2 : 0);
 
   return (
     <Document>
