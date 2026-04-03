@@ -68,12 +68,20 @@ export const PATCH = withApiLogger(async (req: NextRequest, context?: unknown) =
     const { id } = await (context as { params: Promise<{ id: string }> }).params;
     const body = await req.json();
 
-    type AllowedFields = Partial<Pick<Prisma.UserUpdateInput, 'firstName' | 'lastName' | 'phone' | 'password'>>;
+    type AllowedFields = Partial<Pick<Prisma.UserUpdateInput, 'firstName' | 'lastName' | 'phone' | 'password' | 'role' | 'status'>>;
     const updateData: AllowedFields = {};
 
     ['firstName', 'lastName', 'phone'].forEach(field => {
       if (field in body) updateData[field as keyof AllowedFields] = body[field];
     });
+
+    if (body.role && ['USER', 'ADMIN'].includes(body.role)) {
+      updateData.role = body.role;
+    }
+
+    if (body.status && ['PENDING', 'ACTIVE', 'INACTIVE'].includes(body.status)) {
+      updateData.status = body.status;
+    }
 
     if (body.password) {
       const { hash } = await import('bcryptjs');

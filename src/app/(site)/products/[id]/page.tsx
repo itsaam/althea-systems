@@ -5,7 +5,6 @@ import SimilarProducts from "@/components/products/similar-products";
 import StockBadge from "@/components/products/stock-badge";
 import AddToCartButton from "@/components/cart/add-to-cart-button";
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 
 const BASE_URL =
@@ -46,13 +45,6 @@ async function getProduct(identifier: string) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     productLogger.error(`Erreur récupération produit ${identifier}: ${message}`);
-async function getProduct(id: string) {
-  try {
-    return await prisma.product.findUnique({
-      where: { id },
-      include: { category: true },
-    });
-  } catch {
     return null;
   }
 }
@@ -111,6 +103,8 @@ async function getSimilarProducts(identifier: string) {
     productLogger.error(`Erreur chargement produits similaires pour ${identifier}: ${message}`);
     return [];
   }
+}
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
@@ -143,15 +137,6 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
-  const product = await getProduct(id);
-
-  if (!product) {
-    return (
-      <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-8">Produit non trouve</h1>
-      </div>
-    );
-  }
 
   const [product, similarProducts] = await Promise.all([
     getProduct(id),

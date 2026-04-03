@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { productLogger } from "@/lib/logger/exports";
 import ProductGrid from "@/components/products/product-grid";
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -43,6 +42,8 @@ async function getCategoryWithProducts(slug: string) {
     productLogger.error(`Erreur récupération catégorie ${slug}: ${message}`);
     return null;
   }
+}
+
 async function getCategory(slug: string) {
   try {
     return await prisma.category.findUnique({
