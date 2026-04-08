@@ -12,7 +12,7 @@ interface CartItemProps {
 }
 
 export default function CartItem({
-  id: _id,
+  id,
   name,
   price,
   quantity,

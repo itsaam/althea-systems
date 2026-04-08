@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ProductGrid from "@/components/products/product-grid";
 import { productLogger } from "@/lib/logger/exports";
 import { prisma } from "@/lib/prisma";
+import type { Metadata } from "next";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;

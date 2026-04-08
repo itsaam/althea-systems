@@ -6,6 +6,9 @@ import StockBadge from "@/components/products/stock-badge";
 import { BreadcrumbJsonLd, ProductJsonLd } from "@/components/seo/json-ld";
 import { productLogger } from "@/lib/logger/exports";
 import { prisma } from "@/lib/prisma";
+import AddToCartButton from "@/components/cart/add-to-cart-button";
+import type { Metadata } from "next";
+import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me";
@@ -41,7 +44,7 @@ async function getProduct(identifier: string) {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    productLogger.error(`Erreur recuperation produit ${identifier}: ${message}`);
+    productLogger.error(`Erreur récupération produit ${identifier}: ${message}`);
     return null;
   }
 }
