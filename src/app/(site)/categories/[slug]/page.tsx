@@ -1,8 +1,7 @@
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { productLogger } from "@/lib/logger/exports";
-import ProductGrid from "@/components/products/product-grid";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import ProductGrid from "@/components/products/product-grid";
+import { productLogger } from "@/lib/logger/exports";
 import { prisma } from "@/lib/prisma";
 
 interface CategoryPageProps {
@@ -29,24 +28,31 @@ async function getCategoryWithProducts(slug: string) {
 
     return {
       ...category,
-      products: category.products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        price: p.price.toNumber(),
-        image: p.images[0] || undefined,
-        stock: p.stock,
+      products: category.products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price.toNumber(),
+        image: product.images[0] || undefined,
+        stock: product.stock,
       })),
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    productLogger.error(`Erreur récupération catégorie ${slug}: ${message}`);
+    productLogger.error(`Erreur recuperation categorie ${slug}: ${message}`);
     return null;
   }
+}
+
 async function getCategory(slug: string) {
   try {
     return await prisma.category.findUnique({
       where: { slug },
+      select: {
+        name: true,
+        slug: true,
+        description: true,
+      },
     });
   } catch {
     return null;
@@ -86,21 +92,21 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
+        <h1 className="mb-2 text-3xl font-bold">{category.name}</h1>
         {category.description && (
           <p className="text-muted-foreground">{category.description}</p>
         )}
       </div>
 
       {category.products.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Aucun produit dans cette catégorie</p>
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">
+            Aucun produit dans cette categorie
+          </p>
         </div>
       ) : (
         <ProductGrid products={category.products} />
       )}
-      <h1 className="text-3xl font-bold mb-8">Categorie: {slug}</h1>
-      {/* Products grid */}
     </div>
   );
 }
