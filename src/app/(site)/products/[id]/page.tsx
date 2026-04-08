@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { productLogger } from "@/lib/logger/exports";
+import AddToCartButton from "@/components/cart/add-to-cart-button";
 import SimilarProducts from "@/components/products/similar-products";
 import StockBadge from "@/components/products/stock-badge";
+import { BreadcrumbJsonLd, ProductJsonLd } from "@/components/seo/json-ld";
+import { productLogger } from "@/lib/logger/exports";
+import { prisma } from "@/lib/prisma";
 import AddToCartButton from "@/components/cart/add-to-cart-button";
 import type { Metadata } from "next";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
@@ -18,10 +21,7 @@ async function getProduct(identifier: string) {
   try {
     const product = await prisma.product.findFirst({
       where: {
-        OR: [
-          { id: identifier },
-          { slug: identifier },
-        ],
+        OR: [{ id: identifier }, { slug: identifier }],
       },
       include: {
         category: {
@@ -51,23 +51,23 @@ async function getProduct(identifier: string) {
 
 async function getSimilarProducts(identifier: string) {
   try {
-    // Récupérer le produit pour avoir son ID et sa catégorie
     const product = await prisma.product.findFirst({
       where: {
-        OR: [
-          { id: identifier },
-          { slug: identifier },
-        ],
+        OR: [{ id: identifier }, { slug: identifier }],
       },
       select: { id: true, categoryId: true },
     });
 
     if (!product) {
-      productLogger.warn(`Produit non trouvé pour getSimilarProducts: ${identifier}`);
+      productLogger.warn(
+        `Produit non trouve pour getSimilarProducts: ${identifier}`
+      );
       return [];
     }
 
-    productLogger.debug(`Produit trouvé: ${product.id}, Catégorie: ${product.categoryId}`);
+    productLogger.debug(
+      `Produit trouve: ${product.id}, Categorie: ${product.categoryId}`
+    );
 
     interface SimilarProductRow {
       id: string;
@@ -88,19 +88,23 @@ async function getSimilarProducts(identifier: string) {
       LIMIT 6
     `;
 
-    productLogger.info(`${similarProducts.length} produits similaires trouvés pour ${identifier}`);
+    productLogger.info(
+      `${similarProducts.length} produits similaires trouves pour ${identifier}`
+    );
 
-    return similarProducts.map((p) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug ?? undefined,
-      price: Number(p.price),
-      image: p.images?.[0] ?? undefined,
-      stock: p.stock,
+    return similarProducts.map((similarProduct) => ({
+      id: similarProduct.id,
+      name: similarProduct.name,
+      slug: similarProduct.slug ?? undefined,
+      price: Number(similarProduct.price),
+      image: similarProduct.images?.[0] ?? undefined,
+      stock: similarProduct.stock,
     }));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
-    productLogger.error(`Erreur chargement produits similaires pour ${identifier}: ${message}`);
+    productLogger.error(
+      `Erreur chargement produits similaires pour ${identifier}: ${message}`
+    );
     return [];
   }
 }
@@ -149,31 +153,28 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="container py-8">
-      {/* Product Details */}
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
-        {/* Image */}
-        <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+      <div className="mb-12 grid gap-8 md:grid-cols-2">
+        <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
           {product.image ? (
             <img
               src={product.image}
               alt={product.name}
-              className="object-cover w-full h-full"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
+            <div className="flex h-full items-center justify-center text-muted-foreground">
               Aucune image
             </div>
           )}
-          <StockBadge stock={product.stock} className="absolute top-4 right-4" />
+          <StockBadge stock={product.stock} className="absolute right-4 top-4" />
         </div>
 
-        {/* Info */}
         <div className="flex flex-col gap-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+            <h1 className="mb-2 text-3xl font-bold">{product.name}</h1>
             {product.category && (
               <p className="text-muted-foreground">
-                Catégorie : {product.category.name}
+                Categorie : {product.category.name}
               </p>
             )}
           </div>
@@ -189,7 +190,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {product.description && (
             <div>
-              <h2 className="font-semibold mb-2">Description</h2>
+              <h2 className="mb-2 font-semibold">Description</h2>
               <p className="text-muted-foreground">{product.description}</p>
             </div>
           )}
@@ -212,7 +213,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      {/* Similar Products */}
       <SimilarProducts products={similarProducts} />
       <ProductJsonLd
         name={product.name}
@@ -242,8 +242,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           },
         ]}
       />
-      <h1 className="text-3xl font-bold mb-8">{product.name}</h1>
-      {/* Product details */}
     </div>
   );
 }
