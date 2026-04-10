@@ -5,6 +5,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { productLogger, apiLogger, LogMessages } from "@/lib/logger/exports";
+import { invalidateProductCache } from "@/lib/redis";
 
 // GET /api/admin/products/[id] - Récupérer un produit par ID
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -166,6 +167,8 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     productLogger.info(`Produit modifié : ${product.name} (${product.id})`);
 
+    await invalidateProductCache(product.id);
+
     return NextResponse.json({ product: serializedProduct });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -235,6 +238,8 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
     // Pour l'instant on les laisse, elles peuvent être réutilisées
 
     productLogger.info(`Produit supprimé : ${existingProduct.name} (${id})`);
+
+    await invalidateProductCache(id);
 
     return NextResponse.json({ success: true, message: "Produit supprimé avec succès" });
   } catch (error) {

@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { withApiLogger, loggedSuccessResponse, loggedErrorResponse } from "@/lib/logger/exports";
 import { productLogger, apiLogger, LogMessages } from "@/lib/logger/exports";
+import { invalidateProductCache } from "@/lib/redis";
 
 import type { BulkActionData, BulkDeleteData } from "@/types/admin-table";
 
@@ -97,6 +98,8 @@ export const PATCH = withApiLogger(async (req: NextRequest) => {
       )
     );
 
+    await invalidateProductCache();
+
     return loggedSuccessResponse({
       message: `${result.count} produit(s) modifié(s) avec succès`,
       count: result.count,
@@ -165,6 +168,8 @@ export const DELETE = withApiLogger(async (req: NextRequest) => {
         `Suppression en masse : ${result.count} produits supprimés`
       )
     );
+
+    await invalidateProductCache();
 
     return loggedSuccessResponse({
       message: `${result.count} produit(s) supprimé(s) avec succès`,
