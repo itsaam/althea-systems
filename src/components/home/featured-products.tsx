@@ -48,14 +48,14 @@ export default function FeaturedProducts() {
 
   if (isLoading) {
     return (
-      <section className="w-full py-16 bg-muted/30">
+      <section className="w-full bg-muted/30 py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="space-y-4">
-                <div className="aspect-square rounded-xl bg-muted animate-pulse" />
-                <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
-                <div className="h-4 w-1/2 bg-muted rounded animate-pulse" />
+                <div className="aspect-square animate-pulse rounded-xl bg-muted" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
               </div>
             ))}
           </div>
@@ -67,21 +67,21 @@ export default function FeaturedProducts() {
   if (products.length === 0) return null;
 
   return (
-    <section className="w-full py-16 bg-[#d4f4f7]/20">
+    <section className="w-full bg-[#d4f4f7]/20 py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-end justify-between mb-10">
+        <div className="mb-8 flex flex-col gap-3 md:mb-10 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#003d5c]">
+            <h2 className="text-2xl font-bold tracking-tight text-[#003d5c] sm:text-3xl md:text-4xl">
               Les Top Produits du moment
             </h2>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-2 text-sm text-muted-foreground md:text-base">
               Les équipements les plus demandés par nos clients
             </p>
           </div>
           <Link
             href="/categories"
-            className="hidden md:flex items-center gap-2 text-sm font-medium text-[#00a8b5] hover:text-[#33bfc9] transition-colors"
+            className="hidden items-center gap-2 text-sm font-medium text-[#00a8b5] transition-colors hover:text-[#33bfc9] md:flex"
           >
             Voir tout
             <ArrowRight className="h-4 w-4" />
@@ -89,7 +89,7 @@ export default function FeaturedProducts() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 md:grid-cols-4 md:gap-y-10">
           {products.map((product) => (
             <Link
               key={product.id}

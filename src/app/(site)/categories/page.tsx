@@ -48,10 +48,12 @@ export default async function CategoriesPage() {
   const categories = await getAllCategories();
 
   return (
-    <div className="container py-8">
-      <div className="mb-12">
-        <h1 className="mb-2 text-3xl font-bold">Cat&eacute;gories</h1>
-        <p className="text-muted-foreground">
+    <div className="container py-8 md:py-12">
+      <div className="mb-8 md:mb-12">
+        <h1 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
+          Cat&eacute;gories
+        </h1>
+        <p className="text-sm text-muted-foreground md:text-base">
           Parcourez notre s&eacute;lection de produits par cat&eacute;gorie
         </p>
       </div>
@@ -69,14 +71,14 @@ export default async function CategoriesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
           {categories.map((category) => (
             <Link
               key={category.id}
               href={`/categories/${category.slug}`}
               className="group overflow-hidden rounded-lg border border-border transition-colors hover:border-primary"
             >
-              <div className="relative h-48 overflow-hidden bg-muted">
+              <div className="relative h-40 overflow-hidden bg-muted sm:h-48">
                 {category.image ? (
                   <img
                     src={category.image}
