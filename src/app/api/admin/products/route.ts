@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { withApiLogger, loggedSuccessResponse, loggedErrorResponse } from "@/lib/logger/exports";
 import { productLogger, apiLogger, LogMessages } from "@/lib/logger/exports";
+import { invalidateProductCache } from "@/lib/redis";
 
 import type { ProductsResponse, ProductWithCategory } from "@/types/admin-table";
 
@@ -274,6 +275,8 @@ export const POST = withApiLogger(async (req: NextRequest) => {
     };
 
     productLogger.info(`Produit créé : ${product.name} (${product.id})`);
+
+    await invalidateProductCache(product.id);
 
     return loggedSuccessResponse(
       { product: serializedProduct },

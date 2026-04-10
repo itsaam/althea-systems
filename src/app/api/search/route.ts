@@ -29,6 +29,72 @@ interface SearchResponse {
 }
 
 const REDIS_TIMEOUT_MS = 500;
+const MAX_RESULTS = 50;
+const SQL_FETCH_LIMIT = 100;
+
+function normalize(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function levenshtein(a: string, b: string, max: number): number {
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const dp: number[] = Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) dp[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    let rowMin = dp[0];
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = dp[j];
+      dp[j] =
+        a[i - 1] === b[j - 1]
+          ? prev
+          : Math.min(prev + 1, dp[j] + 1, dp[j - 1] + 1);
+      prev = tmp;
+      if (dp[j] < rowMin) rowMin = dp[j];
+    }
+    if (rowMin > max) return max + 1;
+  }
+  return dp[b.length];
+}
+
+function matchScore(query: string, name: string, description: string | null): number {
+  if (!query) return 0;
+  const q = normalize(query);
+  const n = normalize(name);
+  const d = description ? normalize(description) : "";
+
+  // Exact match on name (whole or per-token)
+  if (n === q) return 1000;
+  const tokens = n.split(/\s+/).filter(Boolean);
+  if (tokens.includes(q)) return 900;
+
+  // Typo (1 char diff) on name or any token
+  if (q.length >= 3) {
+    if (levenshtein(n, q, 1) <= 1) return 800;
+    for (const t of tokens) {
+      if (t.length >= 3 && levenshtein(t, q, 1) <= 1) return 750;
+    }
+  }
+
+  // Starts with on name
+  if (n.startsWith(q)) return 600;
+  for (const t of tokens) {
+    if (t.startsWith(q)) return 550;
+  }
+
+  // Contains on name
+  if (n.includes(q)) return 400;
+
+  // Contains on description
+  if (d.includes(q)) return 200;
+
+  return 0;
+}
 
 function hashFilters(filters: Record<string, string | null>): string {
   const normalized = Object.keys(filters)
@@ -121,13 +187,27 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      take: 50,
+      take: query ? SQL_FETCH_LIMIT : MAX_RESULTS,
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    const formattedProducts: SearchProduct[] = products.map((p) => ({
+    // Apply matching rules when a text query is provided:
+    // exact > 1-char typo > starts-with > contains.
+    const scored = query
+      ? products
+          .map((p) => ({
+            product: p,
+            score: matchScore(query, p.name, p.description),
+          }))
+          .filter((s) => s.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, MAX_RESULTS)
+          .map((s) => s.product)
+      : products;
+
+    const formattedProducts: SearchProduct[] = scored.map((p) => ({
       id: p.id,
       name: p.name,
       slug: p.slug,
