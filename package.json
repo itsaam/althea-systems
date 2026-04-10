@@ -22,6 +22,8 @@
     "test:ui": "vitest --ui",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
+    "test:integration": "vitest run __tests__/integration",
+    "test:integration:watch": "vitest __tests__/integration",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
