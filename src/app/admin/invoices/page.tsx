@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { toast } from "sonner";
 
@@ -20,6 +21,8 @@ import {
 import { ExportButton } from "@/components/admin/export-button";
 
 export default function AdminInvoicesPage() {
+  const router = useRouter();
+
   // States
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,14 +120,12 @@ export default function AdminInvoicesPage() {
   }, [fetchInvoices]);
 
   // Handlers
-  const handleView = useCallback((id: string) => {
-    const invoice = invoices.find((inv) => inv.id === id);
-    if (invoice) {
-      toast.info(
-        `Facture ${invoice.invoiceNumber} - ${Number(invoice.amount).toFixed(2)} EUR - Commande ${invoice.order.orderNumber}`
-      );
-    }
-  }, [invoices]);
+  const handleView = useCallback(
+    (id: string) => {
+      router.push(`/admin/invoices/${id}`);
+    },
+    [router]
+  );
 
   const handleDownload = useCallback(async (id: string) => {
     try {
