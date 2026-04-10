@@ -1000,7 +1000,8 @@ npm install              # Installer nouvelles versions
 |----------|-------------|
 | **[API.md](./docs/API.md)** | Documentation complète des endpoints API REST |
 | **[DIAGRAMMES_TECHNIQUES.md](./docs/DIAGRAMMES_TECHNIQUES.md)** | Architecture, flux, ERD, séquences |
-| **[CAHIER_DES_CHARGES_SUIVI.md](./docs/CAHIER_DES_CHARGES_SUIVI.md)** | Suivi du cahier des charges + roadmap |
+| **[ROADMAP.md](./docs/ROADMAP.md)** | Roadmap de développement et suivi des features |
+| **[DECISIONS_ARCHITECTURALES_CDC.md](./docs/DECISIONS_ARCHITECTURALES_CDC.md)** | Décisions architecturales et conformité cahier des charges |
 | **[RAPPORT_SOUTENANCE_SAMY.md](./docs/RAPPORT_SOUTENANCE_SAMY.md)** | Rapport technique Auth & Infrastructure |
 | **[AGENTS.md](./AGENTS.md)** | Guide pour agents IA (conventions, patterns) |
 
