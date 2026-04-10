@@ -58,7 +58,7 @@ function baseEmailTemplate(content: string, title: string): string {
       color: #1a1a1a;
       margin: 0;
       padding: 0;
-      background-color: #ffffff;
+      background-color: #f4f6f8;
     }
     .container {
       max-width: 580px;
@@ -67,24 +67,40 @@ function baseEmailTemplate(content: string, title: string): string {
     }
     .email-wrapper {
       background-color: #ffffff;
-      border: 1px solid #e5e5e5;
+      border: 1px solid #dfe4ea;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 61, 92, 0.06);
+    }
+    .accent-bar {
+      height: 4px;
+      background: linear-gradient(90deg, #003d5c 0%, #00a8b5 100%);
+      font-size: 0;
+      line-height: 0;
     }
     .header {
       padding: 32px 40px;
-      border-bottom: 1px solid #e5e5e5;
+      background-color: #003d5c;
     }
     .header h1 {
-      color: #000000;
+      color: #ffffff;
       margin: 0;
       font-size: 24px;
       font-weight: 600;
       letter-spacing: -0.5px;
     }
+    .header .tagline {
+      color: #9fd8df;
+      margin: 4px 0 0 0;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
     .content {
       padding: 40px;
     }
     .content h2 {
-      color: #000000;
+      color: #003d5c;
       margin: 0 0 24px 0;
       font-size: 20px;
       font-weight: 600;
@@ -94,55 +110,69 @@ function baseEmailTemplate(content: string, title: string): string {
       color: #4a4a4a;
       font-size: 15px;
     }
+    .content a {
+      color: #003d5c;
+      text-decoration: underline;
+    }
+    .content a:hover {
+      color: #00a8b5;
+    }
     .button {
       display: inline-block;
       padding: 14px 28px;
-      background-color: #000000;
+      background-color: #003d5c;
       color: #ffffff !important;
-      text-decoration: none;
+      text-decoration: none !important;
       font-weight: 500;
       font-size: 14px;
       margin: 24px 0;
+      border-radius: 4px;
       transition: background-color 0.2s;
     }
     .button:hover {
-      background-color: #333333;
+      background-color: #00a8b5;
     }
     .footer {
       padding: 24px 40px;
-      border-top: 1px solid #e5e5e5;
+      background-color: #f8fafc;
+      border-top: 1px solid #dfe4ea;
       font-size: 13px;
-      color: #8a8a8a;
+      color: #6b7885;
     }
     .footer a {
-      color: #000000;
+      color: #003d5c;
       text-decoration: none;
+      font-weight: 500;
     }
     .footer a:hover {
+      color: #00a8b5;
       text-decoration: underline;
     }
     .info-box {
-      background-color: #fafafa;
-      border-left: 2px solid #000000;
+      background-color: #f0f9fa;
+      border-left: 3px solid #00a8b5;
       padding: 16px 20px;
       margin: 24px 0;
+      border-radius: 0 4px 4px 0;
     }
     .info-box p {
       margin: 0;
       font-size: 14px;
-      color: #4a4a4a;
+      color: #003d5c;
     }
     .info-box p + p {
       margin-top: 8px;
     }
     .divider {
       height: 1px;
-      background-color: #e5e5e5;
+      background-color: #dfe4ea;
       margin: 32px 0;
     }
     .order-summary {
-      border: 1px solid #e5e5e5;
+      border: 1px solid #dfe4ea;
+      border-radius: 4px;
       margin: 24px 0;
+      overflow: hidden;
     }
     .order-summary table {
       width: 100%;
@@ -152,20 +182,21 @@ function baseEmailTemplate(content: string, title: string): string {
     .order-summary td {
       padding: 14px 16px;
       text-align: left;
-      border-bottom: 1px solid #e5e5e5;
+      border-bottom: 1px solid #dfe4ea;
       font-size: 14px;
     }
     .order-summary th {
-      background-color: #fafafa;
+      background-color: #003d5c;
+      color: #ffffff;
       font-weight: 600;
-      color: #000000;
     }
     .order-summary tr:last-child td {
       border-bottom: none;
     }
-    .order-summary .total {
+    .order-summary .total td {
       font-weight: 600;
-      background-color: #fafafa;
+      background-color: #f0f9fa;
+      color: #003d5c;
     }
     .link-fallback {
       font-size: 12px;
@@ -173,21 +204,23 @@ function baseEmailTemplate(content: string, title: string): string {
       word-break: break-all;
     }
     .link-fallback a {
-      color: #4a4a4a;
+      color: #003d5c;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="email-wrapper">
+      <div class="accent-bar">&nbsp;</div>
       <div class="header">
         <h1>${APP_NAME}</h1>
+        <p class="tagline">Équipements médicaux professionnels</p>
       </div>
       <div class="content">
         ${content}
       </div>
       <div class="footer">
-        <p>&copy; ${new Date().getFullYear()} ${APP_NAME}</p>
+        <p>&copy; ${new Date().getFullYear()} ${APP_NAME} — Tous droits réservés</p>
         <p style="margin-top: 8px;">
           <a href="${APP_URL}">Site web</a> &nbsp;&middot;&nbsp;
           <a href="${APP_URL}/contact">Contact</a> &nbsp;&middot;&nbsp;
