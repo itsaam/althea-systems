@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { toast } from "sonner";
 
@@ -11,8 +12,17 @@ import {
   type UserRow,
 } from "@/components/admin/users/users-columns";
 import { ExportButton } from "@/components/admin/export-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AdminUsersPage() {
+  const router = useRouter();
+
   // Data state
   const [users, setUsers] = useState<UserRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +30,8 @@ export default function AdminUsersPage() {
   // Search state
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Pagination state
   const [pagination, setPagination] = useState<PaginationState>({
@@ -77,35 +89,34 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Client-side filter on email/name since API doesn't support search
+  // Client-side filter on email/name + role + status since API doesn't support it
   const filteredUsers = useMemo(() => {
-    if (!debouncedSearch) return users;
     const query = debouncedSearch.toLowerCase();
     return users.filter((user) => {
-      const fullName = [user.firstName, user.lastName]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return (
-        user.email.toLowerCase().includes(query) || fullName.includes(query)
-      );
+      if (query) {
+        const fullName = [user.firstName, user.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (
+          !user.email.toLowerCase().includes(query) &&
+          !fullName.includes(query)
+        ) {
+          return false;
+        }
+      }
+      if (roleFilter !== "all" && user.role !== roleFilter) return false;
+      if (statusFilter !== "all" && user.status !== statusFilter) return false;
+      return true;
     });
-  }, [users, debouncedSearch]);
+  }, [users, debouncedSearch, roleFilter, statusFilter]);
 
   // Handlers
   const handleView = useCallback(
     (id: string) => {
-      const user = users.find((u) => u.id === id);
-      if (user) {
-        const fullName =
-          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-          "Non renseigné";
-        toast.info(
-          `${user.email} - ${user.role === "ADMIN" ? "Admin" : "Utilisateur"} - ${fullName}`
-        );
-      }
+      router.push(`/admin/users/${id}`);
     },
-    [users]
+    [router]
   );
 
   const handleToggleRole = useCallback(
@@ -206,6 +217,8 @@ export default function AdminUsersPage() {
   const handleResetFilters = useCallback(() => {
     setSearchValue("");
     setDebouncedSearch("");
+    setRoleFilter("all");
+    setStatusFilter("all");
   }, []);
 
   // Columns definition
@@ -227,11 +240,36 @@ export default function AdminUsersPage() {
         <ExportButton endpoint="/api/admin/users/export" />
       </div>
 
-      {/* Toolbar with search */}
+      {/* Toolbar with search + filters */}
       <DataTableToolbar
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         onResetFilters={handleResetFilters}
+        filters={
+          <div className="flex items-center gap-2">
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="h-8 w-[160px]">
+                <SelectValue placeholder="Rôle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les rôles</SelectItem>
+                <SelectItem value="USER">Utilisateur</SelectItem>
+                <SelectItem value="ADMIN">Administrateur</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[160px]">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="ACTIVE">Actif</SelectItem>
+                <SelectItem value="PENDING">En attente</SelectItem>
+                <SelectItem value="INACTIVE">Inactif</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        }
       />
 
       {/* Table */}
