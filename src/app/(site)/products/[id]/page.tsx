@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import AddToCartButton from "@/components/cart/add-to-cart-button";
-import ShareButtons from "@/components/products/share-buttons";
+import { ChevronRight, ArrowUpRight } from "lucide-react";
+import ProductGallery from "@/components/products/product-gallery";
+import ProductInfo from "@/components/products/product-info";
+import ProductDetailsTabs from "@/components/products/product-details-tabs";
 import SimilarProducts from "@/components/products/similar-products";
-import StockBadge from "@/components/products/stock-badge";
 import { BreadcrumbJsonLd, ProductJsonLd } from "@/components/seo/json-ld";
 import { productLogger } from "@/lib/logger/exports";
 import { prisma } from "@/lib/prisma";
@@ -63,10 +65,6 @@ async function getSimilarProducts(identifier: string) {
       return [];
     }
 
-    productLogger.debug(
-      `Produit trouve: ${product.id}, Categorie: ${product.categoryId}`
-    );
-
     interface SimilarProductRow {
       id: string;
       name: string;
@@ -85,10 +83,6 @@ async function getSimilarProducts(identifier: string) {
       ORDER BY RANDOM()
       LIMIT 6
     `;
-
-    productLogger.info(
-      `${similarProducts.length} produits similaires trouves pour ${identifier}`
-    );
 
     return similarProducts.map((similarProduct) => ({
       id: similarProduct.id,
@@ -162,82 +156,127 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const shareUrl = `${BASE_URL}/products/${product.id}`;
+
   return (
-    <div className="container py-8 md:py-12">
-      <div className="mb-10 grid gap-6 md:mb-12 md:grid-cols-2 md:gap-8 lg:gap-12">
-        <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
-          {product.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={product.image}
-              alt={product.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              Aucune image
-            </div>
+    <div className="relative bg-background">
+      {/* ── Editorial breadcrumb ─────────────────────── */}
+      <nav
+        aria-label="Fil d'ariane"
+        className="mx-auto max-w-7xl px-6 pt-10 md:px-10 md:pt-14"
+      >
+        <ol className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] uppercase tracking-[0.16em] text-shadow-grey-500">
+          <li>
+            <Link
+              href="/"
+              className="transition-colors duration-300 hover:text-lavender-mist-600"
+            >
+              Accueil
+            </Link>
+          </li>
+          <li aria-hidden="true">
+            <ChevronRight className="h-3 w-3" />
+          </li>
+          <li>
+            <Link
+              href="/categories"
+              className="transition-colors duration-300 hover:text-lavender-mist-600"
+            >
+              Catalogue
+            </Link>
+          </li>
+          {product.category && (
+            <>
+              <li aria-hidden="true">
+                <ChevronRight className="h-3 w-3" />
+              </li>
+              <li>
+                <Link
+                  href={`/categories/${product.category.slug}`}
+                  className="transition-colors duration-300 hover:text-lavender-mist-600"
+                >
+                  {product.category.name}
+                </Link>
+              </li>
+            </>
           )}
-          <StockBadge stock={product.stock} className="absolute right-3 top-3 md:right-4 md:top-4" />
+          <li aria-hidden="true">
+            <ChevronRight className="h-3 w-3" />
+          </li>
+          <li className="truncate text-shadow-grey-900" aria-current="page">
+            {product.name}
+          </li>
+        </ol>
+      </nav>
+
+      {/* ── Main product grid ────────────────────────── */}
+      <div className="mx-auto max-w-7xl px-6 pb-12 pt-10 md:px-10 md:pb-20 md:pt-14">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-7">
+            <ProductGallery images={product.images} alt={product.name} />
+          </div>
+          <div className="lg:col-span-5">
+            <ProductInfo product={product} shareUrl={shareUrl} />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-5 md:gap-6">
-          <div>
-            <h1 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-              {product.name}
-            </h1>
-            {product.category && (
-              <p className="text-sm text-muted-foreground">
-                Categorie : {product.category.name}
-              </p>
-            )}
-          </div>
+        {/* ── Details tabs ─────────────────────────── */}
+        <ProductDetailsTabs
+          description={product.description}
+          sku={product.sku}
+          categoryName={product.category?.name}
+          stock={product.stock}
+        />
 
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-2xl font-bold sm:text-3xl">
-              {product.price.toFixed(2)} €
-            </span>
-            {product.comparePrice && (
-              <span className="text-base text-muted-foreground line-through sm:text-lg">
-                {product.comparePrice.toFixed(2)} €
-              </span>
-            )}
-          </div>
-
-          {product.description && (
-            <div>
-              <h2 className="mb-2 font-semibold">Description</h2>
-              <p className="text-muted-foreground">{product.description}</p>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              Stock disponible : {product.stock}
-            </span>
-          </div>
-
-          <div className="w-full md:w-auto">
-            <AddToCartButton
-              productId={product.id}
-              productName={product.name}
-              price={product.price}
-              image={product.image || undefined}
-              disabled={product.stock === 0}
-            />
-          </div>
-
-          <div className="mt-2 border-t pt-5">
-            <ShareButtons
-              url={`${BASE_URL}/products/${product.id}`}
-              title={product.name}
-              description={product.description || undefined}
-            />
-          </div>
-        </div>
+        {/* ── Similar products ─────────────────────── */}
+        <SimilarProducts products={similarProducts} />
       </div>
 
-      <SimilarProducts products={similarProducts} />
+      {/* ── About Althea slim band ───────────────────── */}
+      <section className="relative isolate overflow-hidden border-t border-shadow-grey-200 bg-shadow-grey-950 text-white grain">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-32 top-1/2 h-[420px] w-[420px] -translate-y-1/2 rounded-full bg-lavender-mist-500 opacity-25 blur-[160px]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-20 top-0 h-[360px] w-[360px] rounded-full bg-electric-indigo-500 opacity-20 blur-[140px]"
+        />
+
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-10 px-6 py-20 md:flex-row md:items-end md:justify-between md:gap-16 md:px-10 md:py-28">
+          <div className="max-w-2xl">
+            <p className="eyebrow text-lavender-mist-300">À propos d&apos;Althea</p>
+            <h2 className="font-display mt-6 text-display-sm text-white">
+              L&apos;équipement médical,{" "}
+              <em className="not-italic italic text-brand-gradient">
+                sans bruit ni compromis.
+              </em>
+            </h2>
+            <p className="mt-8 max-w-xl text-base leading-relaxed text-shadow-grey-300">
+              Depuis 2011, Althea Systems sélectionne et certifie les
+              équipements qui équipent cabinets, cliniques et hôpitaux partout
+              en France. On choisit bien, on livre vite, on répond vraiment.
+            </p>
+          </div>
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/about"
+              className="group inline-flex items-center justify-between gap-4 rounded-full border border-white/20 bg-white/5 px-6 py-4 backdrop-blur-xl transition-all duration-500 ease-out-expo hover:bg-white hover:text-shadow-grey-950"
+            >
+              <span className="text-sm font-medium">Découvrir Althea</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out-expo group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              href="/contact"
+              className="group inline-flex items-center justify-between gap-4 rounded-full border border-transparent px-6 py-4 text-shadow-grey-300 transition-all duration-500 ease-out-expo hover:text-white"
+            >
+              <span className="text-sm font-medium">Contacter un conseiller</span>
+              <span className="block h-px w-8 bg-current transition-all duration-500 ease-out-expo group-hover:w-12" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <ProductJsonLd
         name={product.name}
         description={product.description || ""}
@@ -245,7 +284,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         sku={product.sku || undefined}
         price={Number(product.price)}
         availability={product.stock > 0 ? "InStock" : "OutOfStock"}
-        url={`${BASE_URL}/products/${product.id}`}
+        url={shareUrl}
         category={product.category?.name}
       />
       <BreadcrumbJsonLd
@@ -262,7 +301,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             : []),
           {
             name: product.name,
-            url: `${BASE_URL}/products/${product.id}`,
+            url: shareUrl,
           },
         ]}
       />
