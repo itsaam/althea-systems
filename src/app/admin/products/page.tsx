@@ -12,8 +12,31 @@ import { DataTableToolbar } from "@/components/admin/data-table/data-table-toolb
 import { getProductsColumns } from "@/components/admin/products/products-columns";
 import { ProductsTableFilters } from "@/components/admin/products/products-table-filters";
 import { ProductsBulkActions } from "@/components/admin/products/products-bulk-actions";
+import { ClientExportButton } from "@/components/admin/client-export-button";
+import type { CsvColumn } from "@/lib/csv-export";
 
 import type { ProductWithCategory, ProductFilters, ProductsResponse } from "@/types/admin-table";
+
+const PRODUCT_EXPORT_COLUMNS: CsvColumn<ProductWithCategory>[] = [
+  { header: "Nom", accessor: (p) => p.name },
+  { header: "SKU", accessor: (p) => p.sku ?? "" },
+  { header: "Slug", accessor: (p) => p.slug },
+  { header: "Catégorie", accessor: (p) => p.category?.name ?? "" },
+  { header: "Prix", accessor: (p) => Number(p.price).toFixed(2) },
+  {
+    header: "Prix barré",
+    accessor: (p) =>
+      p.comparePrice !== null ? Number(p.comparePrice).toFixed(2) : "",
+  },
+  { header: "TVA", accessor: (p) => p.tva },
+  { header: "Stock", accessor: (p) => p.stock },
+  { header: "Statut", accessor: (p) => p.status },
+  { header: "Mis en avant", accessor: (p) => p.featured },
+  {
+    header: "Créé le",
+    accessor: (p) => new Date(p.createdAt),
+  },
+];
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -181,10 +204,17 @@ export default function AdminProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Produits</h1>
-        <Button onClick={() => router.push("/admin/products/new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouveau produit
-        </Button>
+        <div className="flex items-center gap-2">
+          <ClientExportButton
+            rows={products}
+            columns={PRODUCT_EXPORT_COLUMNS}
+            filename="produits"
+          />
+          <Button onClick={() => router.push("/admin/products/new")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nouveau produit
+          </Button>
+        </div>
       </div>
 
       {/* Toolbar avec recherche */}

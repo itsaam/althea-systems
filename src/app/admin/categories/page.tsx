@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClientExportButton } from "@/components/admin/client-export-button";
+import type { CsvColumn } from "@/lib/csv-export";
 import {
   Table,
   TableBody,
@@ -46,6 +48,16 @@ interface Category {
     products: number;
   };
 }
+
+const CATEGORY_EXPORT_COLUMNS: CsvColumn<Category>[] = [
+  { header: "Nom", accessor: (c) => c.name },
+  { header: "Slug", accessor: (c) => c.slug },
+  { header: "Description", accessor: (c) => c.description ?? "" },
+  { header: "Ordre", accessor: (c) => c.order },
+  { header: "Active", accessor: (c) => c.active },
+  { header: "Nombre de produits", accessor: (c) => c._count.products },
+  { header: "Créée le", accessor: (c) => new Date(c.createdAt) },
+];
 
 // Sortable row component
 function SortableRow({
@@ -224,10 +236,17 @@ export default function AdminCategoriesPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Categories</h1>
-        <Button onClick={() => router.push("/admin/categories/new")}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle categorie
-        </Button>
+        <div className="flex items-center gap-2">
+          <ClientExportButton
+            rows={filteredCategories}
+            columns={CATEGORY_EXPORT_COLUMNS}
+            filename="categories"
+          />
+          <Button onClick={() => router.push("/admin/categories/new")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle categorie
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
