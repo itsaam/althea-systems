@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   Award,
@@ -86,7 +87,8 @@ const MILESTONES = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const t = await getTranslations("aboutPage");
   return (
     <div>
       <section className="relative overflow-hidden border-b bg-[#003d5c] text-white">
@@ -112,20 +114,17 @@ export default function AboutPage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur">
               <Sparkles className="h-3 w-3" aria-hidden="true" />
-              Notre mission
+              {t("hero.eyebrow")}
             </div>
             <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-              Équiper les soignants{" "}
-              <span className="italic text-white/80">
-                avec l&apos;exigence
-              </span>{" "}
-              qu&apos;ils méritent.
+              {t.rich("hero.title", {
+                em: (chunks) => (
+                  <span className="italic text-white/80">{chunks}</span>
+                ),
+              })}
             </h1>
             <p className="mt-6 max-w-2xl text-base text-white/70 md:text-lg">
-              Althea Systems est un distributeur européen d&apos;équipements
-              médicaux indépendant, fondé par des professionnels de santé. Nous
-              sélectionnons, certifions et livrons uniquement ce que nous
-              utiliserions nous-mêmes.
+              {t("hero.subtitle")}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button
@@ -134,7 +133,7 @@ export default function AboutPage() {
                 className="h-12 bg-white text-[#003d5c] hover:bg-white/90"
               >
                 <Link href="/products">
-                  Découvrir le catalogue
+                  {t("hero.ctaPrimary")}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
@@ -144,7 +143,7 @@ export default function AboutPage() {
                 variant="outline"
                 className="h-12 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
-                <Link href="/contact">Parler à un conseiller</Link>
+                <Link href="/contact">{t("hero.ctaSecondary")}</Link>
               </Button>
             </div>
           </div>

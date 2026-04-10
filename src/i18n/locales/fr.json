@@ -80,14 +80,24 @@
   },
   "cart": {
     "title": "Votre panier",
-    "empty": "Votre panier est vide",
+    "empty": "Votre panier est vide.",
     "subtotal": "Sous-total",
     "shipping": "Livraison",
+    "free": "Gratuit",
     "total": "Total",
+    "summary": "Résumé",
     "checkout": "Commander",
+    "proceedToCheckout": "Passer au checkout",
+    "placeOrder": "Passer la commande",
     "continueShopping": "Continuer vos achats",
+    "clear": "Vider le panier",
+    "remove": "Retirer",
     "removeItem": "Retirer du panier",
-    "updateQuantity": "Modifier la quantité"
+    "removeItemNamed": "Retirer {name} du panier",
+    "updateQuantity": "Modifier la quantité",
+    "increaseQuantity": "Augmenter la quantité de {name}",
+    "decreaseQuantity": "Diminuer la quantité de {name}",
+    "itemCount": "{count, plural, =0 {aucun article} one {# article} other {# articles}}"
   },
   "auth": {
     "email": "Email",
@@ -107,7 +117,73 @@
     "twoFactorTitle": "Authentification à deux facteurs",
     "twoFactorCode": "Code de vérification",
     "twoFactorSetup": "Configurer la 2FA",
-    "continueWith": "Continuer avec"
+    "continueWith": "Continuer avec",
+    "loginPage": {
+      "eyebrow": "Bon retour",
+      "title": "Connexion à votre compte",
+      "subtitle": "Accédez à vos commandes, adresses et factures en quelques clics."
+    },
+    "registerPage": {
+      "eyebrow": "Nouveau compte",
+      "title": "Créer votre compte",
+      "subtitle": "Rejoignez Althea Systems et profitez d'un accès complet au catalogue, de tarifs professionnels et d'un historique de commandes détaillé."
+    }
+  },
+  "checkout": {
+    "page": {
+      "eyebrow": "Paiement sécurisé",
+      "title": "Finalisez votre commande",
+      "subtitle": "Quatre étapes simples : authentification, adresse, paiement et confirmation."
+    }
+  },
+  "contactPage": {
+    "hero": {
+      "eyebrow": "Parlons de votre projet",
+      "title": "Un interlocuteur dédié, <em>pas un formulaire</em> anonyme.",
+      "subtitle": "Cabinet, clinique, centre de soins ou hôpital : notre équipe commerciale vous accompagne pour équiper vos espaces avec les meilleures solutions du marché."
+    },
+    "reach": {
+      "eyebrow": "Nous joindre",
+      "title": "Trois façons d'entrer en contact.",
+      "subtitle": "Choisissez le canal qui vous convient — nous garantissons une réponse humaine, jamais automatisée."
+    },
+    "methods": {
+      "phone": {
+        "label": "Téléphone",
+        "detail": "Lundi au vendredi · 9h à 18h"
+      },
+      "emailSales": {
+        "label": "Email commercial",
+        "detail": "Réponse sous 24 heures ouvrées"
+      },
+      "support": {
+        "label": "Support client",
+        "detail": "Questions livraison et SAV"
+      }
+    },
+    "headquarters": {
+      "label": "Siège social"
+    },
+    "hours": {
+      "label": "Horaires d'ouverture",
+      "weekdays": "Lundi — Jeudi",
+      "friday": "Vendredi",
+      "weekend": "Samedi — Dimanche",
+      "closed": "Fermé"
+    },
+    "rgpd": {
+      "text": "Vos données sont traitées dans le strict respect du RGPD. Nous ne les partageons jamais avec des tiers.",
+      "linkLabel": "Politique de confidentialité"
+    }
+  },
+  "aboutPage": {
+    "hero": {
+      "eyebrow": "Notre mission",
+      "title": "Équiper les soignants <em>avec l'exigence</em> qu'ils méritent.",
+      "subtitle": "Althea Systems est un distributeur européen d'équipements médicaux indépendant, fondé par des professionnels de santé. Nous sélectionnons, certifions et livrons uniquement ce que nous utiliserions nous-mêmes.",
+      "ctaPrimary": "Découvrir le catalogue",
+      "ctaSecondary": "Parler à un conseiller"
+    }
   },
   "admin": {
     "dashboard": "Tableau de bord",
