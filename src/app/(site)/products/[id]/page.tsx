@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/cart/add-to-cart-button";
+import ShareButtons from "@/components/products/share-buttons";
 import SimilarProducts from "@/components/products/similar-products";
 import StockBadge from "@/components/products/stock-badge";
 import { BreadcrumbJsonLd, ProductJsonLd } from "@/components/seo/json-ld";
@@ -118,20 +119,33 @@ export async function generateMetadata({
     };
   }
 
+  const description =
+    product.description ||
+    `Decouvrez ${product.name} chez Althea Systems. Equipement medical de qualite.`;
+  const productUrl = `${BASE_URL}/products/${product.id}`;
+
   return {
     title: product.name,
-    description:
-      product.description ||
-      `Decouvrez ${product.name} chez Althea Systems. Equipement medical de qualite.`,
+    description,
     openGraph: {
       title: product.name,
-      description: product.description || undefined,
+      description,
       images: product.images.length > 0 ? product.images : undefined,
-      url: `${BASE_URL}/products/${product.id}`,
+      url: productUrl,
       type: "website",
+      siteName: "Althea Systems",
+      locale: "fr_FR",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: product.images.length > 0 ? product.images : undefined,
+      site: "@altheasystems",
+      creator: "@altheasystems",
     },
     alternates: {
-      canonical: `${BASE_URL}/products/${product.id}`,
+      canonical: productUrl,
     },
   };
 }
@@ -205,6 +219,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
               price={product.price}
               image={product.image || undefined}
               disabled={product.stock === 0}
+            />
+          </div>
+
+          <div className="mt-2 border-t pt-5">
+            <ShareButtons
+              url={`${BASE_URL}/products/${product.id}`}
+              title={product.name}
+              description={product.description || undefined}
             />
           </div>
         </div>

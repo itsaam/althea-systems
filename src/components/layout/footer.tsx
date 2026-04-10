@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/shared/logo";
+import SocialLinks from "@/components/shared/social-links";
 import { Mail, MapPin, Phone } from "lucide-react";
 
 export default function Footer() {
@@ -33,6 +34,12 @@ export default function Footer() {
                 <MapPin className="h-4 w-4" />
                 Paris, France
               </p>
+            </div>
+            <div className="mt-6">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/60">
+                Suivez-nous
+              </p>
+              <SocialLinks />
             </div>
           </div>
 
