@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { toast } from "sonner";
 
@@ -20,6 +21,8 @@ import {
 import { ExportButton } from "@/components/admin/export-button";
 
 export default function AdminCreditsPage() {
+  const router = useRouter();
+
   // States
   const [creditNotes, setCreditNotes] = useState<CreditNoteRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,17 +113,17 @@ export default function AdminCreditsPage() {
     fetchCreditNotes();
   }, [fetchCreditNotes]);
 
-  // Handlers
+  // Handlers — credit notes are always attached to an invoice, navigate there
   const handleView = useCallback(
     (id: string) => {
       const credit = creditNotes.find((cn) => cn.id === id);
-      if (credit) {
-        toast.info(
-          `Avoir ${credit.creditNumber} - ${Number(credit.amount).toFixed(2)} EUR - Commande ${credit.order.orderNumber}`
-        );
+      if (credit?.invoiceId) {
+        router.push(`/admin/invoices/${credit.invoiceId}`);
+      } else {
+        toast.info("Cet avoir n'est lié à aucune facture");
       }
     },
-    [creditNotes]
+    [creditNotes, router]
   );
 
   const handleDownload = useCallback(async (id: string) => {
