@@ -136,6 +136,7 @@ model Product {
   priority       Int           @default(0)
   images         String[]
   featured       Boolean       @default(false)
+  featuredOrder  Int?
   status         ProductStatus @default(DRAFT)
   categoryId     String?
   createdAt      DateTime      @default(now())
@@ -143,6 +144,8 @@ model Product {
 
   category   Category?   @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
+
+  @@index([featured, featuredOrder])
 }
 
 model Order {

@@ -37,11 +37,15 @@ export const GET = withApiLogger(async (request: NextRequest) => {
         stock: true,
         images: true,
         featured: true,
+        featuredOrder: true,
         categoryId: true,
         createdAt: true,
         category: { select: { id: true, name: true, slug: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { featuredOrder: { sort: 'asc', nulls: 'last' } },
+        { createdAt: 'desc' },
+      ],
     });
 
     const serializedProducts = products.map((product) => {
