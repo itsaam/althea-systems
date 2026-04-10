@@ -1,13 +1,16 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-import HeroCanvasReveal from "@/components/home/hero-canvas-reveal";
+import Hero from "@/components/home/hero";
+import Ticker from "@/components/home/ticker";
 import CategoriesGrid from "@/components/home/categories-grid";
 import FeaturedProducts from "@/components/home/featured-products";
-import HomeText from "@/components/home/home-text";
+import WhyAlthea from "@/components/home/why-althea";
+import StatsBand from "@/components/home/stats-band";
+import CtaFinal from "@/components/home/cta-final";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = {
-  title: "Althea Systems - Équipement médical de pointe",
+  title: "Althea Systems — Équipement médical de pointe",
 };
 
 async function getCarouselSlides() {
@@ -31,13 +34,16 @@ async function getCarouselSlides() {
 
 export default async function HomePage() {
   const slides = await getCarouselSlides();
-  
+
   return (
     <div className="flex flex-col">
-      <HeroCanvasReveal initialSlides={slides} />
+      <Hero slides={slides} />
+      <Ticker />
       <CategoriesGrid />
       <FeaturedProducts />
-      <HomeText />
+      <WhyAlthea />
+      <StatsBand />
+      <CtaFinal />
     </div>
   );
 }
