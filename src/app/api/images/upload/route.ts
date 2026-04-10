@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { uploadToR2, R2_FOLDERS, type R2Folder } from "@/lib/r2";
-
-const ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/avif",
-];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+import { R2_FOLDERS, type R2Folder } from "@/lib/r2";
+import { validateOptimizeAndUpload } from "@/lib/image-optimization";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,24 +22,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        {
-          error:
-            "Type de fichier non autorise. Utilisez JPG, PNG, WebP, GIF ou AVIF.",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "Fichier trop volumineux. Maximum 5 MB." },
-        { status: 400 }
-      );
-    }
-
-    // Validate folder if provided
     if (folder && !R2_FOLDERS.includes(folder as R2Folder)) {
       return NextResponse.json(
         {
@@ -58,22 +32,31 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadToR2(
+    const validFolder = folder ? (folder as R2Folder) : undefined;
+
+    const result = await validateOptimizeAndUpload(
       buffer,
       file.name,
-      file.type,
-      folder || undefined
+      validFolder
     );
 
     return NextResponse.json({
-      url,
-      size: file.size,
-      contentType: file.type,
+      url: result.url,
+      thumbnailUrl: result.thumbnailUrl,
+      width: result.width,
+      height: result.height,
+      size: result.size,
+      contentType: "image/webp",
       folder: folder || null,
     });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Erreur inconnue";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const isValidation =
+      message.includes("vide") ||
+      message.includes("volumineux") ||
+      message.includes("non reconnu") ||
+      message.includes("invalide");
+    return NextResponse.json({ error: message }, { status: isValidation ? 400 : 500 });
   }
 }
