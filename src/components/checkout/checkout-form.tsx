@@ -1,364 +1,298 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { useCart } from "@/hooks/use-cart";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ShoppingBag } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingBag } from "lucide-react";
+import CheckoutSteps, { CHECKOUT_STEPS } from "./checkout-steps";
+import AuthStep from "./auth-step";
+import AddressForm from "./address-form";
+import PaymentForm from "./payment-form";
+import OrderReview from "./order-review";
+import type { CheckoutAddress, CheckoutMode } from "./types";
 
-interface ShippingAddress {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  country: string;
-}
+const SHIPPING_COST = 10;
+const TAX_RATE = 0.2;
 
 export default function CheckoutForm() {
   const router = useRouter();
-  const { items, total } = useCart();
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState<ShippingAddress>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    postalCode: "",
-    country: "FR",
-  });
+  const { items, total, clearCart } = useCart();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
-  // Redirection si panier vide
-  if (items.length === 0) {
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [completedStep, setCompletedStep] = useState<number>(0);
+  const [mode, setMode] = useState<CheckoutMode | null>(null);
+  const [address, setAddress] = useState<CheckoutAddress | null>(null);
+  const [savedAddressId, setSavedAddressId] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const subtotal = total;
+  const tax = useMemo(
+    () => Math.round(subtotal * TAX_RATE * 100) / 100,
+    [subtotal]
+  );
+  const grandTotal = subtotal + SHIPPING_COST + tax;
+
+  if (!isAuthLoading && items.length === 0) {
     return (
-      <div className="container py-8">
-        <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <ShoppingBag className="h-8 w-8 text-orange-600" />
-              <div>
-                <p className="text-orange-800 font-medium">Votre panier est vide</p>
-                <p className="text-sm text-orange-700">Veuillez ajouter des articles avant de procéder au checkout.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Button
-          onClick={() => router.push("/products")}
-          className="mt-4"
-        >
-          Continuer vos achats
-        </Button>
-      </div>
+      <Card className="border-orange-200 bg-orange-50/40">
+        <CardContent className="flex flex-col items-center gap-4 p-8 text-center sm:flex-row sm:text-left">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+            <ShoppingBag className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-orange-900">
+              Votre panier est vide
+            </p>
+            <p className="mt-1 text-sm text-orange-800/80">
+              Ajoutez des articles avant de procéder au paiement.
+            </p>
+          </div>
+          <Button onClick={() => router.push("/products")}>
+            Continuer vos achats
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.firstName.trim()) newErrors.firstName = "Prénom requis";
-    if (!formData.lastName.trim()) newErrors.lastName = "Nom requis";
-    if (!formData.email.trim()) newErrors.email = "Email requis";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      newErrors.email = "Email invalide";
-    if (!formData.phone.trim()) newErrors.phone = "Téléphone requis";
-    if (!formData.address.trim()) newErrors.address = "Adresse requise";
-    if (!formData.city.trim()) newErrors.city = "Ville requise";
-    if (!formData.postalCode.trim()) newErrors.postalCode = "Code postal requis";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const goTo = (step: number) => {
+    if (step < 1 || step > CHECKOUT_STEPS.length) return;
+    if (step > completedStep + 1) return;
+    setCurrentStep(step);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Effacer l'erreur du champ quand l'utilisateur commence à taper
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+  const handleAuthContinue = (nextMode: CheckoutMode) => {
+    setMode(nextMode);
+    setCompletedStep((s) => Math.max(s, 1));
+    setCurrentStep(2);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddressContinue = (
+    nextAddress: CheckoutAddress,
+    nextSavedId: string | null
+  ) => {
+    setAddress(nextAddress);
+    setSavedAddressId(nextSavedId);
+    setCompletedStep((s) => Math.max(s, 2));
+    setCurrentStep(3);
+  };
 
-    if (!validateForm()) {
-      toast.error("Veuillez corriger les erreurs du formulaire");
+  const handlePaymentContinue = (method: "stripe") => {
+    setPaymentMethod(method);
+    setCompletedStep((s) => Math.max(s, 3));
+    setCurrentStep(4);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!address || !paymentMethod) {
+      toast.error("Veuillez compléter toutes les étapes");
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
-      // Créer la commande (l'API renverra un paymentIntent Stripe)
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          shippingAddress: formData,
-          items: items.map((item) => ({
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-          })),
-          subtotal: total,
-          shipping: 10, // À adapter selon la logique métier
-        }),
-      });
+      if (isAuthenticated && user?.id) {
+        const lineItems = items.map((item) => ({
+          price_data: {
+            currency: "eur",
+            unit_amount: Math.round(item.price * 100),
+            product_data: {
+              name: item.name,
+              metadata: { productId: item.id },
+            },
+          },
+          quantity: item.quantity,
+        }));
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Erreur lors de la création de la commande");
-      }
+        const response = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: lineItems,
+            orderId: `cart-${Date.now()}`,
+          }),
+        });
 
-      const { orderId, clientSecret } = await response.json();
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(
+            error?.error ?? "Impossible de créer la session de paiement"
+          );
+        }
 
-      // Rediriger vers la page de paiement Stripe
-      if (clientSecret) {
-        router.push(
-          `/checkout/payment?orderId=${orderId}&clientSecret=${clientSecret}`
-        );
+        const { url } = await response.json();
+
+        if (url) {
+          toast.success("Redirection vers le paiement sécurisé...");
+          window.location.href = url;
+          return;
+        }
+
+        throw new Error("URL de paiement manquante");
       } else {
-        toast.success("Commande créée! Redirection vers le paiement...");
-        router.push(`/checkout/payment?orderId=${orderId}`);
+        toast.info(
+          "Commande en invité enregistrée. Vous serez recontacté par email."
+        );
+        clearCart();
+        router.push("/checkout/confirmation?guest=1");
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erreur lors de la commande";
+        error instanceof Error ? error.message : "Erreur lors du paiement";
       toast.error(message);
       console.error("Checkout error:", error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const shipping = 10; // À adapter
-  const subtotal = total;
-  const tax = Math.round((subtotal * 0.2) * 100) / 100; // 20% TVA exemple
-  const grandTotal = subtotal + shipping + tax;
-
   return (
-    <div className="grid md:grid-cols-3 gap-8">
-      {/* Formulaire d'adresse */}
-      <div className="md:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Adresse de livraison</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Prénom et Nom */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">Prénom *</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="Jean"
-                    disabled={isLoading}
-                    className={errors.firstName ? "border-red-500" : ""}
-                  />
-                  {errors.firstName && (
-                    <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Nom *</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Dupont"
-                    disabled={isLoading}
-                    className={errors.lastName ? "border-red-500" : ""}
-                  />
-                  {errors.lastName && (
-                    <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>
-                  )}
-                </div>
-              </div>
+    <div className="space-y-8">
+      <Card>
+        <CardContent className="p-6 sm:p-8">
+          <CheckoutSteps
+            currentStep={currentStep}
+            completedStep={completedStep}
+            onStepClick={goTo}
+          />
+        </CardContent>
+      </Card>
 
-              {/* Email */}
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="jean@example.com"
-                  disabled={isLoading}
-                  className={errors.email ? "border-red-500" : ""}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>{CHECKOUT_STEPS[currentStep - 1].label}</CardTitle>
+              <CardDescription>
+                {CHECKOUT_STEPS[currentStep - 1].description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {currentStep === 1 && (
+                <AuthStep
+                  isAuthenticated={isAuthenticated}
+                  userName={user?.name ?? null}
+                  userEmail={user?.email ?? null}
+                  onContinueAuthenticated={() =>
+                    handleAuthContinue("authenticated")
+                  }
+                  onContinueGuest={() => handleAuthContinue("guest")}
                 />
-                {errors.email && (
-                  <p className="text-xs text-red-500 mt-1">{errors.email}</p>
-                )}
-              </div>
+              )}
 
-              {/* Téléphone */}
-              <div>
-                <Label htmlFor="phone">Téléphone *</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="06 12 34 56 78"
-                  disabled={isLoading}
-                  className={errors.phone ? "border-red-500" : ""}
+              {currentStep === 2 && (
+                <AddressForm
+                  initialAddress={address}
+                  initialSavedAddressId={savedAddressId}
+                  isAuthenticated={mode === "authenticated"}
+                  userEmail={user?.email ?? null}
+                  onBack={() => setCurrentStep(1)}
+                  onContinue={handleAddressContinue}
                 />
-                {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
-                )}
-              </div>
+              )}
 
-              {/* Adresse */}
-              <div>
-                <Label htmlFor="address">Adresse *</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="123 rue de la Paix"
-                  disabled={isLoading}
-                  className={errors.address ? "border-red-500" : ""}
+              {currentStep === 3 && (
+                <PaymentForm
+                  selected={paymentMethod}
+                  onBack={() => setCurrentStep(2)}
+                  onContinue={handlePaymentContinue}
                 />
-                {errors.address && (
-                  <p className="text-xs text-red-500 mt-1">{errors.address}</p>
-                )}
-              </div>
+              )}
 
-              {/* Ville et Code postal */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="city">Ville *</Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder="Paris"
-                    disabled={isLoading}
-                    className={errors.city ? "border-red-500" : ""}
-                  />
-                  {errors.city && (
-                    <p className="text-xs text-red-500 mt-1">{errors.city}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="postalCode">Code postal *</Label>
-                  <Input
-                    id="postalCode"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    placeholder="75000"
-                    disabled={isLoading}
-                    className={errors.postalCode ? "border-red-500" : ""}
-                  />
-                  {errors.postalCode && (
-                    <p className="text-xs text-red-500 mt-1">{errors.postalCode}</p>
-                  )}
-                </div>
-              </div>
+              {currentStep === 4 && address && (
+                <OrderReview
+                  address={address}
+                  items={items.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                  }))}
+                  subtotal={subtotal}
+                  shipping={SHIPPING_COST}
+                  tax={tax}
+                  total={grandTotal}
+                  isGuest={mode === "guest"}
+                  onEditAddress={() => setCurrentStep(2)}
+                  onEditPayment={() => setCurrentStep(3)}
+                  onConfirm={handleConfirmOrder}
+                  onBack={() => setCurrentStep(3)}
+                  isSubmitting={isSubmitting}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full mt-6"
-                size="lg"
-              >
-                {isLoading ? "Traitement..." : "Passer la commande"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Résumé de commande */}
-      <div>
-        <Card className="sticky top-24">
-          <CardHeader>
-            <CardTitle>Récapitulatif</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Articles */}
-            <div>
-              <h4 className="font-medium mb-3">Articles ({items.length})</h4>
-              <div className="space-y-2">
+        <aside aria-label="Récapitulatif de commande">
+          <Card className="lg:sticky lg:top-24">
+            <CardHeader>
+              <CardTitle className="text-base">Récapitulatif</CardTitle>
+              <CardDescription>
+                {items.length} article{items.length > 1 ? "s" : ""} dans votre
+                panier
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="space-y-3">
                 {items.map((item) => (
-                  <div
+                  <li
                     key={item.id}
-                    className="flex justify-between text-sm text-muted-foreground"
+                    className="flex items-start justify-between gap-3 text-sm"
                   >
-                    <div>
-                      <p className="font-medium text-foreground">{item.name}</p>
-                      <p className="text-xs">Quantité: {item.quantity}</p>
+                    <div className="flex-1">
+                      <p className="font-medium leading-tight">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Qté : {item.quantity}
+                      </p>
                     </div>
-                    <p className="font-medium text-foreground">
+                    <p className="whitespace-nowrap font-medium">
                       {(item.price * item.quantity).toFixed(2)} €
                     </p>
-                  </div>
+                  </li>
                 ))}
-              </div>
-            </div>
+              </ul>
 
-            <Separator />
+              <Separator />
 
-            {/* Totaux */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Sous-total</span>
-                <span>{subtotal.toFixed(2)} €</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Livraison</span>
-                <span>{shipping.toFixed(2)} €</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>TVA (20%)</span>
-                <span>{tax.toFixed(2)} €</span>
-              </div>
-            </div>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Sous-total</dt>
+                  <dd>{subtotal.toFixed(2)} €</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Livraison</dt>
+                  <dd>{SHIPPING_COST.toFixed(2)} €</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">TVA (20 %)</dt>
+                  <dd>{tax.toFixed(2)} €</dd>
+                </div>
+              </dl>
 
-            <Separator />
+              <Separator />
 
-            {/* Total final */}
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>{grandTotal.toFixed(2)} €</span>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span>{grandTotal.toFixed(2)} €</span>
+              </div>
+            </CardContent>
+          </Card>
+        </aside>
       </div>
     </div>
   );
