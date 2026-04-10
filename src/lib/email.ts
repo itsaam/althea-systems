@@ -1,8 +1,10 @@
+import { readFile } from "fs/promises";
 import { Resend } from "resend";
+import { emailLogger } from "@/lib/logger/exports";
 
 // ==================== CONFIGURATION ====================
 
-// Lazy initialization pour éviter les erreurs au build
+// Lazy initialization pour eviter les erreurs au build
 let resendInstance: Resend | null = null;
 
 function getResend(): Resend {
@@ -13,20 +15,30 @@ function getResend(): Resend {
 }
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "Althea Systems";
-// Utiliser NEXTAUTH_URL en priorité (défini en prod), sinon fallback sur localhost
+// Utiliser NEXTAUTH_URL en priorite (defini en prod), sinon fallback sur localhost
 const APP_URL =
   process.env.NEXTAUTH_URL ||
   process.env.NEXT_PUBLIC_APP_URL ||
   "http://localhost:3000";
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 500;
+
 // ==================== TYPES ====================
+
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+}
 
 interface SendEmailParams {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  attachments?: EmailAttachment[];
 }
 
 // ==================== BASE TEMPLATE ====================
@@ -189,23 +201,79 @@ function baseEmailTemplate(content: string, title: string): string {
 `;
 }
 
-// ==================== SEND EMAIL FUNCTION ====================
+// ==================== SEND EMAIL WITH RETRY ====================
 
-export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
-  const { data, error } = await getResend().emails.send({
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+  attachments,
+}: SendEmailParams) {
+  const payload = {
     from: `${APP_NAME} <${FROM_EMAIL}>`,
     to: [to],
     subject,
     html,
     text: text || html.replace(/<[^>]*>/g, ""),
-  });
+    ...(attachments && attachments.length > 0
+      ? {
+          attachments: attachments.map((a) => ({
+            filename: a.filename,
+            content: a.content,
+          })),
+        }
+      : {}),
+  };
 
-  if (error) {
-    console.error("Resend error:", error);
-    throw new Error(error.message);
+  let lastError: unknown = null;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const { data, error } = await getResend().emails.send(payload);
+
+      if (error) {
+        lastError = error;
+        emailLogger.warn(
+          `Resend returned error (attempt ${attempt}/${MAX_RETRIES}) to=${to} subject="${subject}" error="${error.message}"`
+        );
+      } else {
+        emailLogger.info(
+          `Email sent to=${to} subject="${subject}" id=${data?.id ?? "n/a"}${
+            attachments?.length ? ` attachments=${attachments.length}` : ""
+          }`
+        );
+        return data;
+      }
+    } catch (err) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      emailLogger.warn(
+        `Email send threw (attempt ${attempt}/${MAX_RETRIES}) to=${to} subject="${subject}" error="${msg}"`
+      );
+    }
+
+    if (attempt < MAX_RETRIES) {
+      const backoff = INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1);
+      await sleep(backoff);
+    }
   }
 
-  return data;
+  const finalMsg =
+    lastError instanceof Error
+      ? lastError.message
+      : typeof lastError === "object" && lastError !== null && "message" in lastError
+        ? String((lastError as { message: unknown }).message)
+        : String(lastError);
+
+  emailLogger.error(
+    `Email send failed after ${MAX_RETRIES} attempts to=${to} subject="${subject}" error="${finalMsg}"`
+  );
+  throw new Error(`Email send failed: ${finalMsg}`);
 }
 
 // ==================== EMAIL TEMPLATES ====================
@@ -422,5 +490,126 @@ export async function send2FACodeEmail(email: string, code: string) {
     to: email,
     subject: `Votre code de vérification - ${APP_NAME}`,
     html: baseEmailTemplate(content, "Code de vérification"),
+  });
+}
+
+// ==================== INVOICE EMAIL (PDF attached) ====================
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  PENDING: "En attente",
+  PROCESSING: "En cours de traitement",
+  SHIPPED: "Expédiée",
+  DELIVERED: "Livrée",
+  CANCELLED: "Annulée",
+  REFUNDED: "Remboursée",
+};
+
+export async function sendInvoiceEmail(
+  email: string,
+  invoiceNumber: string,
+  pdfBuffer: Buffer,
+  orderId?: string
+) {
+  const orderLink = orderId
+    ? `<p style="text-align: center;"><a href="${APP_URL}/orders/${orderId}" class="button">Voir ma commande</a></p>`
+    : "";
+
+  const content = `
+    <h2>Votre facture ${invoiceNumber}</h2>
+    <p>Bonjour,</p>
+    <p>Vous trouverez ci-joint la facture <strong>${invoiceNumber}</strong> correspondant à votre commande.</p>
+    <div class="info-box">
+      <p>Conservez ce document : il vous sera utile en cas de retour ou de garantie.</p>
+    </div>
+    ${orderLink}
+    <p>Pour toute question concernant cette facture, n'hésitez pas à nous contacter.</p>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: `Facture ${invoiceNumber} - ${APP_NAME}`,
+    html: baseEmailTemplate(content, `Facture ${invoiceNumber}`),
+    attachments: [
+      {
+        filename: `${invoiceNumber}.pdf`,
+        content: pdfBuffer,
+      },
+    ],
+  });
+}
+
+// ==================== ORDER STATUS CHANGE ====================
+
+export async function sendOrderStatusChangeEmail(
+  email: string,
+  orderId: string,
+  newStatus: string,
+  previousStatus?: string
+) {
+  const orderUrl = `${APP_URL}/orders/${orderId}`;
+  const newLabel = ORDER_STATUS_LABELS[newStatus] ?? newStatus;
+  const prevLabel = previousStatus
+    ? ORDER_STATUS_LABELS[previousStatus] ?? previousStatus
+    : null;
+
+  const transition = prevLabel
+    ? `<p>Le statut de votre commande <strong>#${orderId}</strong> est passé de <strong>${prevLabel}</strong> à <strong>${newLabel}</strong>.</p>`
+    : `<p>Le statut de votre commande <strong>#${orderId}</strong> est maintenant : <strong>${newLabel}</strong>.</p>`;
+
+  const content = `
+    <h2>Mise à jour de votre commande</h2>
+    ${transition}
+    <p style="text-align: center;">
+      <a href="${orderUrl}" class="button">Voir ma commande</a>
+    </p>
+    <div class="info-box">
+      <p>Retrouvez l'historique complet de votre commande depuis votre espace client.</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: `Commande #${orderId} : ${newLabel} - ${APP_NAME}`,
+    html: baseEmailTemplate(content, "Mise à jour commande"),
+  });
+}
+
+// ==================== CREDIT NOTE EMAIL ====================
+
+export async function sendCreditNoteEmail(
+  email: string,
+  creditNumber: string,
+  pdfSource: Buffer | { path: string },
+  orderId?: string
+) {
+  const pdfBuffer = Buffer.isBuffer(pdfSource)
+    ? pdfSource
+    : await readFile(pdfSource.path);
+
+  const orderLink = orderId
+    ? `<p style="text-align: center;"><a href="${APP_URL}/orders/${orderId}" class="button">Voir ma commande</a></p>`
+    : "";
+
+  const content = `
+    <h2>Avoir ${creditNumber}</h2>
+    <p>Bonjour,</p>
+    <p>Un avoir a été généré pour votre commande. Vous trouverez ci-joint le document <strong>${creditNumber}</strong>.</p>
+    <div class="info-box">
+      <p>Cet avoir annule ou complète la facture correspondante. Conservez-le avec vos justificatifs comptables.</p>
+    </div>
+    ${orderLink}
+    <p>Pour toute question sur cet avoir, notre équipe reste à votre disposition.</p>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: `Avoir ${creditNumber} - ${APP_NAME}`,
+    html: baseEmailTemplate(content, `Avoir ${creditNumber}`),
+    attachments: [
+      {
+        filename: `${creditNumber}.pdf`,
+        content: pdfBuffer,
+      },
+    ],
   });
 }
