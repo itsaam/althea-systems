@@ -4,14 +4,19 @@
     "categories": "Catégories",
     "products": "Produits",
     "cart": "Panier",
+    "cartEmpty": "Panier, vide",
+    "cartWithCount": "Panier, {count, plural, =0 {vide} one {# article} other {# articles}}",
     "account": "Mon compte",
     "login": "Connexion",
-    "register": "Inscription",
+    "register": "S'inscrire",
     "logout": "Déconnexion",
     "search": "Rechercher",
+    "openSearch": "Ouvrir la recherche",
+    "closeSearch": "Fermer la recherche",
     "contact": "Contact",
     "about": "À propos",
-    "loading": "Chargement...",
+    "loading": "Chargement…",
+    "loadingSession": "Chargement de la session",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
@@ -21,7 +26,45 @@
     "next": "Suivant",
     "previous": "Précédent",
     "confirm": "Confirmer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "language": "Langue",
+    "myProfile": "Mon profil",
+    "myOrders": "Mes commandes",
+    "administration": "Administration",
+    "userMenu": "Menu utilisateur",
+    "userMenuNamed": "Menu utilisateur de {name}",
+    "skipToContent": "Aller au contenu principal"
+  },
+  "nav": {
+    "home": "Accueil",
+    "categories": "Catégories",
+    "products": "Nos produits",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Équipement médical nouvelle génération",
+      "title": "La précision au service du soin.",
+      "titleAccent": "Au service du soin.",
+      "subtitle": "Althea Systems fournit les professionnels de santé en équipements médicaux haut de gamme, sélectionnés pour leur fiabilité clinique et leur ergonomie.",
+      "ctaPrimary": "Découvrir le catalogue",
+      "ctaSecondary": "Parler à un expert",
+      "badge": "Certifié CE — Classe IIa"
+    },
+    "featured": {
+      "eyebrow": "Sélection du mois",
+      "title": "Les références plébiscitées par nos clients",
+      "viewAll": "Voir tous les produits"
+    },
+    "categories": {
+      "title": "Explorer par spécialité",
+      "subtitle": "Des dispositifs pensés pour chaque environnement de soin."
+    },
+    "trust": {
+      "title": "La confiance des établissements de santé",
+      "subtitle": "Plus de 1 200 professionnels nous font confiance en France et à l'international."
+    }
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -98,12 +141,19 @@
     "refunded": "Remboursée"
   },
   "footer": {
-    "rights": "Tous droits réservés",
+    "heading": "Pied de page",
+    "tagline": "Votre partenaire de confiance pour l'équipement médical professionnel. Qualité, expertise et service.",
+    "navigation": "Navigation",
+    "account": "Compte",
+    "legalHeading": "Légal",
+    "location": "Paris, France",
+    "rights": "Tous droits réservés.",
     "legal": "Mentions légales",
-    "terms": "CGU",
+    "terms": "Conditions générales",
     "privacy": "Politique de confidentialité",
     "contact": "Contact",
-    "followUs": "Suivez-nous"
+    "followUs": "Suivez-nous",
+    "securePayment": "Paiement sécurisé"
   },
   "errors": {
     "required": "Ce champ est requis",

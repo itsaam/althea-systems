@@ -4,14 +4,19 @@
     "categories": "الفئات",
     "products": "المنتجات",
     "cart": "السلة",
+    "cartEmpty": "السلة، فارغة",
+    "cartWithCount": "السلة، {count, plural, =0 {فارغة} one {# عنصر} other {# عناصر}}",
     "account": "حسابي",
     "login": "تسجيل الدخول",
-    "register": "التسجيل",
+    "register": "إنشاء حساب",
     "logout": "تسجيل الخروج",
     "search": "بحث",
+    "openSearch": "فتح البحث",
+    "closeSearch": "إغلاق البحث",
     "contact": "اتصل بنا",
-    "about": "عنا",
-    "loading": "جاري التحميل...",
+    "about": "من نحن",
+    "loading": "جاري التحميل…",
+    "loadingSession": "جاري تحميل الجلسة",
     "save": "حفظ",
     "cancel": "إلغاء",
     "delete": "حذف",
@@ -21,7 +26,45 @@
     "next": "التالي",
     "previous": "السابق",
     "confirm": "تأكيد",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "language": "اللغة",
+    "myProfile": "ملفي الشخصي",
+    "myOrders": "طلباتي",
+    "administration": "الإدارة",
+    "userMenu": "قائمة المستخدم",
+    "userMenuNamed": "قائمة المستخدم {name}",
+    "skipToContent": "تخطي إلى المحتوى الرئيسي"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "categories": "الفئات",
+    "products": "منتجاتنا",
+    "about": "من نحن",
+    "contact": "اتصل بنا"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "معدات طبية من الجيل الجديد",
+      "title": "الدقة في خدمة الرعاية.",
+      "titleAccent": "في خدمة الرعاية.",
+      "subtitle": "تزود Althea Systems متخصصي الرعاية الصحية بمعدات طبية فاخرة، مختارة لموثوقيتها السريرية وتصميمها المريح.",
+      "ctaPrimary": "استكشف الكتالوج",
+      "ctaSecondary": "تحدث إلى خبير",
+      "badge": "معتمد CE — الفئة IIa"
+    },
+    "featured": {
+      "eyebrow": "مختارات الشهر",
+      "title": "المراجع التي يثق بها عملاؤنا",
+      "viewAll": "عرض كل المنتجات"
+    },
+    "categories": {
+      "title": "استكشف حسب التخصص",
+      "subtitle": "أجهزة مصممة لكل بيئة رعاية."
+    },
+    "trust": {
+      "title": "ثقة المؤسسات الصحية",
+      "subtitle": "أكثر من 1200 متخصص يثقون بنا في فرنسا ودولياً."
+    }
   },
   "product": {
     "addToCart": "أضف إلى السلة",
@@ -98,12 +141,19 @@
     "refunded": "مسترد"
   },
   "footer": {
-    "rights": "جميع الحقوق محفوظة",
+    "heading": "تذييل الصفحة",
+    "tagline": "شريككم الموثوق للمعدات الطبية الاحترافية. جودة وخبرة وخدمة.",
+    "navigation": "التنقل",
+    "account": "الحساب",
+    "legalHeading": "قانوني",
+    "location": "باريس، فرنسا",
+    "rights": "جميع الحقوق محفوظة.",
     "legal": "الإشعار القانوني",
     "terms": "شروط الخدمة",
     "privacy": "سياسة الخصوصية",
     "contact": "اتصل بنا",
-    "followUs": "تابعنا"
+    "followUs": "تابعنا",
+    "securePayment": "دفع آمن"
   },
   "errors": {
     "required": "هذا الحقل مطلوب",

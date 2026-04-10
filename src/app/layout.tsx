@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif, Noto_Sans_Arabic } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import SessionProvider from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
 import CookieBanner from "@/components/cookie-banner";
+import { getDirection } from "@/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,6 +16,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const notoArabic = Noto_Sans_Arabic({
+  variable: "--font-noto-arabic",
+  subsets: ["arabic"],
+  display: "swap",
 });
 
 const instrumentSerif = Instrument_Serif({
@@ -84,21 +93,27 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const dir = getDirection(locale);
+
   return (
-    <html lang="fr">
+    <html lang={locale} dir={dir}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${notoArabic.variable} ${instrumentSerif.variable} antialiased`}
       >
-        <SessionProvider>
-          {children}
-          <CookieBanner />
-          <Toaster />
-        </SessionProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <SessionProvider>
+            {children}
+            <CookieBanner />
+            <Toaster />
+          </SessionProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

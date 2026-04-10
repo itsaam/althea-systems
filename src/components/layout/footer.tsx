@@ -1,16 +1,21 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import Logo from "@/components/shared/logo";
 import SocialLinks from "@/components/shared/social-links";
 import { Mail, MapPin, Phone } from "lucide-react";
 
-export default function Footer() {
+export default async function Footer() {
+  const tFooter = await getTranslations("footer");
+  const tNav = await getTranslations("nav");
+  const tCommon = await getTranslations("common");
+
   return (
     <footer
       className="border-t bg-[#003d5c] text-white"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
-        Pied de page
+        {tFooter("heading")}
       </h2>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
@@ -18,8 +23,7 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <Logo />
             <p className="mt-4 text-sm text-white/85 leading-relaxed">
-              Votre partenaire de confiance pour l&apos;équipement médical
-              professionnel. Qualité, expertise et service.
+              {tFooter("tagline")}
             </p>
             <address className="mt-6 space-y-3 not-italic">
               <a
@@ -38,7 +42,7 @@ export default function Footer() {
               </a>
               <p className="flex items-center gap-2 text-sm text-white/85">
                 <MapPin className="h-4 w-4" aria-hidden="true" />
-                Paris, France
+                {tFooter("location")}
               </p>
             </address>
             <div className="mt-6">
@@ -46,7 +50,7 @@ export default function Footer() {
                 id="footer-social-heading"
                 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/75"
               >
-                Suivez-nous
+                {tFooter("followUs")}
               </p>
               <SocialLinks />
             </div>
@@ -58,7 +62,7 @@ export default function Footer() {
               id="footer-nav-heading"
               className="font-semibold mb-4 text-white"
             >
-              Navigation
+              {tFooter("navigation")}
             </h3>
             <ul className="space-y-3">
               <li>
@@ -66,7 +70,7 @@ export default function Footer() {
                   href="/categories"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  Catégories
+                  {tNav("categories")}
                 </Link>
               </li>
               <li>
@@ -74,7 +78,7 @@ export default function Footer() {
                   href="/about"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  À propos
+                  {tNav("about")}
                 </Link>
               </li>
               <li>
@@ -82,7 +86,7 @@ export default function Footer() {
                   href="/contact"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  Contact
+                  {tNav("contact")}
                 </Link>
               </li>
             </ul>
@@ -94,7 +98,7 @@ export default function Footer() {
               id="footer-account-heading"
               className="font-semibold mb-4 text-white"
             >
-              Compte
+              {tFooter("account")}
             </h3>
             <ul className="space-y-3">
               <li>
@@ -102,7 +106,7 @@ export default function Footer() {
                   href="/login"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  Connexion
+                  {tCommon("login")}
                 </Link>
               </li>
               <li>
@@ -110,7 +114,7 @@ export default function Footer() {
                   href="/register"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  Inscription
+                  {tCommon("register")}
                 </Link>
               </li>
               <li>
@@ -118,7 +122,7 @@ export default function Footer() {
                   href="/orders"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  Mes commandes
+                  {tCommon("myOrders")}
                 </Link>
               </li>
             </ul>
@@ -130,7 +134,7 @@ export default function Footer() {
               id="footer-legal-heading"
               className="font-semibold mb-4 text-white"
             >
-              Légal
+              {tFooter("legalHeading")}
             </h3>
             <ul className="space-y-3">
               <li>
@@ -138,7 +142,7 @@ export default function Footer() {
                   href="/cgu"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  Conditions générales
+                  {tFooter("terms")}
                 </Link>
               </li>
               <li>
@@ -146,7 +150,7 @@ export default function Footer() {
                   href="/mentions-legales"
                   className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
                 >
-                  Mentions légales
+                  {tFooter("legal")}
                 </Link>
               </li>
             </ul>
@@ -156,10 +160,12 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-16 pt-8 border-t border-white/15 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-white/85">
-            © {new Date().getFullYear()} Althea Systems. Tous droits réservés.
+            © {new Date().getFullYear()} Althea Systems. {tFooter("rights")}
           </p>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-white/75">Paiement sécurisé</span>
+            <span className="text-xs text-white/75">
+              {tFooter("securePayment")}
+            </span>
             <div className="flex items-center gap-2" aria-hidden="true">
               <div className="h-6 w-10 rounded bg-white/15 flex items-center justify-center text-[10px] font-medium text-white/85">
                 VISA

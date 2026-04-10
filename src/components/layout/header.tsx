@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import Logo from "@/components/shared/logo";
 import SearchBar from "@/components/shared/search-bar";
 import MobileMenu from "@/components/layout/mobile-menu";
+import LanguageSwitcher from "@/components/layout/language-switcher";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,16 +30,18 @@ import { useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 
 const NAV_LINKS = [
-  { href: "/categories", label: "Catégories" },
-  { href: "/about", label: "À propos" },
-  { href: "/contact", label: "Contact" },
-];
+  { href: "/categories", key: "categories" },
+  { href: "/about", key: "about" },
+  { href: "/contact", key: "contact" },
+] as const;
 
 export default function Header() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const { itemCount } = useCart();
+  const tCommon = useTranslations("common");
+  const tNav = useTranslations("nav");
 
   const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -71,7 +75,7 @@ export default function Header() {
                 aria-current={isActive(link.href) ? "page" : undefined}
                 className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:font-semibold transition-colors duration-200 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                {link.label}
+                {tNav(link.key)}
               </Link>
             ))}
           </nav>
@@ -82,7 +86,7 @@ export default function Header() {
               size="icon"
               className="hidden md:flex h-9 w-9 text-foreground/70 hover:text-foreground"
               onClick={() => setSearchOpen((v) => !v)}
-              aria-label={searchOpen ? "Fermer la recherche" : "Ouvrir la recherche"}
+              aria-label={searchOpen ? tCommon("closeSearch") : tCommon("openSearch")}
               aria-expanded={searchOpen}
               aria-controls="site-search"
             >
@@ -99,8 +103,8 @@ export default function Header() {
                 href="/cart"
                 aria-label={
                   itemCount > 0
-                    ? `Panier, ${itemCount} article${itemCount > 1 ? "s" : ""}`
-                    : "Panier, vide"
+                    ? tCommon("cartWithCount", { count: itemCount })
+                    : tCommon("cartEmpty")
                 }
               >
                 <ShoppingBag className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -119,7 +123,7 @@ export default function Header() {
               <div
                 className="w-8 h-8 rounded-full bg-muted animate-pulse"
                 role="status"
-                aria-label="Chargement de la session"
+                aria-label={tCommon("loadingSession")}
               />
             ) : session?.user ? (
               <DropdownMenu>
@@ -127,7 +131,11 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     className="relative h-9 w-9 rounded-full p-0"
-                    aria-label={`Menu utilisateur${session.user.name ? ` de ${session.user.name}` : ""}`}
+                    aria-label={
+                      session.user.name
+                        ? tCommon("userMenuNamed", { name: session.user.name })
+                        : tCommon("userMenu")
+                    }
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage
@@ -162,7 +170,7 @@ export default function Header() {
                       className="cursor-pointer flex items-center"
                     >
                       <User className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Mon profil
+                      {tCommon("myProfile")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -171,7 +179,7 @@ export default function Header() {
                       className="cursor-pointer flex items-center"
                     >
                       <Package className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Mes commandes
+                      {tCommon("myOrders")}
                     </Link>
                   </DropdownMenuItem>
                   {session.user.role === "ADMIN" && (
@@ -183,7 +191,7 @@ export default function Header() {
                           className="cursor-pointer flex items-center"
                         >
                           <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
-                          Administration
+                          {tCommon("administration")}
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -194,7 +202,7 @@ export default function Header() {
                     onClick={() => signOut({ callbackUrl: "/" })}
                   >
                     <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Déconnexion
+                    {tCommon("logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -206,16 +214,18 @@ export default function Header() {
                     size="sm"
                     className="text-foreground/70 hover:text-foreground"
                   >
-                    Connexion
+                    {tCommon("login")}
                   </Button>
                 </Link>
                 <Link href="/register">
                   <Button size="sm" className="rounded-full px-4">
-                    S&apos;inscrire
+                    {tCommon("register")}
                   </Button>
                 </Link>
               </div>
             )}
+
+            <LanguageSwitcher variant="compact" />
 
             <MobileMenu />
           </div>
