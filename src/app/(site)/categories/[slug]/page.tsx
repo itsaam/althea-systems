@@ -69,13 +69,30 @@ export async function generateMetadata({
     return { title: "Categorie non trouvee" };
   }
 
+  const description =
+    category.description ||
+    `Decouvrez nos equipements medicaux dans la categorie ${category.name}.`;
+  const canonical = `/categories/${category.slug}`;
+
   return {
     title: `${category.name} - Equipements medicaux`,
-    description:
-      category.description ||
-      `Decouvrez nos equipements medicaux dans la categorie ${category.name}.`,
+    description,
+    openGraph: {
+      title: `${category.name} - Althea Systems`,
+      description,
+      url: canonical,
+      type: "website",
+      siteName: "Althea Systems",
+      locale: "fr_FR",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${category.name} - Althea Systems`,
+      description,
+      site: "@altheasystems",
+    },
     alternates: {
-      canonical: `/categories/${category.slug}`,
+      canonical,
     },
   };
 }
