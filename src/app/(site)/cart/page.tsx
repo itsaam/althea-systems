@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import CartItem from "@/components/cart/cart-item";
 import CartSummary from "@/components/cart/cart-summary";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ const SHIPPING_COST = 9.9;
 export default function CartPage() {
   const router = useRouter();
   const { items, total, itemCount, removeItem, updateQuantity, clearCart } = useCart();
+  const t = useTranslations("cart");
 
   const shipping = itemCount > 0 ? SHIPPING_COST : 0;
   const grandTotal = total + shipping;
@@ -23,14 +25,14 @@ export default function CartPage() {
   return (
     <div className="container py-8 md:py-12">
       <h1 className="mb-6 text-2xl font-bold tracking-tight sm:text-3xl md:mb-8 md:text-4xl">
-        Panier
+        {t("title")}
       </h1>
 
       {items.length === 0 ? (
         <div className="text-center py-12 border rounded-lg">
-          <p className="text-muted-foreground mb-4">Votre panier est vide.</p>
+          <p className="text-muted-foreground mb-4">{t("empty")}</p>
           <Button asChild>
-            <Link href="/">Continuer vos achats</Link>
+            <Link href="/">{t("continueShopping")}</Link>
           </Button>
         </div>
       ) : (
@@ -38,10 +40,10 @@ export default function CartPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">
-                {itemCount} article{itemCount > 1 ? "s" : ""}
+                {t("itemCount", { count: itemCount })}
               </p>
               <Button variant="ghost" onClick={clearCart}>
-                Vider le panier
+                {t("clear")}
               </Button>
             </div>
 
@@ -79,7 +81,7 @@ export default function CartPage() {
               subtotal={total}
               shipping={shipping}
               total={grandTotal}
-              actionLabel="Passer au checkout"
+              actionLabel={t("proceedToCheckout")}
               onActionClick={handleCheckout}
             />
           </div>

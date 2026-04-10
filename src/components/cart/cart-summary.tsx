@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,37 +24,42 @@ export default function CartSummary({
   subtotal,
   shipping,
   total,
-  actionLabel = "Passer la commande",
+  actionLabel,
   actionDisabled = false,
   onActionClick,
 }: CartSummaryProps) {
+  const t = useTranslations("cart");
+  const label = actionLabel ?? t("placeOrder");
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Résumé</CardTitle>
+        <CardTitle>{t("summary")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between">
-          <span>Sous-total</span>
+          <span>{t("subtotal")}</span>
           <span>{subtotal.toFixed(2)} €</span>
         </div>
         <div className="flex justify-between">
-          <span>Livraison</span>
-          <span>{shipping === 0 ? "Gratuit" : `${shipping.toFixed(2)} €`}</span>
+          <span>{t("shipping")}</span>
+          <span>
+            {shipping === 0 ? t("free") : `${shipping.toFixed(2)} €`}
+          </span>
         </div>
         <Separator />
         <div className="flex justify-between font-bold text-lg">
-          <span>Total</span>
+          <span>{t("total")}</span>
           <span>{total.toFixed(2)} €</span>
         </div>
       </CardContent>
       <CardFooter>
-        <Button 
-          className="w-full" 
+        <Button
+          className="w-full"
           disabled={actionDisabled}
           onClick={onActionClick}
         >
-          {actionLabel}
+          {label}
         </Button>
       </CardFooter>
     </Card>

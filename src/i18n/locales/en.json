@@ -83,11 +83,21 @@
     "empty": "Your cart is empty",
     "subtotal": "Subtotal",
     "shipping": "Shipping",
+    "free": "Free",
     "total": "Total",
+    "summary": "Summary",
     "checkout": "Checkout",
+    "proceedToCheckout": "Proceed to checkout",
+    "placeOrder": "Place order",
     "continueShopping": "Continue shopping",
+    "clear": "Clear cart",
+    "remove": "Remove",
     "removeItem": "Remove from cart",
-    "updateQuantity": "Update quantity"
+    "removeItemNamed": "Remove {name} from cart",
+    "updateQuantity": "Update quantity",
+    "increaseQuantity": "Increase quantity of {name}",
+    "decreaseQuantity": "Decrease quantity of {name}",
+    "itemCount": "{count, plural, =0 {no items} one {# item} other {# items}}"
   },
   "auth": {
     "email": "Email",
@@ -107,7 +117,73 @@
     "twoFactorTitle": "Two-factor authentication",
     "twoFactorCode": "Verification code",
     "twoFactorSetup": "Set up 2FA",
-    "continueWith": "Continue with"
+    "continueWith": "Continue with",
+    "loginPage": {
+      "eyebrow": "Welcome back",
+      "title": "Sign in to your account",
+      "subtitle": "Access your orders, addresses and invoices in just a few clicks."
+    },
+    "registerPage": {
+      "eyebrow": "New account",
+      "title": "Create your account",
+      "subtitle": "Join Althea Systems and enjoy full catalog access, professional pricing and a detailed order history."
+    }
+  },
+  "checkout": {
+    "page": {
+      "eyebrow": "Secure payment",
+      "title": "Complete your order",
+      "subtitle": "Four simple steps: authentication, address, payment and confirmation."
+    }
+  },
+  "contactPage": {
+    "hero": {
+      "eyebrow": "Let's talk about your project",
+      "title": "A dedicated contact, <em>not an anonymous</em> form.",
+      "subtitle": "Practice, clinic, care center or hospital: our sales team helps you equip your spaces with the best solutions on the market."
+    },
+    "reach": {
+      "eyebrow": "Reach us",
+      "title": "Three ways to get in touch.",
+      "subtitle": "Choose the channel that suits you — we guarantee a human response, never automated."
+    },
+    "methods": {
+      "phone": {
+        "label": "Phone",
+        "detail": "Monday to Friday · 9am to 6pm"
+      },
+      "emailSales": {
+        "label": "Sales email",
+        "detail": "Reply within 24 business hours"
+      },
+      "support": {
+        "label": "Customer support",
+        "detail": "Shipping questions and after-sales"
+      }
+    },
+    "headquarters": {
+      "label": "Headquarters"
+    },
+    "hours": {
+      "label": "Opening hours",
+      "weekdays": "Monday — Thursday",
+      "friday": "Friday",
+      "weekend": "Saturday — Sunday",
+      "closed": "Closed"
+    },
+    "rgpd": {
+      "text": "Your data is processed in strict compliance with GDPR. We never share it with third parties.",
+      "linkLabel": "Privacy policy"
+    }
+  },
+  "aboutPage": {
+    "hero": {
+      "eyebrow": "Our mission",
+      "title": "Equipping caregivers <em>with the standards</em> they deserve.",
+      "subtitle": "Althea Systems is an independent European distributor of medical equipment, founded by healthcare professionals. We select, certify and deliver only what we would use ourselves.",
+      "ctaPrimary": "Browse the catalog",
+      "ctaSecondary": "Talk to an advisor"
+    }
   },
   "admin": {
     "dashboard": "Dashboard",

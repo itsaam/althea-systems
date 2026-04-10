@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,6 +25,8 @@ export default function CartItem({
   onDecrease,
   onRemove,
 }: CartItemProps) {
+  const t = useTranslations("cart");
+
   return (
     <div className="flex flex-col gap-4 border-b py-4 sm:flex-row sm:items-start sm:gap-5">
       <div className="flex gap-4 sm:contents">
@@ -49,7 +54,7 @@ export default function CartItem({
               size="icon"
               className="h-8 w-8 rounded-none rounded-l-md"
               onClick={() => onDecrease(id)}
-              aria-label={`Diminuer la quantité de ${name}`}
+              aria-label={t("decreaseQuantity", { name })}
             >
               <Minus className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
@@ -65,7 +70,7 @@ export default function CartItem({
               size="icon"
               className="h-8 w-8 rounded-none rounded-r-md"
               onClick={() => onIncrease(id)}
-              aria-label={`Augmenter la quantité de ${name}`}
+              aria-label={t("increaseQuantity", { name })}
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
@@ -83,10 +88,10 @@ export default function CartItem({
           size="sm"
           className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={() => onRemove(id)}
-          aria-label={`Retirer ${name} du panier`}
+          aria-label={t("removeItemNamed", { name })}
         >
           <Trash2 className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
-          <span className="hidden sm:inline">Retirer</span>
+          <span className="hidden sm:inline">{t("remove")}</span>
         </Button>
       </div>
     </div>

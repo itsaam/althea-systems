@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   Clock,
   Mail,
@@ -18,37 +19,39 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-const CONTACT_METHODS = [
-  {
-    icon: Phone,
-    label: "Téléphone",
-    primary: "+33 (0)4 72 00 00 00",
-    detail: "Lundi au vendredi · 9h à 18h",
-    href: "tel:+33472000000",
-  },
-  {
-    icon: Mail,
-    label: "Email commercial",
-    primary: "contact@althea-systems.com",
-    detail: "Réponse sous 24 heures ouvrées",
-    href: "mailto:contact@althea-systems.com",
-  },
-  {
-    icon: MessageCircle,
-    label: "Support client",
-    primary: "support@althea-systems.com",
-    detail: "Questions livraison et SAV",
-    href: "mailto:support@althea-systems.com",
-  },
-] as const;
+export default async function ContactPage() {
+  const t = await getTranslations("contactPage");
 
-const HOURS = [
-  { day: "Lundi — Jeudi", value: "9h00 — 18h00" },
-  { day: "Vendredi", value: "9h00 — 17h00" },
-  { day: "Samedi — Dimanche", value: "Fermé" },
-];
+  const contactMethods = [
+    {
+      icon: Phone,
+      label: t("methods.phone.label"),
+      primary: "+33 (0)4 72 00 00 00",
+      detail: t("methods.phone.detail"),
+      href: "tel:+33472000000",
+    },
+    {
+      icon: Mail,
+      label: t("methods.emailSales.label"),
+      primary: "contact@althea-systems.com",
+      detail: t("methods.emailSales.detail"),
+      href: "mailto:contact@althea-systems.com",
+    },
+    {
+      icon: MessageCircle,
+      label: t("methods.support.label"),
+      primary: "support@althea-systems.com",
+      detail: t("methods.support.detail"),
+      href: "mailto:support@althea-systems.com",
+    },
+  ] as const;
 
-export default function ContactPage() {
+  const hours = [
+    { day: t("hours.weekdays"), value: "9h00 — 18h00" },
+    { day: t("hours.friday"), value: "9h00 — 17h00" },
+    { day: t("hours.weekend"), value: t("hours.closed") },
+  ];
+
   return (
     <div>
       <section className="relative overflow-hidden border-b bg-[#003d5c] text-white">
@@ -69,17 +72,17 @@ export default function ContactPage() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur">
               <Sparkles className="h-3 w-3" aria-hidden="true" />
-              Parlons de votre projet
+              {t("hero.eyebrow")}
             </div>
             <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-              Un interlocuteur dédié,{" "}
-              <span className="italic text-white/80">pas un formulaire</span>{" "}
-              anonyme.
+              {t.rich("hero.title", {
+                em: (chunks) => (
+                  <span className="italic text-white/80">{chunks}</span>
+                ),
+              })}
             </h1>
             <p className="mt-5 max-w-xl text-base text-white/70 md:text-lg">
-              Cabinet, clinique, centre de soins ou hôpital : notre équipe
-              commerciale vous accompagne pour équiper vos espaces avec les
-              meilleures solutions du marché.
+              {t("hero.subtitle")}
             </p>
           </div>
         </div>
@@ -90,19 +93,18 @@ export default function ContactPage() {
           <aside className="space-y-10">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                Nous joindre
+                {t("reach.eyebrow")}
               </p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
-                Trois façons d&apos;entrer en contact.
+                {t("reach.title")}
               </h2>
               <p className="mt-3 text-sm text-muted-foreground">
-                Choisissez le canal qui vous convient — nous garantissons une
-                réponse humaine, jamais automatisée.
+                {t("reach.subtitle")}
               </p>
             </div>
 
             <ul className="space-y-4">
-              {CONTACT_METHODS.map((method) => {
+              {contactMethods.map((method) => {
                 const Icon = method.icon;
                 return (
                   <li key={method.label}>
@@ -137,7 +139,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Siège social
+                    {t("headquarters.label")}
                   </p>
                   <p className="mt-1 text-sm font-semibold leading-relaxed">
                     Althea Systems SAS
@@ -157,11 +159,11 @@ export default function ContactPage() {
                   aria-hidden="true"
                 />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Horaires d&apos;ouverture
+                  {t("hours.label")}
                 </p>
               </div>
               <dl className="space-y-1.5 text-sm">
-                {HOURS.map((row) => (
+                {hours.map((row) => (
                   <div
                     key={row.day}
                     className="flex items-baseline justify-between gap-4"
@@ -179,13 +181,12 @@ export default function ContactPage() {
                 aria-hidden="true"
               />
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Vos données sont traitées dans le strict respect du RGPD. Nous
-                ne les partageons jamais avec des tiers.{" "}
+                {t("rgpd.text")}{" "}
                 <Link
                   href="/legal/privacy"
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Politique de confidentialité
+                  {t("rgpd.linkLabel")}
                 </Link>
                 .
               </p>
