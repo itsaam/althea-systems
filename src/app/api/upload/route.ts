@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { uploadToR2 } from "@/lib/r2";
+import { R2_FOLDERS, type R2Folder } from "@/lib/r2";
 import { uploadLogger, LogMessages } from "@/lib/logger/exports";
+import { validateOptimizeAndUpload } from "@/lib/image-optimization";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,38 +31,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier le type de fichier
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Type de fichier non autorisé. Utilisez JPG, PNG, WebP ou GIF." },
-        { status: 400 }
-      );
-    }
-
-    // Limite de taille (5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "Fichier trop volumineux. Maximum 5MB." },
-        { status: 400 }
-      );
-    }
+    const validFolder =
+      folder && R2_FOLDERS.includes(folder as R2Folder)
+        ? (folder as R2Folder)
+        : undefined;
 
     const buffer = Buffer.from(await file.arrayBuffer());
     uploadLogger.info(LogMessages.upload.debutUpload(file.name, file.size));
-    
-    const url = await uploadToR2(buffer, file.name, file.type, folder || undefined);
-    
+
+    const result = await validateOptimizeAndUpload(
+      buffer,
+      file.name,
+      validFolder
+    );
+
     uploadLogger.info(LogMessages.upload.uploadReussi(file.name));
-    return NextResponse.json({ url });
+    return NextResponse.json({
+      url: result.url,
+      thumbnailUrl: result.thumbnailUrl,
+      width: result.width,
+      height: result.height,
+      size: result.size,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erreur inconnue";
     uploadLogger.error(LogMessages.upload.uploadEchoue("unknown", message));
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const isValidation =
+      message.includes("vide") ||
+      message.includes("volumineux") ||
+      message.includes("non reconnu") ||
+      message.includes("invalide");
+    return NextResponse.json({ error: message }, { status: isValidation ? 400 : 500 });
   }
 }
-
