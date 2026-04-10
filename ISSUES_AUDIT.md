@@ -11,9 +11,9 @@ de la case cochée dans l'issue GitHub.
 ## Résumé
 
 - Total issues ouvertes: **41**
-- Done (à fermer): **6**
-- Partial (à compléter): **22**
-- Todo (à implémenter): **10**
+- Done (à fermer): **12**
+- Partial (à compléter): **21**
+- Todo (à implémenter): **5**
 - Non-codable (design Figma / charte): **3**
 
 Répartition par label:
