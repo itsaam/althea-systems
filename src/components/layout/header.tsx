@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Logo from "@/components/shared/logo";
 import SearchBar from "@/components/shared/search-bar";
@@ -26,8 +27,15 @@ import {
 import { useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 
+const NAV_LINKS = [
+  { href: "/categories", label: "Catégories" },
+  { href: "/about", label: "À propos" },
+  { href: "/contact", label: "Contact" },
+];
+
 export default function Header() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const { itemCount } = useCart();
 
@@ -41,79 +49,90 @@ export default function Header() {
       .slice(0, 2);
   };
 
+  const isActive = (href: string) =>
+    pathname === href || pathname?.startsWith(`${href}/`);
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo - Gauche */}
           <div className="flex-shrink-0">
             <Logo />
           </div>
 
-          {/* Navigation - Centre */}
-          <nav className="hidden md:flex items-center justify-center gap-1">
-            <Link
-              href="/categories"
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
-            >
-              Catégories
-            </Link>
-            <Link
-              href="/about"
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
-            >
-              À propos
-            </Link>
-            <Link
-              href="/contact"
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
-            >
-              Contact
-            </Link>
+          <nav
+            className="hidden md:flex items-center justify-center gap-1"
+            aria-label="Navigation principale"
+          >
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:font-semibold transition-colors duration-200 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
-          {/* Actions - Droite */}
           <div className="flex items-center gap-1">
-            {/* Search Toggle */}
             <Button
               variant="ghost"
               size="icon"
-              className="hidden md:flex h-9 w-9 text-muted-foreground hover:text-foreground"
-              onClick={() => setSearchOpen(!searchOpen)}
+              className="hidden md:flex h-9 w-9 text-foreground/70 hover:text-foreground"
+              onClick={() => setSearchOpen((v) => !v)}
+              aria-label={searchOpen ? "Fermer la recherche" : "Ouvrir la recherche"}
+              aria-expanded={searchOpen}
+              aria-controls="site-search"
             >
-              <Search className="h-[18px] w-[18px]" />
+              <Search className="h-[18px] w-[18px]" aria-hidden="true" />
             </Button>
 
-            {/* Cart */}
-            <Link href="/cart">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 text-muted-foreground hover:text-foreground relative"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-foreground/70 hover:text-foreground relative"
+              asChild
+            >
+              <Link
+                href="/cart"
+                aria-label={
+                  itemCount > 0
+                    ? `Panier, ${itemCount} article${itemCount > 1 ? "s" : ""}`
+                    : "Panier, vide"
+                }
               >
-                <ShoppingBag className="h-[18px] w-[18px]" />
+                <ShoppingBag className="h-[18px] w-[18px]" aria-hidden="true" />
                 {itemCount > 0 ? (
-                  <span className="absolute -top-1 -right-1 min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] px-1 flex items-center justify-center">
+                  <span
+                    className="absolute -top-1 -right-1 min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] px-1 flex items-center justify-center"
+                    aria-hidden="true"
+                  >
                     {itemCount > 99 ? "99+" : itemCount}
                   </span>
                 ) : null}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            {/* User Menu */}
             {status === "loading" ? (
-              <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+              <div
+                className="w-8 h-8 rounded-full bg-muted animate-pulse"
+                role="status"
+                aria-label="Chargement de la session"
+              />
             ) : session?.user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     className="relative h-9 w-9 rounded-full p-0"
+                    aria-label={`Menu utilisateur${session.user.name ? ` de ${session.user.name}` : ""}`}
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage
                         src={session.user.image || ""}
-                        alt={session.user.name || ""}
+                        alt=""
                       />
                       <AvatarFallback className="text-xs font-medium">
                         {getInitials(session.user.name)}
@@ -142,7 +161,7 @@ export default function Header() {
                       href="/profile"
                       className="cursor-pointer flex items-center"
                     >
-                      <User className="mr-2 h-4 w-4" />
+                      <User className="mr-2 h-4 w-4" aria-hidden="true" />
                       Mon profil
                     </Link>
                   </DropdownMenuItem>
@@ -151,7 +170,7 @@ export default function Header() {
                       href="/orders"
                       className="cursor-pointer flex items-center"
                     >
-                      <Package className="mr-2 h-4 w-4" />
+                      <Package className="mr-2 h-4 w-4" aria-hidden="true" />
                       Mes commandes
                     </Link>
                   </DropdownMenuItem>
@@ -163,7 +182,7 @@ export default function Header() {
                           href="/admin"
                           className="cursor-pointer flex items-center"
                         >
-                          <Settings className="mr-2 h-4 w-4" />
+                          <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
                           Administration
                         </Link>
                       </DropdownMenuItem>
@@ -174,7 +193,7 @@ export default function Header() {
                     className="cursor-pointer text-destructive focus:text-destructive flex items-center"
                     onClick={() => signOut({ callbackUrl: "/" })}
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                     Déconnexion
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -185,7 +204,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-foreground/70 hover:text-foreground"
                   >
                     Connexion
                   </Button>
@@ -202,11 +221,12 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Barre de recherche extensible */}
         <div
+          id="site-search"
           className={`overflow-hidden transition-all duration-300 ease-out ${
             searchOpen ? "max-h-16 pb-4" : "max-h-0"
           }`}
+          aria-hidden={!searchOpen}
         >
           <SearchBar />
         </div>
