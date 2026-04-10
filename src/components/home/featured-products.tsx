@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ShoppingBag } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowUpRight, ShoppingBag } from "lucide-react";
 
 interface Product {
   id: string;
@@ -26,7 +25,6 @@ export default function FeaturedProducts() {
         const res = await fetch("/api/products/featured");
         if (res.ok) {
           const data = await res.json();
-          // Handle both array and object responses
           const items = Array.isArray(data) ? data : data.products || [];
           setProducts(items.slice(0, 8));
         }
@@ -39,23 +37,22 @@ export default function FeaturedProducts() {
     fetchProducts();
   }, []);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("fr-FR", {
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
     }).format(price);
-  };
 
   if (isLoading) {
     return (
-      <section className="w-full bg-muted/30 py-12 md:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
+      <section className="w-full bg-background py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6 md:px-10">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="space-y-4">
-                <div className="aspect-square animate-pulse rounded-xl bg-muted" />
-                <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+                <div className="aspect-[4/5] animate-pulse rounded-2xl bg-shadow-grey-100" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-shadow-grey-100" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-shadow-grey-100" />
               </div>
             ))}
           </div>
@@ -67,108 +64,107 @@ export default function FeaturedProducts() {
   if (products.length === 0) return null;
 
   return (
-    <section className="w-full bg-[#d4f4f7]/20 py-12 md:py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8 flex flex-col gap-3 md:mb-10 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight text-[#003d5c] sm:text-3xl md:text-4xl">
-              Les Top Produits du moment
+    <section className="relative w-full bg-background py-24 md:py-36">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        {/* Section header */}
+        <div className="mb-16 flex flex-col gap-8 md:mb-24 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <p className="eyebrow">Sélection du moment</p>
+            <h2 className="font-display mt-6 text-display-sm text-shadow-grey-900">
+              Ce que les pros
+              <br />
+              <em className="not-italic italic text-brand-gradient">
+                commandent cette semaine.
+              </em>
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground md:text-base">
-              Les équipements les plus demandés par nos clients
-            </p>
           </div>
           <Link
             href="/categories"
-            className="hidden items-center gap-2 text-sm font-medium text-[#00a8b5] transition-colors hover:text-[#33bfc9] md:flex"
+            className="group inline-flex items-center gap-3 self-start rounded-full border border-shadow-grey-300 bg-transparent px-6 py-3 text-sm font-medium text-shadow-grey-900 transition-all duration-500 ease-out-expo hover:border-shadow-grey-900 hover:bg-shadow-grey-900 hover:text-white md:self-auto"
           >
-            Voir tout
-            <ArrowRight className="h-4 w-4" />
+            Tout le catalogue
+            <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out-expo group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </Link>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 md:grid-cols-4 md:gap-y-10">
-          {products.map((product) => (
-            <Link
-              key={product.id}
-              href={`/products/${product.id}`}
-              className="group"
-            >
-              {/* Image */}
-              <div className="relative aspect-square rounded-xl overflow-hidden bg-muted mb-4">
-                {product.images?.[0]?.url ? (
-                  <Image
-                    src={product.images[0].url}
-                    alt={product.images[0].alt || product.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ShoppingBag className="h-12 w-12 text-muted-foreground/30" />
-                  </div>
-                )}
+        {/* Asymmetric grid */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-16 md:grid-cols-4 md:gap-x-8 md:gap-y-24">
+          {products.map((product, idx) => {
+            // Introduce subtle vertical stagger on alternate cards
+            const offsetClass = idx % 2 === 1 ? "md:mt-12" : "";
+            const hasDiscount =
+              product.compareAtPrice && product.compareAtPrice > product.price;
 
-                {/* Discount badge */}
-                {product.compareAtPrice &&
-                  product.compareAtPrice > product.price && (
-                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black text-white text-xs font-medium">
-                      -
+            return (
+              <Link
+                key={product.id}
+                href={`/products/${product.id}`}
+                className={`group flex flex-col ${offsetClass}`}
+              >
+                {/* Image frame */}
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-shadow-grey-100">
+                  {product.images?.[0]?.url ? (
+                    <Image
+                      src={product.images[0].url}
+                      alt={product.images[0].alt || product.name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-[900ms] ease-out-expo group-hover:scale-[1.06]"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-shadow-grey-100 to-lavender-mist-50">
+                      <ShoppingBag className="h-12 w-12 text-shadow-grey-400" />
+                    </div>
+                  )}
+
+                  {/* Discount badge */}
+                  {hasDiscount && (
+                    <div className="absolute left-4 top-4 rounded-full bg-electric-indigo-500 px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-white">
+                      −
                       {Math.round(
-                        ((product.compareAtPrice - product.price) /
-                          product.compareAtPrice) *
+                        ((product.compareAtPrice! - product.price) /
+                          product.compareAtPrice!) *
                           100
                       )}
                       %
                     </div>
                   )}
 
-                {/* Quick add button */}
-                <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Button
-                    size="icon"
-                    className="h-10 w-10 rounded-full shadow-lg"
-                  >
-                    <ShoppingBag className="h-4 w-4" />
-                  </Button>
+                  {/* Quick-look CTA — slides in from bottom on hover */}
+                  <div className="absolute inset-x-4 bottom-4 translate-y-4 opacity-0 transition-all duration-500 ease-out-expo group-hover:translate-y-0 group-hover:opacity-100">
+                    <div className="flex items-center justify-between rounded-full border border-white/20 bg-shadow-grey-900/80 px-5 py-3 backdrop-blur-xl">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white">
+                        Voir la fiche
+                      </span>
+                      <ArrowUpRight className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Info */}
-              <div className="space-y-1">
-                {product.category && (
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                    {product.category.name}
-                  </p>
-                )}
-                <h3 className="font-medium text-sm md:text-base leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{formatPrice(product.price)}</p>
-                  {product.compareAtPrice &&
-                    product.compareAtPrice > product.price && (
-                      <p className="text-sm text-muted-foreground line-through">
-                        {formatPrice(product.compareAtPrice)}
+                {/* Info */}
+                <div className="mt-6 flex flex-col gap-2">
+                  {product.category && (
+                    <p className="eyebrow text-shadow-grey-500">
+                      {product.category.name}
+                    </p>
+                  )}
+                  <h3 className="line-clamp-2 text-base font-medium leading-snug text-shadow-grey-900 transition-colors duration-300 group-hover:text-electric-indigo-600 md:text-lg">
+                    {product.name}
+                  </h3>
+                  <div className="mt-1 flex items-baseline gap-3">
+                    <p className="font-display text-xl italic text-shadow-grey-900">
+                      {formatPrice(product.price)}
+                    </p>
+                    {hasDiscount && (
+                      <p className="text-sm text-shadow-grey-400 line-through">
+                        {formatPrice(product.compareAtPrice!)}
                       </p>
                     )}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Mobile link */}
-        <div className="mt-10 md:hidden text-center">
-          <Link
-            href="/categories"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Voir tous les produits
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>
