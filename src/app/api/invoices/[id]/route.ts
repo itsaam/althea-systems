@@ -1,9 +1,19 @@
+import { readFile } from "fs/promises";
+import { join } from "path";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withApiLogger, loggedErrorResponse, loggedSuccessResponse } from "@/lib/logger/exports";
+import {
+  withApiLogger,
+  loggedErrorResponse,
+  loggedSuccessResponse,
+  apiLogger,
+} from "@/lib/logger/exports";
 import { generateCreditNotePDF } from "@/lib/credit-note-pdf";
+import { sendCreditNoteEmail } from "@/lib/email";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+
+const emailsEnabled = () => process.env.EMAILS_ENABLED !== "false";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -76,6 +86,7 @@ export const DELETE = withApiLogger(async (req: NextRequest, context: unknown) =
       return cn;
     });
 
+    let pdfBuffer: Buffer | null = null;
     try {
       await generateCreditNotePDF({
         creditNumber: creditNote.creditNumber,
@@ -110,8 +121,40 @@ export const DELETE = withApiLogger(async (req: NextRequest, context: unknown) =
         tax: Number(invoice.order.tax),
         total: Number(invoice.amount),
       });
+
+      const pdfPath = join(
+        process.cwd(),
+        "public",
+        "invoices",
+        `${creditNote.creditNumber}.pdf`
+      );
+      pdfBuffer = await readFile(pdfPath);
     } catch (pdfError) {
-      console.error("[API] Erreur génération PDF avoir:", pdfError);
+      const pdfMsg =
+        pdfError instanceof Error ? pdfError.message : "Erreur inconnue";
+      apiLogger.error(
+        `Erreur génération PDF avoir ${creditNote.creditNumber}: ${pdfMsg}`
+      );
+    }
+
+    if (emailsEnabled() && pdfBuffer && invoice.order.user.email) {
+      try {
+        await sendCreditNoteEmail(
+          invoice.order.user.email,
+          creditNote.creditNumber,
+          pdfBuffer,
+          invoice.orderId
+        );
+        apiLogger.info(
+          `Email avoir ${creditNote.creditNumber} envoyé à ${invoice.order.user.email}`
+        );
+      } catch (emailError) {
+        const emailMsg =
+          emailError instanceof Error ? emailError.message : "Erreur inconnue";
+        apiLogger.warn(
+          `Email avoir ${creditNote.creditNumber} non envoyé: ${emailMsg}`
+        );
+      }
     }
 
     return loggedSuccessResponse({

@@ -6,6 +6,9 @@ import type Stripe from "stripe";
 import { apiLogger } from "@/lib/logger/exports";
 import { generateInvoicePDF } from "@/lib/pdf";
 import { uploadToR2 } from "@/lib/r2";
+import { sendInvoiceEmail } from "@/lib/email";
+
+const emailsEnabled = () => process.env.EMAILS_ENABLED !== "false";
 
 async function generateInvoiceNumber(): Promise<string> {
   const date   = new Date();
@@ -137,6 +140,26 @@ export async function POST(request: Request) {
                 ? `Facture créée: ${invoice.invoiceNumber} — R2: ${pdfUrl}`
                 : `Facture créée: ${invoice.invoiceNumber} — sans URL R2 (génération à la volée activée)`
             );
+
+            if (emailsEnabled() && order.user.email) {
+              try {
+                await sendInvoiceEmail(
+                  order.user.email,
+                  invoice.invoiceNumber,
+                  pdfBuffer,
+                  orderId
+                );
+                apiLogger.info(
+                  `Email facture ${invoice.invoiceNumber} envoyé à ${order.user.email}`
+                );
+              } catch (emailError) {
+                const emailMsg =
+                  emailError instanceof Error ? emailError.message : "Erreur inconnue";
+                apiLogger.warn(
+                  `Email facture ${invoice.invoiceNumber} non envoyé: ${emailMsg}`
+                );
+              }
+            }
           }
         }
         break;

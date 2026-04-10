@@ -15,6 +15,9 @@ import {
   calculateCartTotals,
   type CartItem,
 } from "@/lib/tva-utils";
+import { sendOrderStatusChangeEmail } from "@/lib/email";
+
+const emailsEnabled = () => process.env.EMAILS_ENABLED !== "false";
 
 export const dynamic = "force-dynamic";
 
@@ -119,18 +122,27 @@ export const PATCH = withApiLogger(async (
 
     const existingOrder = await prisma.order.findUnique({
       where: { id },
-      select: { id: true, status: true, orderNumber: true, paymentDate: true },
+      select: {
+        id: true,
+        status: true,
+        orderNumber: true,
+        paymentDate: true,
+        user: { select: { email: true } },
+      },
     });
 
     if (!existingOrder) return loggedErrorResponse("Commande introuvable", 404);
 
     const updateData: Prisma.OrderUpdateInput = { ...validatedData };
+    const statusChanged =
+      !!validatedData.status && validatedData.status !== existingOrder.status;
+    const previousStatus = existingOrder.status;
 
-    if (validatedData.status && validatedData.status !== existingOrder.status) {
+    if (statusChanged) {
       await prisma.orderStatusHistory.create({
         data: {
           orderId: id,
-          status: validatedData.status,
+          status: validatedData.status!,
           changedBy: session.user.id,
         },
       });
@@ -162,6 +174,23 @@ export const PATCH = withApiLogger(async (
         statusHistory: { orderBy: { createdAt: "desc" } },
       },
     });
+
+    if (statusChanged && emailsEnabled() && order.user?.email) {
+      try {
+        await sendOrderStatusChangeEmail(
+          order.user.email,
+          order.orderNumber,
+          validatedData.status!,
+          previousStatus
+        );
+      } catch (emailError) {
+        const emailMsg =
+          emailError instanceof Error ? emailError.message : "Erreur inconnue";
+        apiLogger.warn(
+          `Email statut commande ${order.orderNumber} non envoyé: ${emailMsg}`
+        );
+      }
+    }
 
     const cartItems: CartItem[] = order.items.map((item) => ({
       priceHT: Number(item.price),
@@ -218,7 +247,10 @@ export const DELETE = withApiLogger(async (
 
     const order = await prisma.order.findUnique({
       where: { id },
-      include: { items: true },
+      include: {
+        items: true,
+        user: { select: { email: true } },
+      },
     });
 
     if (!order) return loggedErrorResponse("Commande introuvable", 404);
@@ -257,6 +289,24 @@ export const DELETE = withApiLogger(async (
     apiLogger.warn(
       `Commande ${order.orderNumber} annulée par ${session.user.email}`
     );
+
+    if (emailsEnabled() && order.user?.email) {
+      try {
+        await sendOrderStatusChangeEmail(
+          order.user.email,
+          order.orderNumber,
+          OrderStatus.CANCELLED,
+          order.status
+        );
+      } catch (emailError) {
+        const emailMsg =
+          emailError instanceof Error ? emailError.message : "Erreur inconnue";
+        apiLogger.warn(
+          `Email annulation commande ${order.orderNumber} non envoyé: ${emailMsg}`
+        );
+      }
+    }
+
     return loggedSuccessResponse(
       { message: "Commande annulée et stock restauré" },
       "Commande annulée avec succès"
