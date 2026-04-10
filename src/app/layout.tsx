@@ -89,7 +89,7 @@ export default function RootLayout({
         <SessionProvider>
           {children}
           <CookieBanner />
-          <Toaster position="top-right" />
+          <Toaster />
         </SessionProvider>
       </body>
     </html>
