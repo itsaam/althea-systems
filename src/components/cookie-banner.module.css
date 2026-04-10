@@ -1,0 +1,361 @@
+.wrap {
+  position: fixed;
+  bottom: clamp(1rem, 2.5vw, 1.75rem);
+  left: clamp(1rem, 2.5vw, 1.75rem);
+  right: clamp(1rem, 2.5vw, 1.75rem);
+  z-index: 60;
+  pointer-events: none;
+  display: flex;
+  justify-content: flex-start;
+  animation: slideUp 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (min-width: 720px) {
+  .wrap {
+    right: auto;
+    max-width: 420px;
+  }
+}
+
+.wrapClosing {
+  animation: slideDown 240ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+
+.card {
+  pointer-events: auto;
+  position: relative;
+  width: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid color-mix(in oklch, var(--foreground) 14%, transparent);
+  border-radius: 18px;
+  padding: 1.4rem 1.4rem 1.25rem;
+  box-shadow:
+    0 1px 0 color-mix(in oklch, var(--foreground) 6%, transparent) inset,
+    0 2px 6px -2px color-mix(in oklch, var(--foreground) 10%, transparent),
+    0 24px 48px -12px color-mix(in oklch, var(--foreground) 22%, transparent);
+  backdrop-filter: saturate(1.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.cardExpanded {
+  gap: 1rem;
+}
+
+.close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in oklch, var(--foreground) 55%, transparent);
+  border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 200ms ease;
+}
+
+.close:hover {
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+  color: var(--foreground);
+  transform: rotate(90deg);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.header {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding-right: 2rem;
+}
+
+.iconWrap {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+  border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground);
+}
+
+.eyebrow {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: color-mix(in oklch, var(--foreground) 55%, transparent);
+  margin: 0 0 0.25rem;
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.body {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: color-mix(in oklch, var(--foreground) 72%, transparent);
+  margin: 0;
+}
+
+.link {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-thickness 150ms ease;
+}
+
+.link:hover {
+  text-decoration-thickness: 2px;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--foreground) 4%, transparent);
+  border: 1px dashed color-mix(in oklch, var(--foreground) 12%, transparent);
+  animation: expand 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.category {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "head toggle"
+    "desc desc";
+  gap: 0.3rem 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 9px;
+  background: var(--background);
+  border: 1px solid color-mix(in oklch, var(--foreground) 8%, transparent);
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.category:hover:not(.categoryLocked) {
+  border-color: color-mix(in oklch, var(--foreground) 22%, transparent);
+}
+
+.categoryLocked {
+  cursor: default;
+  opacity: 0.92;
+}
+
+.categoryHead {
+  grid-area: head;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.categoryIcon {
+  color: color-mix(in oklch, var(--foreground) 70%, transparent);
+  display: inline-flex;
+}
+
+.categoryTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.categoryBadge {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+  color: color-mix(in oklch, var(--foreground) 60%, transparent);
+}
+
+.categoryDesc {
+  grid-area: desc;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: color-mix(in oklch, var(--foreground) 60%, transparent);
+}
+
+.toggle {
+  grid-area: toggle;
+  appearance: none;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 15%, transparent);
+  position: relative;
+  cursor: pointer;
+  transition: background 220ms ease;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--background);
+  box-shadow: 0 1px 3px color-mix(in oklch, var(--foreground) 20%, transparent);
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toggle:checked {
+  background: var(--foreground);
+}
+
+.toggle:checked::after {
+  transform: translateX(14px);
+}
+
+.toggle:disabled {
+  cursor: not-allowed;
+  background: color-mix(in oklch, var(--foreground) 25%, transparent);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 180ms ease, color 180ms ease, border-color 180ms ease;
+  font-family: inherit;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.btnPrimary {
+  background: var(--foreground);
+  color: var(--background);
+  flex: 1 1 auto;
+}
+
+.btnPrimary:hover {
+  background: color-mix(in oklch, var(--foreground) 88%, transparent);
+}
+
+.btnGhost {
+  background: transparent;
+  color: color-mix(in oklch, var(--foreground) 70%, transparent);
+  border-color: color-mix(in oklch, var(--foreground) 14%, transparent);
+}
+
+.btnGhost:hover {
+  color: var(--foreground);
+  border-color: color-mix(in oklch, var(--foreground) 30%, transparent);
+}
+
+.btnOutline {
+  background: transparent;
+  color: var(--foreground);
+  border-color: color-mix(in oklch, var(--foreground) 18%, transparent);
+}
+
+.btnOutline:hover {
+  background: color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap,
+  .wrapClosing,
+  .details,
+  .btn,
+  .close,
+  .toggle::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

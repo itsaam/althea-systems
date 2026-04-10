@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Cookie, X, Check, ShieldCheck, BarChart3, Megaphone } from "lucide-react";
+import styles from "./cookie-banner.module.css";
 
 const COOKIE_CONSENT_KEY = "althea-cookie-consent";
 
@@ -29,152 +30,252 @@ function storeConsent(consent: CookieConsent): void {
 }
 
 export default function CookieBanner() {
+  const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const firstFocusRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     const consent = getStoredConsent();
     if (!consent) {
-      setVisible(true);
+      const t = window.setTimeout(() => setVisible(true), 600);
+      return () => window.clearTimeout(t);
     }
   }, []);
 
-  function acceptAll() {
-    const consent: CookieConsent = {
+  const close = useCallback(() => {
+    setClosing(true);
+    window.setTimeout(() => {
+      setVisible(false);
+      setClosing(false);
+    }, 240);
+  }, []);
+
+  const acceptAll = useCallback(() => {
+    storeConsent({
       essential: true,
       analytics: true,
       marketing: true,
       consentDate: new Date().toISOString(),
-    };
-    storeConsent(consent);
-    setVisible(false);
-  }
+    });
+    close();
+  }, [close]);
 
-  function rejectAll() {
-    const consent: CookieConsent = {
+  const rejectAll = useCallback(() => {
+    storeConsent({
       essential: true,
       analytics: false,
       marketing: false,
       consentDate: new Date().toISOString(),
-    };
-    storeConsent(consent);
-    setVisible(false);
-  }
+    });
+    close();
+  }, [close]);
 
-  function savePreferences() {
-    const consent: CookieConsent = {
+  const savePreferences = useCallback(() => {
+    storeConsent({
       essential: true,
       analytics,
       marketing,
       consentDate: new Date().toISOString(),
-    };
-    storeConsent(consent);
-    setVisible(false);
-  }
+    });
+    close();
+  }, [analytics, marketing, close]);
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        rejectAll();
+        return;
+      }
+      if (e.key === "Tab" && cardRef.current) {
+        const focusables = cardRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+    firstFocusRef.current?.focus();
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [visible, rejectAll]);
+
+  if (!mounted || !visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg p-4 md:p-6">
-      <div className="container max-w-4xl mx-auto">
-        <div className="flex flex-col gap-4">
+    <div
+      className={`${styles.wrap} ${closing ? styles.wrapClosing : ""}`}
+      role="region"
+      aria-label="Bannière de consentement aux cookies"
+    >
+      <div
+        ref={cardRef}
+        className={`${styles.card} ${showDetails ? styles.cardExpanded : ""}`}
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="cookie-title"
+        aria-describedby="cookie-description"
+      >
+        <button
+          type="button"
+          onClick={rejectAll}
+          className={styles.close}
+          aria-label="Fermer et refuser les cookies optionnels"
+        >
+          <X size={16} aria-hidden="true" />
+        </button>
+
+        <header className={styles.header}>
+          <span className={styles.iconWrap} aria-hidden="true">
+            <Cookie size={18} />
+          </span>
           <div>
-            <h3 className="text-lg font-semibold mb-2">
-              Gestion des cookies
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Nous utilisons des cookies essentiels pour le fonctionnement du
-              site. Avec votre consentement, nous pouvons egalement utiliser des
-              cookies analytiques et marketing.{" "}
-              <Link
-                href="/legal/privacy"
-                className="underline hover:text-foreground"
-              >
-                En savoir plus
-              </Link>
-            </p>
+            <p className={styles.eyebrow}>Vos données, vos règles</p>
+            <h2 id="cookie-title" className={styles.title}>
+              Un biscuit avec votre visite&nbsp;?
+            </h2>
           </div>
+        </header>
 
-          {showDetails && (
-            <div className="border rounded-md p-4 space-y-3">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={true}
-                  disabled
-                  className="rounded"
-                />
-                <div>
-                  <span className="font-medium text-sm">
-                    Cookies essentiels
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    Necessaires au fonctionnement du site (session,
-                    authentification, panier). Toujours actifs.
-                  </p>
-                </div>
-              </label>
+        <p id="cookie-description" className={styles.body}>
+          On utilise des cookies pour que le site fonctionne et pour comprendre ce
+          qui vous plaît. Rien de plus. Vous gardez la main à tout moment.{" "}
+          <Link href="/legal/privacy" className={styles.link}>
+            Politique de confidentialité
+          </Link>
+        </p>
 
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={analytics}
-                  onChange={(e) => setAnalytics(e.target.checked)}
-                  className="rounded"
-                />
-                <div>
-                  <span className="font-medium text-sm">
-                    Cookies analytiques
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    Nous aident a comprendre comment le site est utilise pour
-                    l&apos;ameliorer.
-                  </p>
-                </div>
-              </label>
+        {showDetails && (
+          <div className={styles.details}>
+            <CategoryRow
+              icon={<ShieldCheck size={16} aria-hidden="true" />}
+              title="Essentiels"
+              description="Session, authentification, panier. Impossible de les désactiver sans casser le site."
+              checked
+              disabled
+            />
+            <CategoryRow
+              icon={<BarChart3 size={16} aria-hidden="true" />}
+              title="Analytiques"
+              description="Mesurent les pages populaires et les parcours pour nous aider à améliorer l'expérience."
+              checked={analytics}
+              onChange={setAnalytics}
+            />
+            <CategoryRow
+              icon={<Megaphone size={16} aria-hidden="true" />}
+              title="Marketing"
+              description="Personnalisent les offres et contenus qui vous sont présentés sur le site."
+              checked={marketing}
+              onChange={setMarketing}
+            />
+          </div>
+        )}
 
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={marketing}
-                  onChange={(e) => setMarketing(e.target.checked)}
-                  className="rounded"
-                />
-                <div>
-                  <span className="font-medium text-sm">
-                    Cookies marketing
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    Utilises pour vous proposer du contenu et des offres
-                    personnalises.
-                  </p>
-                </div>
-              </label>
-            </div>
+        <div className={styles.actions}>
+          <button
+            ref={firstFocusRef}
+            type="button"
+            onClick={acceptAll}
+            className={`${styles.btn} ${styles.btnPrimary}`}
+          >
+            <Check size={15} aria-hidden="true" />
+            Tout accepter
+          </button>
+          <button
+            type="button"
+            onClick={rejectAll}
+            className={`${styles.btn} ${styles.btnGhost}`}
+          >
+            Refuser
+          </button>
+          {showDetails ? (
+            <button
+              type="button"
+              onClick={savePreferences}
+              className={`${styles.btn} ${styles.btnOutline}`}
+            >
+              Enregistrer mes choix
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowDetails(true)}
+              className={`${styles.btn} ${styles.btnOutline}`}
+              aria-expanded="false"
+              aria-controls="cookie-details"
+            >
+              Personnaliser
+            </button>
           )}
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={acceptAll}>Tout accepter</Button>
-            <Button variant="outline" onClick={rejectAll}>
-              Tout refuser
-            </Button>
-            {showDetails ? (
-              <Button variant="secondary" onClick={savePreferences}>
-                Enregistrer mes preferences
-              </Button>
-            ) : (
-              <Button
-                variant="secondary"
-                onClick={() => setShowDetails(true)}
-              >
-                Personnaliser
-              </Button>
-            )}
-          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+interface CategoryRowProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange?: (value: boolean) => void;
+}
+
+function CategoryRow({
+  icon,
+  title,
+  description,
+  checked,
+  disabled,
+  onChange,
+}: CategoryRowProps) {
+  return (
+    <label className={`${styles.category} ${disabled ? styles.categoryLocked : ""}`}>
+      <span className={styles.categoryHead}>
+        <span className={styles.categoryIcon} aria-hidden="true">
+          {icon}
+        </span>
+        <span className={styles.categoryTitle}>{title}</span>
+        {disabled && <span className={styles.categoryBadge}>Toujours actif</span>}
+      </span>
+      <span className={styles.categoryDesc}>{description}</span>
+      {!disabled && (
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange?.(e.target.checked)}
+          className={styles.toggle}
+          aria-label={`Activer les cookies ${title.toLowerCase()}`}
+        />
+      )}
+      {disabled && (
+        <input
+          type="checkbox"
+          checked
+          disabled
+          className={styles.toggle}
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+      )}
+    </label>
   );
 }
