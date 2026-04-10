@@ -163,10 +163,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <div className="container py-8">
-      <div className="mb-12 grid gap-8 md:grid-cols-2">
+    <div className="container py-8 md:py-12">
+      <div className="mb-10 grid gap-6 md:mb-12 md:grid-cols-2 md:gap-8 lg:gap-12">
         <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
           {product.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.image}
               alt={product.name}
@@ -177,23 +178,27 @@ export default async function ProductPage({ params }: ProductPageProps) {
               Aucune image
             </div>
           )}
-          <StockBadge stock={product.stock} className="absolute right-4 top-4" />
+          <StockBadge stock={product.stock} className="absolute right-3 top-3 md:right-4 md:top-4" />
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 md:gap-6">
           <div>
-            <h1 className="mb-2 text-3xl font-bold">{product.name}</h1>
+            <h1 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
+              {product.name}
+            </h1>
             {product.category && (
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Categorie : {product.category.name}
               </p>
             )}
           </div>
 
-          <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold">{product.price.toFixed(2)} €</span>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-2xl font-bold sm:text-3xl">
+              {product.price.toFixed(2)} €
+            </span>
             {product.comparePrice && (
-              <span className="text-lg text-muted-foreground line-through">
+              <span className="text-base text-muted-foreground line-through sm:text-lg">
                 {product.comparePrice.toFixed(2)} €
               </span>
             )}

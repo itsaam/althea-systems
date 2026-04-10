@@ -21,8 +21,10 @@ export default function CartPage() {
   };
 
   return (
-    <div className="container py-8">
-      <h1 className="text-3xl font-bold mb-8">Panier</h1>
+    <div className="container py-8 md:py-12">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight sm:text-3xl md:mb-8 md:text-4xl">
+        Panier
+      </h1>
 
       {items.length === 0 ? (
         <div className="text-center py-12 border rounded-lg">
