@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { DataTableToolbar } from "@/components/admin/data-table/data-table-toolbar";
 import { getProductsColumns } from "@/components/admin/products/products-columns";
@@ -216,9 +215,13 @@ export default function AdminProductsPage() {
               columns={PRODUCT_EXPORT_COLUMNS}
               filename="produits"
             />
-            <Button onClick={() => router.push("/admin/products/new")}>
-              Nouveau produit
-            </Button>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/products/new")}
+              className="inline-flex h-9 items-center gap-2 rounded-none border border-foreground bg-background px-4 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
+            >
+              + Nouveau produit
+            </button>
           </>
         }
       />

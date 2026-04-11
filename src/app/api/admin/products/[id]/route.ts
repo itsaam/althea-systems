@@ -134,6 +134,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         name: validatedData.name,
         slug: validatedData.slug,
         description: validatedData.description,
+        technicalSpecs: validatedData.technicalSpecs,
         price: validatedData.price,
         comparePrice: validatedData.comparePrice,
         tva: validatedData.tva,
