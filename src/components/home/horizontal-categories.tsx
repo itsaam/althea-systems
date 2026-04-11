@@ -15,12 +15,12 @@ export type HorizontalCategory = {
 };
 
 const FALLBACK_GRADIENTS = [
-  "from-electric-indigo-200 via-lavender-mist-200 to-shadow-grey-100",
-  "from-lavender-mist-300 via-electric-indigo-100 to-shadow-grey-100",
-  "from-electric-indigo-100 via-shadow-grey-100 to-lavender-mist-200",
-  "from-lavender-mist-200 via-electric-indigo-200 to-shadow-grey-50",
-  "from-shadow-grey-100 via-lavender-mist-200 to-electric-indigo-100",
-  "from-electric-indigo-200 via-shadow-grey-100 to-lavender-mist-300",
+  "from-shadow-grey-100 to-shadow-grey-200",
+  "from-shadow-grey-200 to-shadow-grey-100",
+  "from-shadow-grey-50 to-shadow-grey-200",
+  "from-shadow-grey-100 to-shadow-grey-50",
+  "from-shadow-grey-200 to-shadow-grey-100",
+  "from-shadow-grey-50 to-shadow-grey-100",
 ];
 
 export default function HorizontalCategories({
@@ -41,34 +41,43 @@ export default function HorizontalCategories({
       {/* Desktop — horizontal scroll */}
       <section
         ref={sectionRef}
-        className="relative hidden h-[300vh] bg-shadow-grey-50 lg:block"
+        className="relative hidden h-[300vh] bg-background lg:block"
       >
         <div className="sticky top-0 flex h-screen flex-col overflow-hidden">
-          <div className="mx-auto w-full max-w-7xl px-6 pt-24 md:px-10">
-            <ScrollReveal>
-              <p className="eyebrow text-shadow-grey-500">Explorer</p>
-            </ScrollReveal>
-            <h2 className="font-display mt-6 text-display-sm text-shadow-grey-900">
-              <SplitText as="span" text="Par" className="not-italic" />{" "}
-              <SplitText
-                as="span"
-                text="spécialité."
-                delay={0.25}
-                className="italic text-brand-gradient"
-              />
-            </h2>
+          <div className="mx-auto w-full max-w-[1400px] px-4 pt-24 sm:px-6 lg:px-10">
+            <div className="flex items-end justify-between gap-10">
+              <div>
+                <ScrollReveal>
+                  <p className="text-eyebrow text-foreground/45">
+                    — Explorer · Par spécialité
+                  </p>
+                </ScrollReveal>
+                <h2 className="mt-6 text-h1 text-foreground">
+                  <SplitText as="span" text="Par" className="block" />
+                  <SplitText
+                    as="span"
+                    text="spécialité."
+                    delay={0.25}
+                    className="block text-foreground/40"
+                  />
+                </h2>
+              </div>
+              <span className="hidden font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-foreground/40 md:block">
+                {String(categories.length).padStart(2, "0")} catégories — scroll horizontal
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-1 items-center">
+          <div className="mt-14 flex flex-1 items-center">
             <motion.div
               style={{ x: translate }}
-              className="flex gap-8 pl-6 pr-[30vw] md:pl-20"
+              className="flex gap-6 pl-6 pr-[30vw] md:pl-10 lg:pl-10"
             >
               {categories.map((category, i) => (
                 <Link
                   key={category.id}
                   href={`/categories/${category.slug}`}
-                  className="group relative block aspect-[4/5] w-[35vw] shrink-0 overflow-hidden rounded-3xl"
+                  className="group relative block aspect-[4/5] w-[32vw] shrink-0 overflow-hidden rounded-[2px]"
                 >
                   {category.image ? (
                     <Image
@@ -76,7 +85,7 @@ export default function HorizontalCategories({
                       alt={category.name}
                       fill
                       sizes="40vw"
-                      className="object-cover transition-transform duration-[1200ms] ease-out-expo group-hover:scale-[1.05]"
+                      className="object-cover grayscale transition-all duration-[1200ms] ease-out group-hover:scale-[1.04] group-hover:grayscale-0"
                     />
                   ) : (
                     <div
@@ -86,16 +95,19 @@ export default function HorizontalCategories({
                     />
                   )}
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-electric-indigo-900/70 via-electric-indigo-900/10 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-shadow-grey-950/85 via-shadow-grey-950/30 to-transparent" />
+                  <div className="absolute inset-0 ring-1 ring-inset ring-white/0 transition-colors duration-500 group-hover:ring-electric-indigo-500/70" />
 
                   <div className="absolute inset-x-8 bottom-8">
-                    <p className="eyebrow text-lavender-mist-300">
-                      {String(i + 1).padStart(2, "0")} / {categories.length}
+                    <p className="font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-white/60">
+                      {String(i + 1).padStart(2, "0")} / {String(categories.length).padStart(2, "0")}
                     </p>
-                    <h3 className="font-display mt-4 text-3xl italic leading-[1] text-white md:text-4xl">
+                    <h3 className="mt-4 text-h3 font-semibold leading-[1.05] text-white">
                       {category.name}
                     </h3>
-                    <p className="eyebrow mt-6 text-white/80">Explorer →</p>
+                    <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-white/70 transition-colors duration-300 group-hover:text-electric-indigo-300">
+                      Explorer →
+                    </p>
                   </div>
                 </Link>
               ))}
@@ -105,19 +117,22 @@ export default function HorizontalCategories({
       </section>
 
       {/* Mobile / reduced motion — normal grid */}
-      <section className="bg-shadow-grey-50 py-24 lg:hidden">
-        <div className="mx-auto max-w-7xl px-6">
-          <p className="eyebrow text-shadow-grey-500">Explorer</p>
-          <h2 className="font-display mt-6 text-display-sm italic text-shadow-grey-900">
-            Par <em className="text-brand-gradient">spécialité</em>
+      <section className="bg-background py-24 lg:hidden">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+          <p className="text-eyebrow text-foreground/45">
+            — Explorer · Par spécialité
+          </p>
+          <h2 className="mt-6 text-h1 text-foreground">
+            Par{" "}
+            <span className="text-foreground/40">spécialité.</span>
           </h2>
 
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {categories.map((category, i) => (
               <Link
                 key={category.id}
                 href={`/categories/${category.slug}`}
-                className="group relative block aspect-[4/5] overflow-hidden rounded-2xl"
+                className="group relative block aspect-[4/5] overflow-hidden rounded-[2px]"
               >
                 {category.image ? (
                   <Image
@@ -125,7 +140,7 @@ export default function HorizontalCategories({
                     alt={category.name}
                     fill
                     sizes="(min-width: 640px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-[1.03]"
+                    className="object-cover grayscale transition-all duration-700 ease-out group-hover:scale-[1.03] group-hover:grayscale-0"
                   />
                 ) : (
                   <div
@@ -135,13 +150,18 @@ export default function HorizontalCategories({
                   />
                 )}
 
-                <div className="absolute inset-0 bg-gradient-to-t from-electric-indigo-900/70 via-electric-indigo-900/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-shadow-grey-950/85 via-shadow-grey-950/30 to-transparent" />
 
                 <div className="absolute inset-x-6 bottom-6">
-                  <h3 className="font-display text-2xl italic text-white">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-white/60">
+                    {String(i + 1).padStart(2, "0")} / {String(categories.length).padStart(2, "0")}
+                  </p>
+                  <h3 className="mt-3 text-h3 font-semibold leading-[1.05] text-white">
                     {category.name}
                   </h3>
-                  <p className="eyebrow mt-2 text-white/80">Explorer →</p>
+                  <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.22em] text-white/70">
+                    Explorer →
+                  </p>
                 </div>
               </Link>
             ))}

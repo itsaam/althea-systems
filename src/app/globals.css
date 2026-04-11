@@ -111,12 +111,18 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* ──────────────────────────────────────────────────────────
-     TYPOGRAPHY
+     TYPOGRAPHY — Neo-Grotesque Precision
+     Sans    : Hanken Grotesk (primary — all UI, headings, body)
+     Mono    : IBM Plex Mono  (eyebrows, metadata, tabular nums)
+     Serif   : Newsreader     (rare editorial italic accent)
+     Display : alias → sans   (headings use sans by default)
      ────────────────────────────────────────────────────────── */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-serif: var(--font-instrument-serif), "Times New Roman", serif;
-  --font-display: var(--font-instrument-serif), "Times New Roman", serif;
+  --font-sans: var(--font-sans-brand), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-mono-brand), ui-monospace, "SFMono-Regular",
+    Menlo, Monaco, Consolas, monospace;
+  --font-serif: var(--font-serif-brand), "Times New Roman", Georgia, serif;
+  --font-display: var(--font-sans-brand), ui-sans-serif, system-ui, sans-serif;
 
   /* ──────────────────────────────────────────────────────────
      RADII
@@ -251,7 +257,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
+    font-feature-settings: "kern", "liga", "calt", "ss01";
+    font-optical-sizing: auto;
   }
 
   :focus-visible {
@@ -273,29 +280,47 @@
    UTILITIES — brand-specific helpers
    ──────────────────────────────────────────────────────────── */
 @layer utilities {
+  /* ── Font-family helpers ────────────────────────────────── */
   .font-display {
     font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
   .font-serif {
     font-family: var(--font-serif);
   }
 
-  .eyebrow {
+  /* Rare editorial accent — use sparingly on a single word */
+  .font-editorial {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Eyebrow — mono uppercase micro-label ───────────────── */
+  .eyebrow,
+  .text-eyebrow {
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     font-weight: 500;
     line-height: 1;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--color-lavender-mist-600);
+    color: var(--color-shadow-grey-500);
   }
 
-  .dark .eyebrow {
-    color: var(--color-lavender-mist-400);
+  .dark .eyebrow,
+  .dark .text-eyebrow {
+    color: var(--color-shadow-grey-400);
+  }
+
+  /* ── Tabular numerics helper ────────────────────────────── */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
 
   /* Brand gradient (primary → accent → rare) */
@@ -353,23 +378,72 @@
     transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Fluid display scales for editorial hero typography */
+  /* ── Fluid type scale — Neo-Grotesque Precision ─────────── */
+
+  /* Body text — dense, readable, precise */
+  .text-body {
+    font-size: clamp(0.9375rem, 0.9vw + 0.75rem, 1.0625rem);
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+  }
+
+  .text-lead {
+    font-size: clamp(1.0625rem, 1.1vw + 0.875rem, 1.25rem);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    font-weight: 400;
+  }
+
+  /* Heading scale — tight, clinical */
+  .text-h3 {
+    font-size: clamp(1.5rem, 2vw + 1rem, 2.25rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  .text-h2 {
+    font-size: clamp(2rem, 3vw + 1.25rem, 3.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-weight: 600;
+  }
+
+  .text-h1 {
+    font-size: clamp(2.75rem, 5vw + 1.5rem, 5rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+  }
+
+  /* Hero — display scale, massive editorial */
+  .text-hero {
+    font-size: clamp(3.25rem, 9vw + 1rem, 9rem);
+    line-height: 0.88;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+  }
+
+  /* Legacy aliases — keep phase-2 pages working */
   .text-display-sm {
     font-size: clamp(2.5rem, 6vw, 4rem);
     line-height: 0.95;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+    font-weight: 600;
   }
 
   .text-display-md {
     font-size: clamp(3.5rem, 8vw, 6rem);
     line-height: 0.92;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
+    font-weight: 600;
   }
 
   .text-display-lg {
     font-size: clamp(4.5rem, 10vw, 8rem);
     line-height: 0.88;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
+    font-weight: 600;
   }
 }
 

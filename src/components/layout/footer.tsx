@@ -1,176 +1,159 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import Logo from "@/components/shared/logo";
 import SocialLinks from "@/components/shared/social-links";
-import { Mail, MapPin, Phone } from "lucide-react";
+
+const linkClass =
+  "font-mono text-[11px] lowercase tracking-[0.14em] text-white/60 transition-colors duration-300 hover:text-electric-indigo-300 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950";
+
+const columnHeadingClass =
+  "font-mono text-[10px] uppercase tracking-[0.22em] text-white/40 mb-5";
 
 export default async function Footer() {
   const tFooter = await getTranslations("footer");
   const tNav = await getTranslations("nav");
   const tCommon = await getTranslations("common");
+  const year = new Date().getFullYear();
 
   return (
     <footer
-      className="border-t border-white/10 bg-shadow-grey-950 text-white"
+      className="relative border-t border-white/10 bg-shadow-grey-950 text-white"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
         {tFooter("heading")}
       </h2>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
-          <div className="lg:col-span-1">
-            <Logo />
-            <p className="mt-4 text-sm text-white/85 leading-relaxed">
+
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-24 pb-10">
+        {/* ── Top grid : tagline + columns ────────────────────── */}
+        <div className="grid gap-16 md:grid-cols-12 md:gap-10">
+          <div className="md:col-span-5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/40">
+              {tFooter("followUs")}
+            </p>
+            <p className="mt-6 max-w-md text-h3 font-semibold leading-[1.1] tracking-[-0.02em] text-white">
               {tFooter("tagline")}
             </p>
-            <address className="mt-6 space-y-3 not-italic">
-              <a
-                href="mailto:contact@althea-systems.com"
-                className="flex items-center gap-2 text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-              >
-                <Mail className="h-4 w-4" aria-hidden="true" />
-                contact@althea-systems.com
-              </a>
-              <a
-                href="tel:+33123456789"
-                className="flex items-center gap-2 text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-              >
-                <Phone className="h-4 w-4" aria-hidden="true" />
-                +33 1 23 45 67 89
-              </a>
-              <p className="flex items-center gap-2 text-sm text-white/85">
-                <MapPin className="h-4 w-4" aria-hidden="true" />
-                {tFooter("location")}
-              </p>
-            </address>
-            <div className="mt-6">
-              <p
-                id="footer-social-heading"
-                className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/75"
-              >
-                {tFooter("followUs")}
-              </p>
+            <div className="mt-8">
               <SocialLinks />
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav aria-labelledby="footer-nav-heading">
-            <h3
-              id="footer-nav-heading"
-              className="font-semibold mb-4 text-white"
-            >
+          <nav
+            className="md:col-span-2"
+            aria-labelledby="footer-nav-heading"
+          >
+            <h3 id="footer-nav-heading" className={columnHeadingClass}>
               {tFooter("navigation")}
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link
-                  href="/categories"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/categories" className={linkClass}>
                   {tNav("categories")}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/about"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/about" className={linkClass}>
                   {tNav("about")}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/contact"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/contact" className={linkClass}>
                   {tNav("contact")}
                 </Link>
               </li>
             </ul>
           </nav>
 
-          {/* Account */}
-          <nav aria-labelledby="footer-account-heading">
-            <h3
-              id="footer-account-heading"
-              className="font-semibold mb-4 text-white"
-            >
+          <nav
+            className="md:col-span-2"
+            aria-labelledby="footer-account-heading"
+          >
+            <h3 id="footer-account-heading" className={columnHeadingClass}>
               {tFooter("account")}
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link
-                  href="/login"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/login" className={linkClass}>
                   {tCommon("login")}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/register"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/register" className={linkClass}>
                   {tCommon("register")}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/orders"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/orders" className={linkClass}>
                   {tCommon("myOrders")}
                 </Link>
               </li>
             </ul>
           </nav>
 
-          {/* Legal */}
-          <nav aria-labelledby="footer-legal-heading">
-            <h3
-              id="footer-legal-heading"
-              className="font-semibold mb-4 text-white"
-            >
+          <nav
+            className="md:col-span-3"
+            aria-labelledby="footer-contact-heading"
+          >
+            <h3 id="footer-contact-heading" className={columnHeadingClass}>
               {tFooter("legalHeading")}
             </h3>
             <ul className="space-y-3">
               <li>
-                <Link
-                  href="/cgu"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/cgu" className={linkClass}>
                   {tFooter("terms")}
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/mentions-legales"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
-                >
+                <Link href="/mentions-legales" className={linkClass}>
                   {tFooter("legal")}
                 </Link>
+              </li>
+              <li>
+                <a
+                  href="mailto:contact@althea-systems.com"
+                  className={linkClass}
+                >
+                  contact@althea-systems.com
+                </a>
+              </li>
+              <li>
+                <a href="tel:+33123456789" className={linkClass}>
+                  +33 1 23 45 67 89
+                </a>
+              </li>
+              <li>
+                <span className="font-mono text-[11px] lowercase tracking-[0.14em] text-white/50">
+                  {tFooter("location")}
+                </span>
               </li>
             </ul>
           </nav>
         </div>
 
-        {/* Bottom */}
-        <div className="mt-16 pt-8 border-t border-white/15 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-white/85">
-            © {new Date().getFullYear()} Althea Systems. {tFooter("rights")}
+        {/* ── Massive wordmark ────────────────────────────────── */}
+        <div
+          aria-hidden="true"
+          className="mt-24 flex select-none items-end justify-center overflow-hidden"
+        >
+          <span className="font-display block text-hero font-semibold leading-[0.82] tracking-[-0.045em] text-white/95">
+            althea<span className="text-electric-indigo-400">.</span>
+          </span>
+        </div>
+
+        {/* ── Bottom strip ────────────────────────────────────── */}
+        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 md:flex-row md:items-center">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
+            © {year} althea systems — {tFooter("rights")}
           </p>
           <div className="flex items-center gap-4">
-            <span className="text-xs text-white/75">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
               {tFooter("securePayment")}
             </span>
             <div className="flex items-center gap-2" aria-hidden="true">
-              <div className="h-6 w-10 rounded bg-white/15 flex items-center justify-center text-[10px] font-medium text-white/85">
+              <div className="flex h-6 w-10 items-center justify-center rounded border border-white/15 font-mono text-[9px] tracking-wider text-white/60">
                 VISA
               </div>
-              <div className="h-6 w-10 rounded bg-white/15 flex items-center justify-center text-[10px] font-medium text-white/85">
+              <div className="flex h-6 w-10 items-center justify-center rounded border border-white/15 font-mono text-[9px] tracking-wider text-white/60">
                 MC
               </div>
             </div>

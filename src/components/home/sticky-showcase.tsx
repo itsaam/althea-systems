@@ -49,7 +49,7 @@ function ProductPanel({
       className="flex min-h-[80vh] flex-col justify-center lg:min-h-screen"
     >
       <div className="lg:hidden">
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl">
+        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2px] bg-muted">
           {product.image ? (
             <Image
               src={product.image}
@@ -59,33 +59,33 @@ function ProductPanel({
               className="object-cover"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-electric-indigo-100 via-lavender-mist-100 to-shadow-grey-100" />
+            <div className="absolute inset-0 bg-muted" />
           )}
         </div>
       </div>
 
       <div className="mt-8 lg:mt-0">
-        <span className="eyebrow text-lavender-mist-600">
-          {String(index + 1).padStart(2, "0")}
+        <span className="text-eyebrow text-foreground/45 tabular-nums">
+          {String(index + 1).padStart(2, "0")} / 03
           {product.categoryName ? ` · ${product.categoryName}` : ""}
         </span>
-        <h3 className="font-display mt-6 text-4xl italic leading-[1] text-shadow-grey-900 md:text-5xl lg:text-6xl">
+        <h3 className="mt-6 text-h1 text-foreground">
           {product.name}
         </h3>
         {product.description && (
-          <p className="mt-6 max-w-md text-base leading-relaxed text-shadow-grey-600 md:text-lg">
+          <p className="mt-6 max-w-md text-lead text-foreground/65">
             {product.description}
           </p>
         )}
-        <p className="font-display mt-8 text-2xl italic text-electric-indigo-600">
+        <p className="mt-10 font-mono text-sm uppercase tracking-[0.14em] tabular-nums text-foreground/80">
           {formatPrice(product.price)}
         </p>
         <Link
           href={`/products/${product.slug}`}
-          className="group mt-10 inline-flex items-center gap-2 border-b border-shadow-grey-900 pb-1 text-sm font-medium tracking-wide text-shadow-grey-900 transition-opacity duration-500 hover:opacity-70"
+          className="group mt-10 inline-flex items-center gap-2 border-b border-foreground pb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors duration-500 hover:border-electric-indigo-500 hover:text-electric-indigo-500"
         >
           Voir le produit
-          <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out-expo group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
         </Link>
       </div>
     </div>
@@ -101,23 +101,27 @@ export default function StickyShowcase({
   const current = products[active] ?? products[0];
 
   return (
-    <section className="relative bg-shadow-grey-50 py-24 md:py-40">
-      <div className="mx-auto max-w-7xl px-6 md:px-10">
-        <div className="max-w-3xl">
-          <ScrollReveal>
-            <p className="eyebrow text-shadow-grey-500">Sélection</p>
-          </ScrollReveal>
-          <h2 className="font-display mt-6 text-display-sm text-shadow-grey-900">
-            <SplitText as="span" text="Produits" className="block not-italic" />
-            <SplitText
-              as="span"
-              text="signature."
-              delay={0.3}
-              className="block italic text-brand-gradient"
-            />
-          </h2>
-          <ScrollReveal delay={0.5}>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-shadow-grey-600">
+    <section className="relative bg-background py-28 md:py-40">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
+        <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <ScrollReveal>
+              <p className="text-eyebrow text-foreground/45">
+                — Sélection · Produits signature
+              </p>
+            </ScrollReveal>
+            <h2 className="mt-6 text-h1 text-foreground">
+              <SplitText as="span" text="Produits" className="block" />
+              <SplitText
+                as="span"
+                text="signature."
+                delay={0.25}
+                className="block text-foreground/40"
+              />
+            </h2>
+          </div>
+          <ScrollReveal delay={0.4} className="lg:col-span-5">
+            <p className="max-w-md text-lead text-foreground/65">
               Des références soigneusement choisies par nos experts — pour les
               praticiens qui refusent le compromis.
             </p>
@@ -127,7 +131,7 @@ export default function StickyShowcase({
         <div className="mt-20 grid grid-cols-1 gap-12 lg:mt-32 lg:grid-cols-12 lg:gap-20">
           <div className="hidden lg:col-span-6 lg:block">
             <div className="sticky top-24">
-              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-shadow-grey-100">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[2px] bg-muted">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={current?.id}
@@ -147,7 +151,7 @@ export default function StickyShowcase({
                         priority={active === 0}
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-electric-indigo-100 via-lavender-mist-100 to-shadow-grey-100" />
+                      <div className="absolute inset-0 bg-muted" />
                     )}
                   </motion.div>
                 </AnimatePresence>
@@ -156,10 +160,10 @@ export default function StickyShowcase({
                   {products.map((p, i) => (
                     <span
                       key={p.id}
-                      className={`h-1 rounded-full transition-all duration-700 ease-out-expo ${
+                      className={`h-[2px] transition-all duration-700 ease-out ${
                         i === active
-                          ? "w-10 bg-electric-indigo-600"
-                          : "w-5 bg-shadow-grey-300"
+                          ? "w-10 bg-electric-indigo-500"
+                          : "w-5 bg-foreground/20"
                       }`}
                     />
                   ))}

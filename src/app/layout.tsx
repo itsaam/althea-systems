@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif, Noto_Sans_Arabic } from "next/font/google";
+import {
+  Hanken_Grotesk,
+  IBM_Plex_Mono,
+  Newsreader,
+  Noto_Sans_Arabic,
+} from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
@@ -8,27 +13,39 @@ import { Toaster } from "@/components/ui/sonner";
 import CookieBanner from "@/components/cookie-banner";
 import { getDirection } from "@/i18n";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// ──────────────────────────────────────────────────────────────
+// Neo-Grotesque Precision typography stack
+// Sans  — Hanken Grotesk (General Sans equivalent, precise & clinical)
+// Mono  — IBM Plex Mono  (eyebrows, metadata, tabular numerics)
+// Serif — Newsreader     (rare editorial italic accent)
+// Arabic — Noto Sans Arabic (RTL parity)
+// ──────────────────────────────────────────────────────────────
+
+const sans = Hanken_Grotesk({
+  variable: "--font-sans-brand",
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mono = IBM_Plex_Mono({
+  variable: "--font-mono-brand",
   subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
+
+const serif = Newsreader({
+  variable: "--font-serif-brand",
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  display: "swap",
 });
 
 const notoArabic = Noto_Sans_Arabic({
   variable: "--font-noto-arabic",
   subsets: ["arabic"],
-  display: "swap",
-});
-
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  weight: "400",
-  style: ["normal", "italic"],
-  subsets: ["latin"],
   display: "swap",
 });
 
@@ -105,7 +122,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoArabic.variable} ${instrumentSerif.variable} antialiased`}
+        className={`${sans.variable} ${mono.variable} ${serif.variable} ${notoArabic.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SessionProvider>

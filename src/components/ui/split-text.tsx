@@ -11,6 +11,7 @@ type Props = {
   delay?: number;
   stagger?: number;
   as?: Tag;
+  immediate?: boolean;
 };
 
 export default function SplitText({
@@ -19,6 +20,7 @@ export default function SplitText({
   delay = 0,
   stagger = 0.03,
   as = "h1",
+  immediate = false,
 }: Props): ReactElement {
   const words = text.split(" ");
 
@@ -42,13 +44,18 @@ export default function SplitText({
         >
           {word.split("").map((char, charIndex) => {
             const i = prevChars + charIndex;
+            const anim = immediate
+              ? { animate: { opacity: 1, y: "0%" } }
+              : {
+                  whileInView: { opacity: 1, y: "0%" },
+                  viewport: { once: true, margin: "-80px" } as const,
+                };
             return (
               <motion.span
                 key={`${char}-${charIndex}`}
                 style={{ display: "inline-block", willChange: "transform" }}
                 initial={{ opacity: 0, y: "110%" }}
-                whileInView={{ opacity: 1, y: "0%" }}
-                viewport={{ once: true, margin: "-80px" }}
+                {...anim}
                 transition={{
                   duration: 0.9,
                   delay: delay + i * stagger,
