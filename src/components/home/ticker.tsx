@@ -12,7 +12,8 @@ const MARKS = [
 ];
 
 export default function Ticker() {
-  const doubled = [...MARKS, ...MARKS];
+  // Quadrupled so the track is always wider than any viewport — no visual gaps.
+  const repeated = [...MARKS, ...MARKS, ...MARKS, ...MARKS];
 
   return (
     <section
@@ -30,7 +31,7 @@ export default function Ticker() {
       />
 
       <div className="ticker-track flex min-w-max items-center">
-        {doubled.map((mark, i) => {
+        {repeated.map((mark, i) => {
           const Icon = mark.icon;
           return (
             <div
@@ -52,11 +53,11 @@ export default function Ticker() {
 
       <style>{`
         .ticker-track {
-          animation: ticker 48s linear infinite;
+          animation: ticker 96s linear infinite;
         }
         @keyframes ticker {
           from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
+          to { transform: translateX(-25%); }
         }
         @media (prefers-reduced-motion: reduce) {
           .ticker-track {

@@ -14,7 +14,7 @@ export default function Hero() {
         className="pointer-events-none absolute -bottom-48 -left-24 h-[480px] w-[480px] rounded-full bg-electric-indigo-300 opacity-20 blur-[140px]"
       />
 
-      <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-2 md:px-10 md:pb-24 md:pt-4 lg:pb-28 lg:pt-6">
+      <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-12 md:px-10 md:pb-24 md:pt-20 lg:pb-28 lg:pt-28">
         <div className="relative max-w-5xl">
           {/* Eyebrow */}
           <p className="eyebrow flex items-center gap-3">
