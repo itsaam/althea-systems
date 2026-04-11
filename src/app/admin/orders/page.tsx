@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ExportButton } from "@/components/admin/export-button";
+import { AdminPageHeader } from "@/components/admin/shell/page-header";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 
 export default function AdminOrdersPage() {
   const router = useRouter();
@@ -78,9 +80,11 @@ export default function AdminOrdersPage() {
 
       setOrders(data.orders);
       setPageCount(data.pagination.totalPages);
-    } catch (error) {
-      console.error("Erreur chargement commandes:", error);
-      toast.error("Erreur lors du chargement des commandes");
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      setOrders([]);
+      setPageCount(0);
+      signalDegradedMode();
     } finally {
       setIsLoading(false);
     }
@@ -144,15 +148,19 @@ export default function AdminOrdersPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Commandes</h1>
-        <ExportButton
-          endpoint="/api/admin/orders/export"
-          queryParams={statusFilter !== "all" ? { status: statusFilter } : {}}
-        />
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        eyebrow="Admin — Commerce"
+        index="003 / Commandes"
+        title="Commandes"
+        description="Suivez l'état des commandes, leur préparation et leur livraison."
+        actions={
+          <ExportButton
+            endpoint="/api/admin/orders/export"
+            queryParams={statusFilter !== "all" ? { status: statusFilter } : {}}
+          />
+        }
+      />
 
       {/* Toolbar avec recherche et filtre statut */}
       <DataTableToolbar

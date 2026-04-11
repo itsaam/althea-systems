@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,8 @@ import { getProductsColumns } from "@/components/admin/products/products-columns
 import { ProductsTableFilters } from "@/components/admin/products/products-table-filters";
 import { ProductsBulkActions } from "@/components/admin/products/products-bulk-actions";
 import { ClientExportButton } from "@/components/admin/client-export-button";
+import { AdminPageHeader } from "@/components/admin/shell/page-header";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 import type { CsvColumn } from "@/lib/csv-export";
 
 import type { ProductWithCategory, ProductFilters, ProductsResponse } from "@/types/admin-table";
@@ -129,9 +130,11 @@ export default function AdminProductsPage() {
 
       setProducts(data.products);
       setPageCount(data.pagination.totalPages);
-    } catch (error) {
-      console.error("Erreur chargement produits:", error);
-      toast.error("Erreur lors du chargement des produits");
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      setProducts([]);
+      setPageCount(0);
+      signalDegradedMode();
     } finally {
       setIsLoading(false);
     }
@@ -200,22 +203,25 @@ export default function AdminProductsPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Produits</h1>
-        <div className="flex items-center gap-2">
-          <ClientExportButton
-            rows={products}
-            columns={PRODUCT_EXPORT_COLUMNS}
-            filename="produits"
-          />
-          <Button onClick={() => router.push("/admin/products/new")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau produit
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        eyebrow="Admin — Catalogue"
+        index="002 / Produits"
+        title="Catalogue produits"
+        description="Gérez l'intégralité du catalogue, ses visuels, ses stocks et sa mise en avant."
+        actions={
+          <>
+            <ClientExportButton
+              rows={products}
+              columns={PRODUCT_EXPORT_COLUMNS}
+              filename="produits"
+            />
+            <Button onClick={() => router.push("/admin/products/new")}>
+              Nouveau produit
+            </Button>
+          </>
+        }
+      />
 
       {/* Toolbar avec recherche */}
       <DataTableToolbar

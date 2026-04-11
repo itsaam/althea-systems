@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGrid from "@/components/products/product-grid";
 import { productLogger } from "@/lib/logger/exports";
@@ -75,10 +76,10 @@ export async function generateMetadata({
   const canonical = `/categories/${category.slug}`;
 
   return {
-    title: `${category.name} - Equipements medicaux`,
+    title: `${category.name} — Althea Systems`,
     description,
     openGraph: {
-      title: `${category.name} - Althea Systems`,
+      title: `${category.name} — Althea Systems`,
       description,
       url: canonical,
       type: "website",
@@ -87,7 +88,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${category.name} - Althea Systems`,
+      title: `${category.name} — Althea Systems`,
       description,
       site: "@altheasystems",
     },
@@ -106,24 +107,98 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">{category.name}</h1>
-        {category.description && (
-          <p className="text-muted-foreground">{category.description}</p>
-        )}
-      </div>
+  const productCount = category.products.length;
 
-      {category.products.length === 0 ? (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">
-            Aucun produit dans cette categorie
-          </p>
+  return (
+    <div className="bg-background text-foreground">
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden border-b border-border/60">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-16 pt-24 sm:px-6 lg:px-10 lg:pb-20 lg:pt-32">
+          {/* Breadcrumb */}
+          <div className="flex flex-wrap items-center justify-between gap-y-3">
+            <nav
+              aria-label="Fil d'Ariane"
+              className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50"
+            >
+              <Link
+                href="/"
+                className="transition-colors hover:text-foreground"
+              >
+                Accueil
+              </Link>
+              <span aria-hidden="true" className="text-foreground/30">
+                ·
+              </span>
+              <Link
+                href="/categories"
+                className="transition-colors hover:text-foreground"
+              >
+                Catégories
+              </Link>
+              <span aria-hidden="true" className="text-foreground/30">
+                ·
+              </span>
+              <span className="text-foreground">{category.name}</span>
+            </nav>
+            <p className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/40 tabular-nums sm:block">
+              Index · 006 / {slug}
+            </p>
+          </div>
+
+          <h1 className="mt-16 font-display text-h1 leading-[1] tracking-[-0.03em] text-foreground lg:mt-20">
+            {category.name}
+            <span className="text-electric-indigo-500">.</span>
+          </h1>
+
+          <div className="mt-10 grid grid-cols-1 gap-6 border-t border-border/60 pt-8 lg:grid-cols-12">
+            {category.description ? (
+              <p className="text-lead text-foreground/70 lg:col-span-7 lg:col-start-1">
+                {category.description}
+              </p>
+            ) : (
+              <p className="text-lead text-foreground/70 lg:col-span-7 lg:col-start-1">
+                Sélection certifiée par notre comité clinique. Livraison 48h,
+                support humain, garantie constructeur.
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 lg:col-span-4 lg:col-start-9 lg:justify-end">
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50 tabular-nums">
+                {String(productCount).padStart(3, "0")}{" "}
+                {productCount > 1 ? "produits" : "produit"}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                CE · ISO 13485
+              </span>
+            </div>
+          </div>
         </div>
-      ) : (
-        <ProductGrid products={category.products} />
-      )}
+      </section>
+
+      {/* ── Products ─────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
+          {productCount === 0 ? (
+            <div className="border-y border-border/60 py-24 text-center">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+                Stock · 000 / Vide
+              </p>
+              <p className="mt-4 text-body text-foreground/70">
+                Aucun produit publié dans cette catégorie pour le moment.
+              </p>
+              <Link
+                href="/categories"
+                className="mt-8 inline-flex items-center gap-2 rounded-full border border-foreground/20 px-6 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
+              >
+                ← Retour au catalogue
+              </Link>
+            </div>
+          ) : (
+            <div className="border-t border-border/60 pt-10">
+              <ProductGrid products={category.products} />
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

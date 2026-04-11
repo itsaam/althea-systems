@@ -236,7 +236,7 @@ export function MultiImageUpload({
 
       {value.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          💡 La première image est l&apos;image principale. Glissez les images pour réorganiser.
+          La première image est l&apos;image principale. Glissez les images pour réorganiser.
         </p>
       )}
     </div>

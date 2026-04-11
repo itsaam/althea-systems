@@ -24,22 +24,31 @@ interface DataTablePaginationProps<TData> {
 export function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
+  const pageIndex = table.getState().pagination.pageIndex + 1;
+  const pageCount = Math.max(table.getPageCount(), 1);
+  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
+  const totalCount = table.getFilteredRowModel().rows.length;
+
   return (
-    <div className="flex items-center justify-between px-2">
-      <div className="flex-1 text-sm text-muted-foreground">
-        {table.getFilteredSelectedRowModel().rows.length} sur{" "}
-        {table.getFilteredRowModel().rows.length} ligne(s) sélectionnée(s).
+    <div className="flex items-center justify-between">
+      <div className="flex-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+        <span className="tabular-nums">{selectedCount}</span>
+        <span className="mx-1 text-foreground/25">/</span>
+        <span className="tabular-nums">{totalCount}</span>
+        <span className="ml-2 opacity-70">sélectionné{selectedCount > 1 ? "s" : ""}</span>
       </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Lignes par page</p>
+      <div className="flex items-center gap-6 lg:gap-8">
+        <div className="flex items-center gap-2">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+            Lignes
+          </p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
               table.setPageSize(Number(value));
             }}
           >
-            <SelectTrigger className="h-8 w-[70px]">
+            <SelectTrigger className="h-8 w-[70px] font-mono text-[11px] tabular-nums">
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
@@ -51,9 +60,10 @@ export function DataTablePagination<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} sur{" "}
-          {table.getPageCount()}
+        <div className="flex w-[90px] items-center justify-center font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/70 tabular-nums">
+          {pageIndex.toString().padStart(2, "0")}
+          <span className="mx-1 text-foreground/25">/</span>
+          {pageCount.toString().padStart(2, "0")}
         </div>
         <div className="flex items-center space-x-2">
           <Button

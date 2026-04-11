@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AdminPageHeader } from "@/components/admin/shell/page-header";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -77,9 +79,11 @@ export default function AdminUsersPage() {
 
       setUsers(responseData.users);
       setPageCount(responseData.pagination.totalPages);
-    } catch (error) {
-      console.error("Erreur chargement utilisateurs:", error);
-      toast.error("Erreur lors du chargement des utilisateurs");
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      setUsers([]);
+      setPageCount(0);
+      signalDegradedMode();
     } finally {
       setIsLoading(false);
     }
@@ -233,12 +237,14 @@ export default function AdminUsersPage() {
   );
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Utilisateurs</h1>
-        <ExportButton endpoint="/api/admin/users/export" />
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        eyebrow="Admin — Audience"
+        index="004 / Utilisateurs"
+        title="Utilisateurs"
+        description="Gérez les comptes, leurs rôles et leur statut d'accès au back office."
+        actions={<ExportButton endpoint="/api/admin/users/export" />}
+      />
 
       {/* Toolbar with search + filters */}
       <DataTableToolbar

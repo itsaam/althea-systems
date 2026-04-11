@@ -199,8 +199,8 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
                 </h3>
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800 font-semibold mb-2">
-                    ⚠️ Important : Ces codes ne seront affichés qu&apos;une
-                    seule fois !
+                    Important : Ces codes ne seront affichés qu&apos;une seule
+                    fois.
                   </p>
                   <p className="text-sm text-yellow-700 mb-3">
                     Conservez ces codes en lieu sûr. Chaque code peut être
@@ -223,7 +223,7 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
                     size="sm"
                     className="w-full"
                   >
-                    📥 Télécharger les codes
+                    Télécharger les codes
                   </Button>
                 </div>
               </div>

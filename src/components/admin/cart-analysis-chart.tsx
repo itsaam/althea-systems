@@ -2,28 +2,16 @@
 
 import { useEffect, useState } from "react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
+import { cn } from "@/lib/utils";
+import { MOCK_CART_ANALYSIS, signalDegradedMode } from "@/lib/admin/mock-data";
 
 interface CartAnalysisDataPoint {
   period: string;
@@ -32,16 +20,49 @@ interface CartAnalysisDataPoint {
 
 type Period = "7days" | "5weeks";
 
-const COLORS = [
-  "#00a8b5",
-  "#ff6b6b",
-  "#4ecdc4",
-  "#45b7d1",
-  "#f7b731",
-  "#5f27cd",
-  "#00d2d3",
-  "#fd79a8",
+// Palette sobre : foreground + nuances de gris + un accent indigo sur la première catégorie
+const BAR_CLASSES = [
+  "text-electric-indigo-500",
+  "text-foreground",
+  "text-foreground/55",
+  "text-foreground/35",
+  "text-foreground/20",
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip(props: any) {
+  const { active, payload, label } = props;
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="border border-border/80 bg-background px-3 py-2 shadow-sm">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
+        {label}
+      </p>
+      <ul className="mt-2 space-y-1">
+        {payload.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (entry: any, i: number) => (
+            <li
+              key={i}
+              className="flex items-baseline justify-between gap-3 text-[11px]"
+            >
+              <span className="font-mono uppercase tracking-[0.16em] text-foreground/55">
+                {entry.name}
+              </span>
+              <span className="font-mono tabular-nums text-foreground">
+                {Number(entry.value).toLocaleString("fr-FR", {
+                  style: "currency",
+                  currency: "EUR",
+                  maximumFractionDigits: 0,
+                })}
+              </span>
+            </li>
+          )
+        )}
+      </ul>
+    </div>
+  );
+}
 
 export default function CartAnalysisChart() {
   const [rawData, setRawData] = useState<CartAnalysisDataPoint[]>([]);
@@ -49,30 +70,33 @@ export default function CartAnalysisChart() {
   const [period, setPeriod] = useState<Period>("7days");
 
   useEffect(() => {
-    async function fetchCartAnalysis() {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
       try {
-        setLoading(true);
-        const response = await fetch(
+        const res = await fetch(
           `/api/admin/dashboard/cart-analysis?period=${period}`
         );
-        if (!response.ok)
-          throw new Error("Erreur lors du chargement de l'analyse");
-        const result = await response.json();
-        setRawData(result);
-      } catch (error) {
-        console.error("Erreur:", error);
+        if (!res.ok) throw new Error("cart-unavailable");
+        const json = (await res.json()) as CartAnalysisDataPoint[];
+        if (!cancelled) setRawData(json);
+      } catch {
+        if (!cancelled) {
+          setRawData(MOCK_CART_ANALYSIS);
+          signalDegradedMode();
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
-
-    fetchCartAnalysis();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [period]);
 
   const allCategories = Array.from(
-    new Set(
-      rawData.flatMap((item) => Object.keys(item.categories))
-    )
+    new Set(rawData.flatMap((item) => Object.keys(item.categories)))
   );
 
   const chartData = rawData.map((item) => ({
@@ -80,98 +104,131 @@ export default function CartAnalysisChart() {
     ...item.categories,
   }));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip = (props: any) => {
-    const { active, payload, label } = props;
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold mb-2">{label}</p>
-          {payload.map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (entry: any, index: number) => (
-            <p key={index} className="text-sm text-muted-foreground">
-              <span
-                className="inline-block w-3 h-3 mr-2 rounded"
-                style={{ backgroundColor: entry.color }}
-              />
-              {entry.name}:{" "}
-              <span className="font-bold text-foreground">
-                {Number(entry.value).toLocaleString("fr-FR", {
-                  style: "currency",
-                  currency: "EUR",
-                })}
-              </span>
-            </p>
+  return (
+    <section className="border-t border-border/60 pt-6">
+      <header className="mb-6 flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+            <span className="mr-1.5 tabular-nums text-foreground/35">07</span>
+            Panier moyen par catégorie
+          </p>
+          <p className="mt-2 font-display text-[18px] font-medium leading-none tracking-tight text-foreground">
+            Distribution quotidienne
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {(["7days", "5weeks"] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriod(p)}
+              className={cn(
+                "font-mono text-[10px] uppercase tracking-[0.18em] transition-colors",
+                period === p
+                  ? "text-electric-indigo-500"
+                  : "text-foreground/40 hover:text-foreground/70"
+              )}
+            >
+              {p === "7days" ? "7 jours" : "5 semaines"}
+            </button>
           ))}
         </div>
-      );
-    }
-    return null;
-  };
+      </header>
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Panier moyen par catégorie</CardTitle>
-          <Select
-            value={period}
-            onValueChange={(value) => setPeriod(value as Period)}
-          >
-            <SelectTrigger className="w-[180px]" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7days">7 derniers jours</SelectItem>
-              <SelectItem value="5weeks">5 dernières semaines</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent>
+      <div className="h-[320px]">
         {loading ? (
-          <div className="h-[350px] flex items-center justify-center">
-            <div className="text-muted-foreground">Chargement...</div>
+          <div className="flex h-full items-center justify-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+              Chargement
+            </p>
           </div>
         ) : chartData.length === 0 ? (
-          <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-            Aucune donnée disponible
+          <div className="flex h-full items-center justify-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+              Aucune donnée
+            </p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData}
+              margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="2 4"
+                stroke="currentColor"
+                className="text-foreground/10"
+                vertical={false}
+              />
               <XAxis
                 dataKey="period"
-                className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  fill: "currentColor",
+                }}
+                className="text-foreground/45"
               />
               <YAxis
-                className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
-                tickFormatter={(value) =>
-                  `${value >= 1000 ? (value / 1000).toFixed(0) + "k" : value}€`
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  fill: "currentColor",
+                }}
+                className="text-foreground/45"
+                tickFormatter={(v) =>
+                  `${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v}`
                 }
+                width={40}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ fontSize: "12px" }}
-                iconType="circle"
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{
+                  fill: "currentColor",
+                  className: "text-foreground/[0.04]",
+                }}
               />
               {allCategories.map((category, index) => (
                 <Bar
                   key={category}
                   dataKey={category}
-                  fill={COLORS[index % COLORS.length]}
-                  radius={[4, 4, 0, 0]}
-                  name={category}
+                  fill="currentColor"
+                  className={BAR_CLASSES[index % BAR_CLASSES.length]}
+                  radius={[2, 2, 0, 0]}
+                  maxBarSize={24}
                 />
               ))}
             </BarChart>
           </ResponsiveContainer>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Legend mono */}
+      {!loading && allCategories.length > 0 && (
+        <ul className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+          {allCategories.map((cat, idx) => (
+            <li
+              key={cat}
+              className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/55"
+            >
+              <span
+                className={cn(
+                  "h-2 w-2",
+                  BAR_CLASSES[idx % BAR_CLASSES.length].replace(
+                    "text-",
+                    "bg-"
+                  )
+                )}
+              />
+              {cat}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

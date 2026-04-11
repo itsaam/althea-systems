@@ -1,15 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
-import {
-  Clock,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Phone,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
 import ContactForm from "@/components/contact/contact-form";
 
 export const metadata: Metadata = {
@@ -19,182 +9,185 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export default async function ContactPage() {
-  const t = await getTranslations("contactPage");
+const COORDINATES = [
+  {
+    label: "Téléphone",
+    primary: "+33 (0)4 72 00 00 00",
+    detail: "Lun — Ven · 09h — 18h",
+    href: "tel:+33472000000",
+  },
+  {
+    label: "Commercial",
+    primary: "contact@althea-systems.com",
+    detail: "Réponse sous 24h ouvrées",
+    href: "mailto:contact@althea-systems.com",
+  },
+  {
+    label: "Support SAV",
+    primary: "support@althea-systems.com",
+    detail: "Livraison · maintenance · retours",
+    href: "mailto:support@althea-systems.com",
+  },
+];
 
-  const contactMethods = [
-    {
-      icon: Phone,
-      label: t("methods.phone.label"),
-      primary: "+33 (0)4 72 00 00 00",
-      detail: t("methods.phone.detail"),
-      href: "tel:+33472000000",
-    },
-    {
-      icon: Mail,
-      label: t("methods.emailSales.label"),
-      primary: "contact@althea-systems.com",
-      detail: t("methods.emailSales.detail"),
-      href: "mailto:contact@althea-systems.com",
-    },
-    {
-      icon: MessageCircle,
-      label: t("methods.support.label"),
-      primary: "support@althea-systems.com",
-      detail: t("methods.support.detail"),
-      href: "mailto:support@althea-systems.com",
-    },
-  ] as const;
+const ADDRESS_LINES = [
+  "Althea Systems SAS",
+  "42 rue de la Santé",
+  "69003 Lyon — France",
+];
 
-  const hours = [
-    { day: t("hours.weekdays"), value: "9h00 — 18h00" },
-    { day: t("hours.friday"), value: "9h00 — 17h00" },
-    { day: t("hours.weekend"), value: t("hours.closed") },
-  ];
+const HOURS = [
+  { day: "Lun — Jeu", value: "09h — 18h" },
+  { day: "Vendredi", value: "09h — 17h" },
+  { day: "Sam — Dim", value: "Fermé" },
+];
 
+const SPECS = [
+  "SAV 7j/7",
+  "Lun — Ven · 09h — 19h",
+  "Réponse < 24h",
+  "ISO 13485",
+];
+
+export default function ContactPage() {
   return (
-    <div>
-      <section className="relative overflow-hidden border-b bg-[#003d5c] text-white">
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 30%, white 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute -right-24 top-1/2 h-[420px] w-[420px] -translate-y-1/2 rounded-full bg-primary/20 blur-3xl"
-          aria-hidden="true"
-        />
-        <div className="container relative py-16 md:py-20 lg:py-24">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur">
-              <Sparkles className="h-3 w-3" aria-hidden="true" />
-              {t("hero.eyebrow")}
-            </div>
-            <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-              {t.rich("hero.title", {
-                em: (chunks) => (
-                  <span className="italic text-white/80">{chunks}</span>
-                ),
-              })}
-            </h1>
-            <p className="mt-5 max-w-xl text-base text-white/70 md:text-lg">
-              {t("hero.subtitle")}
+    <div className="bg-background text-foreground">
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden border-b border-border/60">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-16 pt-24 sm:px-6 lg:px-10 lg:pb-24 lg:pt-32">
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+              Althea Systems — Contact · FR
             </p>
+            <p className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/40 tabular-nums sm:block">
+              Index · 004 / Contact
+            </p>
+          </div>
+
+          <div className="mt-16 grid grid-cols-1 gap-10 lg:mt-24 lg:grid-cols-12">
+            <h1 className="font-display text-hero leading-[0.88] tracking-[-0.035em] text-foreground lg:col-span-12">
+              Un vrai humain
+              <span className="text-electric-indigo-500">.</span>
+              <br className="hidden sm:block" />
+              Pas un formulaire.
+            </h1>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 gap-6 border-t border-border/60 pt-8 lg:grid-cols-12">
+            <p className="text-lead text-foreground/70 lg:col-span-6 lg:col-start-1">
+              Cabinet, clinique, centre de soins ou hôpital — notre équipe
+              commerciale vous répond directement, sans chatbot ni ticket
+              anonyme.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 lg:col-span-5 lg:col-start-8 lg:justify-end">
+              {SPECS.map((spec) => (
+                <span
+                  key={spec}
+                  className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50"
+                >
+                  {spec}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="container py-14 md:py-20">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:gap-16">
-          <aside className="space-y-10">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                {t("reach.eyebrow")}
-              </p>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
-                {t("reach.title")}
-              </h2>
-              <p className="mt-3 text-sm text-muted-foreground">
-                {t("reach.subtitle")}
-              </p>
-            </div>
+      {/* ── Editorial body : coords + form ──────────────────────── */}
+      <section className="relative isolate grain overflow-hidden">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-20 sm:px-6 lg:px-10 lg:py-32">
+          <div className="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-10">
+            {/* ── Left : editorial coordinates ──────────────────── */}
+            <aside className="flex flex-col gap-12 lg:col-span-5">
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+                  Coordonnées · 001 / Canaux
+                </p>
+                <h2 className="mt-4 font-display text-h2 leading-[1.02] tracking-[-0.025em] text-foreground">
+                  Trois canaux.
+                  <br />
+                  Une réponse.
+                </h2>
+              </div>
 
-            <ul className="space-y-4">
-              {contactMethods.map((method) => {
-                const Icon = method.icon;
-                return (
-                  <li key={method.label}>
+              <ul className="flex flex-col divide-y divide-border/60 border-y border-border/60">
+                {COORDINATES.map((c) => (
+                  <li key={c.label}>
                     <a
-                      href={method.href}
-                      className="group flex items-start gap-4 rounded-xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                      href={c.href}
+                      className="group flex items-baseline justify-between gap-6 py-6 transition-colors hover:text-electric-indigo-500"
                     >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50 group-hover:text-electric-indigo-500/70">
+                          {c.label}
+                        </span>
+                        <span className="truncate font-display text-lg tracking-[-0.01em] text-foreground group-hover:text-electric-indigo-500 sm:text-xl">
+                          {c.primary}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+                          {c.detail}
+                        </span>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          {method.label}
-                        </p>
-                        <p className="mt-0.5 break-words text-base font-semibold tracking-tight">
-                          {method.primary}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {method.detail}
-                        </p>
-                      </div>
+                      <span
+                        aria-hidden="true"
+                        className="shrink-0 font-mono text-[11px] text-foreground/40 transition-transform group-hover:translate-x-1 group-hover:text-electric-indigo-500"
+                      >
+                        →
+                      </span>
                     </a>
                   </li>
-                );
-              })}
-            </ul>
-
-            <div className="rounded-xl border bg-card p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <MapPin className="h-4 w-4" aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t("headquarters.label")}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold leading-relaxed">
-                    Althea Systems SAS
-                    <br />
-                    42 rue de la Santé
-                    <br />
-                    69003 Lyon, France
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border bg-card p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <Clock
-                  className="h-4 w-4 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t("hours.label")}
-                </p>
-              </div>
-              <dl className="space-y-1.5 text-sm">
-                {hours.map((row) => (
-                  <div
-                    key={row.day}
-                    className="flex items-baseline justify-between gap-4"
-                  >
-                    <dt className="text-muted-foreground">{row.day}</dt>
-                    <dd className="font-medium tabular-nums">{row.value}</dd>
-                  </div>
                 ))}
-              </dl>
-            </div>
+              </ul>
 
-            <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-5">
-              <ShieldCheck
-                className="mt-0.5 h-5 w-5 shrink-0 text-primary"
-                aria-hidden="true"
-              />
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {t("rgpd.text")}{" "}
+              <div className="grid grid-cols-2 gap-8">
+                <div className="flex flex-col gap-2">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                    Siège social
+                  </p>
+                  <address className="not-italic font-mono text-xs leading-relaxed text-foreground/80">
+                    {ADDRESS_LINES.map((line) => (
+                      <span key={line} className="block">
+                        {line}
+                      </span>
+                    ))}
+                  </address>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                    Horaires
+                  </p>
+                  <dl className="flex flex-col gap-1">
+                    {HOURS.map((row) => (
+                      <div
+                        key={row.day}
+                        className="flex items-baseline justify-between gap-3 font-mono text-xs tabular-nums text-foreground/80"
+                      >
+                        <dt className="text-foreground/50">{row.day}</dt>
+                        <dd>{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </div>
+
+              <p className="max-w-sm border-t border-border/60 pt-6 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-foreground/50">
+                Vos données sont traitées dans le strict respect du RGPD.{" "}
                 <Link
                   href="/legal/privacy"
-                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  className="text-foreground underline-offset-4 hover:underline hover:text-electric-indigo-500"
                 >
-                  {t("rgpd.linkLabel")}
+                  Confidentialité
                 </Link>
                 .
               </p>
-            </div>
-          </aside>
+            </aside>
 
-          <div>
-            <ContactForm />
+            {/* ── Right : form ──────────────────────────────────── */}
+            <div className="lg:col-span-6 lg:col-start-7">
+              <div className="border-t border-border/60 pt-10 lg:border-0 lg:pt-0">
+                <ContactForm />
+              </div>
+            </div>
           </div>
         </div>
       </section>

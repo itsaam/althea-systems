@@ -3,19 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { AlertCircle, Check, Loader2, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AlertCircle, Check, Loader2 } from "lucide-react";
 
 const SUBJECTS = [
   { value: "commercial", label: "Demande commerciale" },
@@ -79,7 +67,10 @@ export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleChange = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+  const handleChange = <K extends keyof FormState>(
+    key: K,
+    value: FormState[K]
+  ) => {
     setValues((prev) => ({ ...prev, [key]: value }));
     if (errors[key as keyof ContactFormValues]) {
       setErrors((prev) => {
@@ -108,7 +99,8 @@ export default function ContactForm() {
 
     setSubmitting(true);
     try {
-      const subjectLabel = SUBJECT_LABEL.get(parsed.data.subjectKey) ?? parsed.data.subjectKey;
+      const subjectLabel =
+        SUBJECT_LABEL.get(parsed.data.subjectKey) ?? parsed.data.subjectKey;
       const fullSubject = parsed.data.company
         ? `[${subjectLabel}] ${parsed.data.company}`
         : `[${subjectLabel}]`;
@@ -153,27 +145,26 @@ export default function ContactForm() {
       <div
         role="status"
         aria-live="polite"
-        className="rounded-2xl border bg-card p-8 text-center md:p-10"
+        className="border-t border-border/60 pt-10"
       >
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Check className="h-6 w-6" aria-hidden="true" />
-        </div>
-        <h2 className="mt-5 text-xl font-bold tracking-tight">
-          Message bien reçu
-        </h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          Un membre de notre équipe commerciale va vous recontacter sous 24
-          heures ouvrées à l&apos;adresse indiquée. Une copie de confirmation
-          vous a été envoyée par email.
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+          Statut · 200 / Reçu
         </p>
-        <Button
+        <h2 className="mt-4 font-display text-h2 leading-[1.02] tracking-[-0.025em] text-foreground">
+          Message reçu<span className="text-electric-indigo-500">.</span>
+        </h2>
+        <p className="mt-4 max-w-md text-body text-foreground/70">
+          Un membre de notre équipe commerciale vous recontactera sous 24 heures
+          ouvrées à l&apos;adresse indiquée. Une copie de confirmation vous a
+          été envoyée par email.
+        </p>
+        <button
           type="button"
-          variant="outline"
-          className="mt-6"
           onClick={() => setSubmitted(false)}
+          className="mt-8 inline-flex items-center rounded-full border border-foreground/20 px-6 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
         >
           Envoyer un autre message
-        </Button>
+        </button>
       </div>
     );
   }
@@ -182,22 +173,27 @@ export default function ContactForm() {
     <form
       noValidate
       onSubmit={handleSubmit}
-      className="space-y-5 rounded-2xl border bg-card p-6 md:p-8"
       aria-describedby="contact-form-intro"
+      className="flex flex-col gap-8"
     >
-      <div>
-        <h2 className="text-xl font-bold tracking-tight md:text-2xl">
-          Envoyez-nous un message
-        </h2>
-        <p id="contact-form-intro" className="mt-2 text-sm text-muted-foreground">
+      <div className="flex flex-col gap-2">
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+          Formulaire · 001 / Demande
+        </p>
+        <p id="contact-form-intro" className="text-body text-foreground/70">
           Réponse garantie sous 24 heures ouvrées. Les champs marqués d&apos;un
           astérisque sont obligatoires.
         </p>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Nom complet" htmlFor="name" error={errors.name} required>
-          <Input
+      <div className="grid gap-8 sm:grid-cols-2">
+        <MinimalField
+          label="Nom complet"
+          htmlFor="name"
+          error={errors.name}
+          required
+        >
+          <input
             id="name"
             name="name"
             type="text"
@@ -208,11 +204,17 @@ export default function ContactForm() {
             aria-describedby={errors.name ? "name-error" : undefined}
             placeholder="Dr. Jeanne Moreau"
             disabled={submitting}
+            className={inputClass}
           />
-        </Field>
+        </MinimalField>
 
-        <Field label="Email professionnel" htmlFor="email" error={errors.email} required>
-          <Input
+        <MinimalField
+          label="Email professionnel"
+          htmlFor="email"
+          error={errors.email}
+          required
+        >
+          <input
             id="email"
             name="email"
             type="email"
@@ -223,12 +225,17 @@ export default function ContactForm() {
             aria-describedby={errors.email ? "email-error" : undefined}
             placeholder="cabinet@exemple.fr"
             disabled={submitting}
+            className={inputClass}
           />
-        </Field>
+        </MinimalField>
       </div>
 
-      <Field label="Société / structure" htmlFor="company" error={errors.company}>
-        <Input
+      <MinimalField
+        label="Société / structure"
+        htmlFor="company"
+        error={errors.company}
+      >
+        <input
           id="company"
           name="company"
           type="text"
@@ -239,38 +246,51 @@ export default function ContactForm() {
           aria-describedby={errors.company ? "company-error" : undefined}
           placeholder="Cabinet, clinique, hôpital…"
           disabled={submitting}
+          className={inputClass}
         />
-      </Field>
+      </MinimalField>
 
-      <Field label="Sujet" htmlFor="subject" error={errors.subjectKey} required>
-        <Select
+      <MinimalField
+        label="Sujet"
+        htmlFor="subject"
+        error={errors.subjectKey}
+        required
+      >
+        <select
+          id="subject"
+          name="subject"
           value={values.subjectKey}
-          onValueChange={(val) => handleChange("subjectKey", val)}
+          onChange={(e) => handleChange("subjectKey", e.target.value)}
+          aria-invalid={Boolean(errors.subjectKey)}
+          aria-describedby={errors.subjectKey ? "subject-error" : undefined}
           disabled={submitting}
+          className={`${inputClass} appearance-none bg-[length:8px] bg-[right_0_center] bg-no-repeat pr-6`}
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path fill='%23000' d='M0 2l4 4 4-4z'/></svg>\")",
+          }}
         >
-          <SelectTrigger
-            id="subject"
-            aria-invalid={Boolean(errors.subjectKey)}
-            aria-describedby={errors.subjectKey ? "subject-error" : undefined}
-            className="h-10"
-          >
-            <SelectValue placeholder="Sélectionnez un sujet" />
-          </SelectTrigger>
-          <SelectContent>
-            {SUBJECTS.map((subject) => (
-              <SelectItem key={subject.value} value={subject.value}>
-                {subject.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
+          <option value="" disabled>
+            Sélectionnez un sujet
+          </option>
+          {SUBJECTS.map((subject) => (
+            <option key={subject.value} value={subject.value}>
+              {subject.label}
+            </option>
+          ))}
+        </select>
+      </MinimalField>
 
-      <Field label="Message" htmlFor="message" error={errors.message} required>
-        <Textarea
+      <MinimalField
+        label="Message"
+        htmlFor="message"
+        error={errors.message}
+        required
+      >
+        <textarea
           id="message"
           name="message"
-          rows={6}
+          rows={5}
           value={values.message}
           onChange={(e) => handleChange("message", e.target.value)}
           aria-invalid={Boolean(errors.message)}
@@ -278,51 +298,51 @@ export default function ContactForm() {
           placeholder="Décrivez votre besoin, votre structure et le niveau d'urgence…"
           maxLength={2000}
           disabled={submitting}
-          className="min-h-[150px] resize-y"
+          className={`${inputClass} resize-y pt-3`}
         />
         {!errors.message && (
-          <p id="message-help" className="mt-1.5 text-xs text-muted-foreground">
-            {values.message.length} / 2000 caractères
+          <p
+            id="message-help"
+            className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] tabular-nums text-foreground/40"
+          >
+            {String(values.message.length).padStart(4, "0")} / 2000
           </p>
         )}
-      </Field>
+      </MinimalField>
 
-      <div
-        className={`rounded-lg border p-4 ${
-          errors.consent ? "border-destructive/40 bg-destructive/5" : "bg-muted/30"
-        }`}
-      >
+      <div className="border-t border-border/60 pt-6">
         <label
           htmlFor="consent"
           className="flex cursor-pointer items-start gap-3 text-sm"
         >
-          <Checkbox
+          <input
             id="consent"
+            type="checkbox"
             checked={values.consent}
-            onCheckedChange={(checked) => handleChange("consent", checked === true)}
+            onChange={(e) => handleChange("consent", e.target.checked)}
             disabled={submitting}
             aria-invalid={Boolean(errors.consent)}
             aria-describedby={errors.consent ? "consent-error" : undefined}
-            className="mt-0.5"
+            className="mt-1 h-3.5 w-3.5 shrink-0 border-foreground/40 accent-electric-indigo-500"
           />
-          <span className="text-muted-foreground">
+          <span className="text-xs leading-relaxed text-foreground/70">
             J&apos;accepte qu&apos;Althea Systems traite les données saisies
             dans ce formulaire dans le seul but de répondre à ma demande,
             conformément à sa{" "}
             <a
               href="/legal/privacy"
-              className="font-medium text-primary underline-offset-4 hover:underline"
+              className="font-medium text-foreground underline underline-offset-4 hover:text-electric-indigo-500"
             >
               politique de confidentialité
             </a>
-            . <span className="text-destructive">*</span>
+            . <span className="text-electric-indigo-500">*</span>
           </span>
         </label>
         {errors.consent && (
           <p
             id="consent-error"
             role="alert"
-            className="ml-7 mt-2 flex items-center gap-1.5 text-xs text-destructive"
+            className="ml-7 mt-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-red-600 dark:text-red-400"
           >
             <AlertCircle className="h-3 w-3" aria-hidden="true" />
             {errors.consent}
@@ -330,29 +350,38 @@ export default function ContactForm() {
         )}
       </div>
 
-      <Button
-        type="submit"
-        size="lg"
-        className="w-full sm:w-auto"
-        disabled={submitting}
-      >
-        {submitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-            Envoi en cours…
-          </>
-        ) : (
-          <>
-            <Send className="mr-2 h-4 w-4" aria-hidden="true" />
-            Envoyer le message
-          </>
-        )}
-      </Button>
+      <div>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="group inline-flex items-center gap-3 rounded-full bg-foreground px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-all hover:bg-electric-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              Envoi en cours
+            </>
+          ) : (
+            <>
+              Envoyer le message
+              <span
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </>
+          )}
+        </button>
+      </div>
     </form>
   );
 }
 
-interface FieldProps {
+const inputClass =
+  "w-full border-0 border-b border-border/80 bg-transparent px-0 py-3 font-sans text-body text-foreground placeholder:text-foreground/30 focus:border-foreground focus:outline-none focus:ring-0 disabled:opacity-60 aria-[invalid=true]:border-red-500";
+
+interface MinimalFieldProps {
   label: string;
   htmlFor: string;
   error?: string;
@@ -360,19 +389,28 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-function Field({ label, htmlFor, error, required, children }: FieldProps) {
+function MinimalField({
+  label,
+  htmlFor,
+  error,
+  required,
+  children,
+}: MinimalFieldProps) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={htmlFor} className="text-sm font-medium">
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={htmlFor}
+        className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50"
+      >
         {label}
-        {required && <span className="ml-1 text-destructive">*</span>}
-      </Label>
+        {required && <span className="ml-1 text-electric-indigo-500">*</span>}
+      </label>
       {children}
       {error && (
         <p
           id={`${htmlFor}-error`}
           role="alert"
-          className="flex items-center gap-1.5 text-xs text-destructive"
+          className="mt-1 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-red-600 dark:text-red-400"
         >
           <AlertCircle className="h-3 w-3" aria-hidden="true" />
           {error}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 
 interface StockAlerts {
   outOfStock: number;
@@ -10,31 +11,43 @@ interface StockAlerts {
 }
 
 export function StockAlertBadge() {
-  const [alerts, setAlerts] = useState<StockAlerts>({ 
-    outOfStock: 0, 
+  const [alerts, setAlerts] = useState<StockAlerts>({
+    outOfStock: 0,
     lowStock: 0,
     threshold: 5,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     fetch("/api/admin/stock/alerts")
-      .then((res) => res.json())
-      .then((data) => {
-        setAlerts(data);
-        setLoading(false);
+      .then((res) => {
+        if (!res.ok) throw new Error("stock-unavailable");
+        return res.json();
       })
-      .catch((error) => {
-        console.error("Erreur chargement alertes stock:", error);
-        setLoading(false);
+      .then((data) => {
+        if (!cancelled) {
+          setAlerts(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          // Silent fallback — DB unavailable in dev backdoor mode
+          setLoading(false);
+          signalDegradedMode();
+        }
       });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) {
     return (
-      <div className="animate-pulse bg-gray-200 px-3 py-1 rounded-full text-sm">
-        Chargement...
-      </div>
+      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+        Chargement
+      </span>
     );
   }
 
@@ -42,22 +55,35 @@ export function StockAlertBadge() {
 
   if (!hasAlerts) {
     return (
-      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-        ✅ Stock OK
+      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/55">
+        Stock OK
       </span>
     );
   }
 
   return (
-    <Link href="/admin/stock/alerts" className="flex gap-2 items-center">
+    <Link
+      href="/admin/products"
+      className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-electric-indigo-500"
+    >
       {alerts.outOfStock > 0 && (
-        <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-red-600 transition-colors">
-          🔴 {alerts.outOfStock} rupture{alerts.outOfStock > 1 ? "s" : ""}
+        <span className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"
+          />
+          <span className="tabular-nums">{alerts.outOfStock}</span>
+          {" "}rupture{alerts.outOfStock > 1 ? "s" : ""}
         </span>
       )}
       {alerts.lowStock > 0 && (
-        <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors">
-          ⚠️ {alerts.lowStock} stock faible (&lt;{alerts.threshold})
+        <span className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"
+          />
+          <span className="tabular-nums">{alerts.lowStock}</span>
+          {" "}stock faible
         </span>
       )}
     </Link>

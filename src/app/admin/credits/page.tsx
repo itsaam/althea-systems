@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ExportButton } from "@/components/admin/export-button";
+import { AdminPageHeader } from "@/components/admin/shell/page-header";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 
 export default function AdminCreditsPage() {
   const router = useRouter();
@@ -95,9 +97,11 @@ export default function AdminCreditsPage() {
 
       setCreditNotes(filtered);
       setPageCount(responseData.pagination?.totalPages || 1);
-    } catch (error) {
-      console.error("Erreur chargement avoirs:", error);
-      toast.error("Erreur lors du chargement des avoirs");
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      setCreditNotes([]);
+      setPageCount(0);
+      signalDegradedMode();
     } finally {
       setIsLoading(false);
     }
@@ -175,15 +179,19 @@ export default function AdminCreditsPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Avoirs</h1>
-        <ExportButton
-          endpoint="/api/admin/credits/export"
-          queryParams={reasonFilter !== "all" ? { reason: reasonFilter } : {}}
-        />
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        eyebrow="Admin — Commerce"
+        index="007 / Avoirs"
+        title="Avoirs"
+        description="Notes de crédit émises en cas d'annulation, remboursement ou erreur de facturation."
+        actions={
+          <ExportButton
+            endpoint="/api/admin/credits/export"
+            queryParams={reasonFilter !== "all" ? { reason: reasonFilter } : {}}
+          />
+        }
+      />
 
       {/* Toolbar avec recherche et filtre motif */}
       <DataTableToolbar

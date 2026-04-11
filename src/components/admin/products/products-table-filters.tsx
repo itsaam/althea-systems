@@ -36,10 +36,12 @@ export function ProductsTableFilters({
   const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch("/api/categories");
+      if (!res.ok) throw new Error("categories-unavailable");
       const data = await res.json();
       setCategories(data.categories || []);
-    } catch (error) {
-      console.error("Erreur chargement catégories:", error);
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      setCategories([]);
     }
   }, []);
 

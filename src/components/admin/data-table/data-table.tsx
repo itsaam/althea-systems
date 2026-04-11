@@ -102,10 +102,10 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border">
+    <div className="space-y-6">
+      <div className="border-y border-border/60">
         <Table>
-          <TableHeader>
+          <TableHeader className="[&_tr]:border-b [&_tr]:border-border/60 [&_th]:h-11 [&_th]:font-mono [&_th]:text-[10px] [&_th]:font-medium [&_th]:uppercase [&_th]:tracking-[0.18em] [&_th]:text-foreground/55">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -118,11 +118,14 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_tr]:border-b [&_tr]:border-border/40 [&_tr:last-child]:border-0 [&_tr:hover]:bg-foreground/[0.02] [&_td]:text-[13px]">
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Chargement...
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40"
+                >
+                  Chargement
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -137,8 +140,11 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Aucun résultat.
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40"
+                >
+                  Aucun résultat
                 </TableCell>
               </TableRow>
             )}

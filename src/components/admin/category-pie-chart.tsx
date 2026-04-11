@@ -1,49 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { cn } from "@/lib/utils";
+import { MOCK_CATEGORIES, signalDegradedMode } from "@/lib/admin/mock-data";
 
 interface CategorySalesDataPoint {
   name: string;
   value: number;
   percentage: number;
-  [key: string]: string | number;
 }
 
 type Period = "7days" | "5weeks";
-
-const COLORS = [
-  "#00a8b5",
-  "#ff6b6b",
-  "#4ecdc4",
-  "#45b7d1",
-  "#f7b731",
-  "#5f27cd",
-  "#00d2d3",
-  "#fd79a8",
-  "#a29bfe",
-  "#6c5ce7",
-];
 
 export default function CategoryPieChart() {
   const [data, setData] = useState<CategorySalesDataPoint[]>([]);
@@ -51,128 +18,118 @@ export default function CategoryPieChart() {
   const [period, setPeriod] = useState<Period>("7days");
 
   useEffect(() => {
-    async function fetchCategoryData() {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
       try {
-        setLoading(true);
-        const response = await fetch(
+        const res = await fetch(
           `/api/admin/dashboard/category-sales?period=${period}`
         );
-        if (!response.ok)
-          throw new Error("Erreur lors du chargement des catégories");
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error("Erreur:", error);
+        if (!res.ok) throw new Error("categories-unavailable");
+        const json = (await res.json()) as CategorySalesDataPoint[];
+        if (!cancelled) setData(json);
+      } catch {
+        if (!cancelled) {
+          setData(MOCK_CATEGORIES);
+          signalDegradedMode();
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
-
-    fetchCategoryData();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [period]);
 
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: Array<{ payload: CategorySalesDataPoint }>;
-  }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload as CategorySalesDataPoint;
-      return (
-        <div className="bg-background border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold mb-1">{data.name}</p>
-          <p className="text-sm text-muted-foreground">
-            Montant:{" "}
-            <span className="font-bold text-foreground">
-              {data.value.toLocaleString("fr-FR", {
-                style: "currency",
-                currency: "EUR",
-              })}
-            </span>
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Pourcentage:{" "}
-            <span className="font-bold text-foreground">
-              {data.percentage.toFixed(1)}%
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderCustomLabel = (props: any) => {
-    const percentage = props.percentage || 0;
-    if (percentage < 5) return "";
-    return `${percentage.toFixed(0)}%`;
-  };
+  const sorted = [...data].sort((a, b) => b.value - a.value);
+  const total = sorted.reduce((sum, d) => sum + d.value, 0);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Répartition par catégorie</CardTitle>
-          <Select
-            value={period}
-            onValueChange={(value) => setPeriod(value as Period)}
-          >
-            <SelectTrigger className="w-[180px]" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7days">7 derniers jours</SelectItem>
-              <SelectItem value="5weeks">5 dernières semaines</SelectItem>
-            </SelectContent>
-          </Select>
+    <section className="border-t border-border/60 pt-6">
+      <header className="mb-6 flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+            <span className="mr-1.5 tabular-nums text-foreground/35">06</span>
+            Répartition par catégorie
+          </p>
+          <p className="mt-2 font-display text-[18px] font-medium leading-none tracking-tight text-foreground">
+            Part du revenu
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="text-muted-foreground">Chargement...</div>
-          </div>
-        ) : data.length === 0 ? (
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+        <div className="flex items-center gap-3">
+          {(["7days", "5weeks"] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriod(p)}
+              className={cn(
+                "font-mono text-[10px] uppercase tracking-[0.18em] transition-colors",
+                period === p
+                  ? "text-electric-indigo-500"
+                  : "text-foreground/40 hover:text-foreground/70"
+              )}
+            >
+              {p === "7days" ? "7 jours" : "5 semaines"}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {loading ? (
+        <div className="flex h-[280px] items-center justify-center">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+            Chargement
+          </p>
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="flex h-[280px] items-center justify-center">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
             Aucune vente sur cette période
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={renderCustomLabel}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {data.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                verticalAlign="bottom"
-                height={36}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(value: string, entry: any) => {
-                  const item = entry.payload as CategorySalesDataPoint;
-                  return `${value} (${item.percentage.toFixed(1)}%)`;
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {sorted.map((item, idx) => (
+            <li key={item.name} className="group">
+              <div className="flex items-baseline justify-between gap-4">
+                <div className="flex items-baseline gap-3 min-w-0">
+                  <span className="font-mono text-[10px] tabular-nums text-foreground/35">
+                    {(idx + 1).toString().padStart(2, "0")}
+                  </span>
+                  <span className="truncate text-[13px] text-foreground">
+                    {item.name}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-3 shrink-0">
+                  <span className="font-mono text-[11px] tabular-nums text-foreground/50">
+                    {item.value.toLocaleString("fr-FR", {
+                      style: "currency",
+                      currency: "EUR",
+                      maximumFractionDigits: 0,
+                    })}
+                  </span>
+                  <span className="font-mono text-[11px] tabular-nums text-foreground/70 min-w-[3rem] text-right">
+                    {item.percentage.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <div className="mt-2 h-[2px] w-full bg-foreground/5">
+                <div
+                  className={cn(
+                    "h-full transition-all duration-700 ease-out",
+                    idx === 0 ? "bg-electric-indigo-500" : "bg-foreground/40"
+                  )}
+                  style={{
+                    width: `${total > 0 ? (item.value / total) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

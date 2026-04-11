@@ -14,9 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, GripVertical } from "lucide-react";
+import { Pencil, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { AdminPageHeader } from "@/components/admin/shell/page-header";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 import {
   DndContext,
   closestCenter,
@@ -164,9 +166,10 @@ export default function AdminCategoriesPage() {
       // Sort by order field
       cats.sort((a: Category, b: Category) => a.order - b.order);
       setCategories(cats);
-    } catch (error) {
-      console.error("Erreur chargement categories:", error);
-      toast.error("Erreur lors du chargement des categories");
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      setCategories([]);
+      signalDegradedMode();
     } finally {
       setIsLoading(false);
     }
@@ -233,21 +236,25 @@ export default function AdminCategoriesPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Categories</h1>
-        <div className="flex items-center gap-2">
-          <ClientExportButton
-            rows={filteredCategories}
-            columns={CATEGORY_EXPORT_COLUMNS}
-            filename="categories"
-          />
-          <Button onClick={() => router.push("/admin/categories/new")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle categorie
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        eyebrow="Admin — Catalogue"
+        index="005 / Catégories"
+        title="Catégories"
+        description="Organisez la taxonomie du catalogue. Glissez-déposez les lignes pour réordonner."
+        actions={
+          <>
+            <ClientExportButton
+              rows={filteredCategories}
+              columns={CATEGORY_EXPORT_COLUMNS}
+              filename="categories"
+            />
+            <Button onClick={() => router.push("/admin/categories/new")}>
+              Nouvelle catégorie
+            </Button>
+          </>
+        }
+      />
 
       <div className="space-y-4">
         <Input

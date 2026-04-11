@@ -3,9 +3,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Categories - Equipements medicaux",
+  title: "Catalogue — Althea Systems",
   description:
-    "Parcourez nos categories d'equipements medicaux professionnels. Materiel de diagnostic, chirurgie, soins et plus.",
+    "Parcourez nos catégories d'équipements médicaux professionnels. Imagerie, chirurgie, mobilier clinique, monitoring et plus.",
   alternates: {
     canonical: "/categories",
   },
@@ -46,72 +46,110 @@ async function getAllCategories(): Promise<CategoryWithProduct[] | null> {
 
 export default async function CategoriesPage() {
   const categories = await getAllCategories();
+  const total = categories?.length ?? 0;
 
   return (
-    <div className="container py-8 md:py-12">
-      <div className="mb-8 md:mb-12">
-        <h1 className="mb-2 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
-          Cat&eacute;gories
-        </h1>
-        <p className="text-sm text-muted-foreground md:text-base">
-          Parcourez notre s&eacute;lection de produits par cat&eacute;gorie
-        </p>
-      </div>
+    <div className="bg-background text-foreground">
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden border-b border-border/60">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-16 pt-24 sm:px-6 lg:px-10 lg:pb-24 lg:pt-32">
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+              Althea Systems — Catalogue · FR
+            </p>
+            <p className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/40 tabular-nums sm:block">
+              Index · 006 / Categories
+            </p>
+          </div>
 
-      {categories === null ? (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">
-            Impossible de charger les cat&eacute;gories pour le moment.
-          </p>
+          <h1 className="mt-16 font-display text-hero leading-[0.88] tracking-[-0.035em] text-foreground lg:mt-24">
+            Par domaine<span className="text-electric-indigo-500">.</span>
+          </h1>
+
+          <div className="mt-12 grid grid-cols-1 gap-6 border-t border-border/60 pt-8 lg:grid-cols-12">
+            <p className="text-lead text-foreground/70 lg:col-span-6 lg:col-start-1">
+              Une sélection d&apos;équipements médicaux qualifiés par notre
+              comité clinique. Chaque catégorie regroupe des références
+              certifiées CE, livrées en 48 heures depuis nos hubs européens.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 lg:col-span-5 lg:col-start-8 lg:justify-end">
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50 tabular-nums">
+                {String(total).padStart(2, "0")} catégories
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                ISO 13485
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                Made in EU
+              </span>
+            </div>
+          </div>
         </div>
-      ) : categories.length === 0 ? (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">
-            Aucune cat&eacute;gorie disponible
-          </p>
+      </section>
+
+      {/* ── Grid ─────────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
+          {categories === null ? (
+            <div className="border-y border-border/60 py-24 text-center">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+                Erreur · 500 / Indisponible
+              </p>
+              <p className="mt-4 text-body text-foreground/70">
+                Impossible de charger les catégories pour le moment.
+              </p>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="border-y border-border/60 py-24 text-center">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+                Catalogue · 000 / Vide
+              </p>
+              <p className="mt-4 text-body text-foreground/70">
+                Aucune catégorie disponible pour le moment.
+              </p>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 border-t border-border/60 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category, i) => (
+                <li key={category.id}>
+                  <Link
+                    href={`/categories/${category.slug}`}
+                    className="group relative flex h-full flex-col justify-between gap-10 border-b border-border/60 p-8 transition-colors hover:bg-foreground/[0.02] sm:[&:nth-child(2n)]:border-l sm:[&:nth-child(2n)]:border-l-border/60 lg:[&:nth-child(2n)]:border-l-0 lg:[&:nth-child(3n-1)]:border-x lg:[&:nth-child(3n-1)]:border-x-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-foreground/40 group-hover:text-electric-indigo-500">
+                        {String(i + 1).padStart(2, "0")} /{" "}
+                        {String(total).padStart(2, "0")}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="font-mono text-sm text-foreground/40 transition-all group-hover:translate-x-1 group-hover:text-electric-indigo-500"
+                      >
+                        →
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <h2 className="font-display text-h3 leading-[1.05] tracking-[-0.02em] text-foreground transition-colors group-hover:text-electric-indigo-500">
+                        {category.name}
+                      </h2>
+                      {category.description && (
+                        <p className="line-clamp-2 text-sm leading-relaxed text-foreground/60">
+                          {category.description}
+                        </p>
+                      )}
+                      <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-foreground/50">
+                        {String(category.productCount).padStart(3, "0")}{" "}
+                        {category.productCount > 1 ? "produits" : "produit"}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      ) : (
-        <div className="grid gap-5 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/categories/${category.slug}`}
-              className="group overflow-hidden rounded-lg border border-border transition-colors hover:border-primary"
-            >
-              <div className="relative h-40 overflow-hidden bg-muted sm:h-48">
-                {category.image ? (
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-                    Pas d&apos;image
-                  </div>
-                )}
-              </div>
-
-              <div className="p-4">
-                <h2 className="mb-2 text-lg font-semibold transition-colors group-hover:text-primary">
-                  {category.name}
-                </h2>
-
-                {category.description && (
-                  <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
-                    {category.description}
-                  </p>
-                )}
-
-                <p className="text-xs text-muted-foreground">
-                  {category.productCount} produit
-                  {category.productCount > 1 ? "s" : ""}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+      </section>
     </div>
   );
 }

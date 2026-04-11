@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -57,7 +57,7 @@ const CREDENTIAL_ERROR_MESSAGES: Record<string, string> = {
 
 const REMEMBER_STORAGE_KEY = "althea.auth.rememberEmail";
 
-function getInitialRememberedEmail(): string {
+function readRememberedEmail(): string {
   if (typeof window === "undefined") return "";
   try {
     return window.localStorage.getItem(REMEMBER_STORAGE_KEY) ?? "";
@@ -86,10 +86,17 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState<string>(() => getInitialRememberedEmail());
-  const [rememberMe, setRememberMe] = useState<boolean>(
-    () => !!getInitialRememberedEmail()
-  );
+  const [email, setEmail] = useState<string>("");
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
+
+  // Hydrate remembered email after mount to avoid SSR hydration mismatch.
+  useEffect(() => {
+    const remembered = readRememberedEmail();
+    if (remembered) {
+      setEmail(remembered);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleCredentialsLogin = async (
     e: React.FormEvent<HTMLFormElement>

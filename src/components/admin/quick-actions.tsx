@@ -1,30 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Plus, Package, MessageSquare } from "lucide-react";
+
+const ACTIONS = [
+  {
+    href: "/admin/products/new",
+    label: "Nouveau produit",
+    index: "01",
+    primary: true,
+  },
+  {
+    href: "/admin/orders",
+    label: "Voir les commandes",
+    index: "02",
+  },
+  {
+    href: "/admin/messages",
+    label: "Consulter les messages",
+    index: "03",
+  },
+];
 
 export default function QuickActions() {
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
-      <Button asChild className="flex-1">
-        <Link href="/admin/products/new">
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter un produit
+    <div className="grid gap-px bg-border/60 sm:grid-cols-3">
+      {ACTIONS.map((action) => (
+        <Link
+          key={action.href}
+          href={action.href}
+          className="group flex items-center justify-between bg-background px-5 py-4 transition-colors hover:bg-foreground/[0.02]"
+        >
+          <div className="flex items-baseline gap-3">
+            <span className="font-mono text-[10px] tabular-nums text-foreground/35">
+              {action.index}
+            </span>
+            <span className="text-[13px] font-medium text-foreground">
+              {action.label}
+            </span>
+          </div>
+          <span
+            aria-hidden
+            className="font-mono text-[14px] text-foreground/30 transition-all duration-200 group-hover:translate-x-1 group-hover:text-electric-indigo-500"
+          >
+            →
+          </span>
         </Link>
-      </Button>
-
-      <Button variant="outline" className="flex-1" disabled>
-        <Package className="mr-2 h-4 w-4" />
-        Nouvelle commande
-      </Button>
-
-      <Button asChild variant="outline" className="flex-1">
-        <Link href="/admin/messages">
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Voir les messages
-        </Link>
-      </Button>
+      ))}
     </div>
   );
 }

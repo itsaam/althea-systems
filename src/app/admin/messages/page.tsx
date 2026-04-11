@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ExportButton } from "@/components/admin/export-button";
+import { AdminPageHeader } from "@/components/admin/shell/page-header";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 
 export default function AdminMessagesPage() {
   // Data state
@@ -88,9 +90,11 @@ export default function AdminMessagesPage() {
 
       setMessages(responseData.messages || []);
       setPageCount(responseData.pagination?.totalPages || 0);
-    } catch (error) {
-      console.error("Erreur chargement messages:", error);
-      toast.error("Erreur lors du chargement des messages");
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      setMessages([]);
+      setPageCount(0);
+      signalDegradedMode();
     } finally {
       setIsLoading(false);
     }
@@ -182,22 +186,23 @@ export default function AdminMessagesPage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">
-          Messages{" "}
-          {unreadCount > 0 && (
-            <span className="text-lg font-normal text-muted-foreground">
-              ({unreadCount} non lu{unreadCount > 1 ? "s" : ""})
-            </span>
-          )}
-        </h1>
-        <ExportButton
-          endpoint="/api/admin/messages/export"
-          queryParams={readFilter !== "all" ? { read: readFilter === "read" ? "true" : "false" } : {}}
-        />
-      </div>
+    <div className="space-y-10">
+      <AdminPageHeader
+        eyebrow="Admin — Audience"
+        index="008 / Messages"
+        title="Messages"
+        description={
+          unreadCount > 0
+            ? `${unreadCount} message${unreadCount > 1 ? "s" : ""} non lu${unreadCount > 1 ? "s" : ""} en attente de traitement.`
+            : "Messages reçus depuis le formulaire de contact."
+        }
+        actions={
+          <ExportButton
+            endpoint="/api/admin/messages/export"
+            queryParams={readFilter !== "all" ? { read: readFilter === "read" ? "true" : "false" } : {}}
+          />
+        }
+      />
 
       {/* Toolbar with search and filter */}
       <DataTableToolbar

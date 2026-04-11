@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
-import Logo from "@/components/shared/logo";
 import SearchBar from "@/components/shared/search-bar";
 import MobileMenu from "@/components/layout/mobile-menu";
 import LanguageSwitcher from "@/components/layout/language-switcher";
@@ -58,10 +57,21 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/85 backdrop-blur-xl">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        <div className="flex h-14 items-center justify-between">
-          <div className="flex-shrink-0">
-            <Logo />
+      <div className="w-full px-4 sm:px-6 lg:px-10">
+        <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <div className="flex items-center justify-start">
+            <Link
+              href="/"
+              className="group inline-flex items-baseline gap-3"
+              aria-label="Althea Systems — Accueil"
+            >
+              <span className="font-display text-[17px] font-semibold leading-none tracking-[-0.02em] text-foreground">
+                althea<span className="text-electric-indigo-500">.</span>
+              </span>
+              <span className="hidden font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/45 transition-colors duration-300 group-hover:text-foreground/65 md:inline-block">
+                Medical · Systems
+              </span>
+            </Link>
           </div>
 
           <nav
@@ -80,7 +90,7 @@ export default function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-end gap-1">
             <Button
               variant="ghost"
               size="icon"

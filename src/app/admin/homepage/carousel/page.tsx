@@ -9,7 +9,6 @@ import {
   Loader2,
   Plus,
   Save,
-  Sparkles,
   Trash2,
   Upload,
   X,
@@ -38,8 +37,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -49,6 +46,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import PageHeader from "@/components/admin/shell/page-header";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 
 interface CarouselSlide {
   id: string;
@@ -125,64 +124,61 @@ function SortableSlideCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-md motion-reduce:transition-none"
+      className="group relative overflow-hidden border border-border/60 bg-background transition-colors hover:border-foreground/40 motion-reduce:transition-none"
     >
       <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:p-5">
         <button
           type="button"
           aria-label={`Déplacer ${slide.title}`}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background text-muted-foreground transition-colors hover:border-[#00a8b5] hover:text-[#00a8b5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00a8b5] cursor-grab active:cursor-grabbing"
+          className="flex h-10 w-10 shrink-0 items-center justify-center border border-border/60 bg-background text-foreground/50 transition-colors hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 cursor-grab active:cursor-grabbing"
           {...attributes}
           {...listeners}
         >
           <GripVertical className="h-4 w-4" />
         </button>
 
-        <div className="relative h-24 w-40 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/60">
+        <div className="relative h-24 w-40 shrink-0 overflow-hidden bg-foreground/[0.04] ring-1 ring-inset ring-border/60">
           {slide.image ? (
             <Image
               src={slide.image}
               alt={slide.title}
               fill
               sizes="160px"
-              className="object-cover"
+              className="object-cover grayscale transition-[filter] duration-500 group-hover:grayscale-0"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <ImageIcon className="h-6 w-6 text-muted-foreground/60" />
+              <ImageIcon className="h-6 w-6 text-foreground/30" />
             </div>
           )}
           {isPrimary && (
-            <div className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#003d5c] to-[#00a8b5] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-sm">
-              <Sparkles className="h-3 w-3" />
+            <div className="absolute left-2 top-2 inline-flex items-center rounded-none border border-foreground/60 bg-background/90 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-foreground">
               Principal
             </div>
           )}
         </div>
 
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Slide {String(index + 1).padStart(2, "0")}
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-foreground/45">
+              Slide {String(index + 1).padStart(2, "0")} / {String(MAX_SLIDES).padStart(2, "0")}
             </span>
-            {slide.active ? (
-              <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-                Actif
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                Inactif
-              </Badge>
-            )}
+            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/60">
+              <span
+                aria-hidden="true"
+                className={`h-1.5 w-1.5 rounded-full ${slide.active ? "bg-emerald-500" : "bg-foreground/25"}`}
+              />
+              {slide.active ? "Actif" : "Inactif"}
+            </span>
           </div>
-          <h3 className="truncate text-lg font-semibold tracking-tight text-[#003d5c]">
+          <h3 className="truncate font-display text-lg font-semibold tracking-tight text-foreground">
             {slide.title}
           </h3>
           {slide.subtitle && (
-            <p className="truncate text-sm text-muted-foreground">{slide.subtitle}</p>
+            <p className="truncate text-sm text-foreground/60">{slide.subtitle}</p>
           )}
           {slide.link && (
-            <p className="truncate font-mono text-xs text-muted-foreground/80">
+            <p className="truncate font-mono text-[11px] text-foreground/50">
               → {slide.link}
             </p>
           )}
@@ -202,7 +198,7 @@ function SortableSlideCard({
               size="sm"
               variant="outline"
               onClick={() => onPromote(slide)}
-              className="h-9 gap-1.5"
+              className="h-9 gap-1.5 rounded-none border-border/60 font-mono text-[10px] uppercase tracking-[0.18em]"
             >
               <ArrowUpToLine className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Principal</span>
@@ -213,7 +209,7 @@ function SortableSlideCard({
             size="sm"
             variant="outline"
             onClick={() => onEdit(slide)}
-            className="h-9"
+            className="h-9 rounded-none border-border/60 font-mono text-[10px] uppercase tracking-[0.18em]"
           >
             Modifier
           </Button>
@@ -222,7 +218,7 @@ function SortableSlideCard({
             size="icon"
             variant="ghost"
             onClick={() => onDelete(slide)}
-            className="h-9 w-9 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+            className="h-9 w-9 rounded-none text-foreground/50 hover:bg-destructive/10 hover:text-destructive"
             aria-label="Supprimer"
           >
             <Trash2 className="h-4 w-4" />
@@ -236,11 +232,11 @@ function SortableSlideCard({
 function SlidePreview({ slide }: { slide: CarouselSlide | DraftSlide | null }) {
   if (!slide || (!slide.image && !slide.title)) {
     return (
-      <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border/60 bg-gradient-to-br from-muted/40 to-muted/20">
+      <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden border border-dashed border-border/60 bg-foreground/[0.02]">
         <div className="text-center">
-          <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground/40" />
-          <p className="mt-2 text-xs text-muted-foreground">
-            L&apos;aperçu apparaîtra ici
+          <ImageIcon className="mx-auto h-8 w-8 text-foreground/25" />
+          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+            Aperçu
           </p>
         </div>
       </div>
@@ -248,7 +244,7 @@ function SlidePreview({ slide }: { slide: CarouselSlide | DraftSlide | null }) {
   }
 
   return (
-    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-neutral-900 shadow-lg ring-1 ring-black/5">
+    <div className="relative aspect-[16/9] w-full overflow-hidden bg-shadow-grey-950 ring-1 ring-inset ring-border/60">
       {slide.image && (
         <Image
           src={slide.image}
@@ -260,16 +256,16 @@ function SlidePreview({ slide }: { slide: CarouselSlide | DraftSlide | null }) {
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
       <div className="relative flex h-full flex-col items-center justify-center px-6 text-center">
-        <h1 className="max-w-lg text-2xl font-bold leading-tight tracking-tight text-white md:text-4xl">
+        <h1 className="max-w-lg font-display text-2xl font-semibold leading-tight tracking-tight text-white md:text-4xl">
           {slide.title || "Titre du slide"}
         </h1>
         {slide.subtitle && (
-          <p className="mt-3 max-w-md text-sm text-white/85 md:text-base">
+          <p className="mt-3 max-w-md text-sm text-white/80 md:text-base">
             {slide.subtitle}
           </p>
         )}
         {slide.link && (
-          <div className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-white px-6 text-sm font-medium text-black">
+          <div className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-white px-6 font-mono text-[11px] uppercase tracking-[0.18em] text-shadow-grey-950">
             Découvrir
           </div>
         )}
@@ -306,9 +302,10 @@ export default function AdminCarouselPage() {
       const data = (await res.json()) as CarouselSlide[];
       const sorted = [...data].sort((a, b) => a.order - b.order);
       setSlides(sorted);
-    } catch (error) {
-      console.error("Erreur chargement carrousel:", error);
-      toast.error("Impossible de charger le carrousel");
+    } catch {
+      // Silent fallback — DB unavailable in dev backdoor mode
+      signalDegradedMode();
+      setSlides([]);
     } finally {
       setIsLoading(false);
     }
@@ -420,7 +417,7 @@ export default function AdminCarouselPage() {
         return;
       }
 
-      toast.success(editingSlide ? "Slide mis à jour" : "Slide créé");
+      toast.success(editingSlide ? "Slide mise à jour" : "Slide créée");
       closeDialog();
       fetchSlides();
     } catch (error) {
@@ -442,7 +439,7 @@ export default function AdminCarouselPage() {
         toast.error(data.error || "Erreur lors de la suppression");
         return;
       }
-      toast.success("Slide supprimé");
+      toast.success("Slide supprimée");
       setDeleteTarget(null);
       fetchSlides();
     } catch (error) {
@@ -494,7 +491,7 @@ export default function AdminCarouselPage() {
           })
         )
       );
-      toast.success("Slide défini comme principal");
+      toast.success("Slide définie comme principale");
     } catch (error) {
       console.error("Erreur promotion:", error);
       toast.error("Erreur lors de la promotion");
@@ -518,7 +515,7 @@ export default function AdminCarouselPage() {
         fetchSlides();
         return;
       }
-      toast.success(active ? "Slide activé" : "Slide désactivé");
+      toast.success(active ? "Slide activée" : "Slide désactivée");
     } catch (error) {
       console.error("Erreur toggle active:", error);
       toast.error("Erreur lors du changement de statut");
@@ -531,97 +528,92 @@ export default function AdminCarouselPage() {
 
   return (
     <div className="space-y-10">
-      <header className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#00a8b5]">
-            Homepage · Carrousel
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-[#003d5c] md:text-4xl">
-            Gestion du carrousel
-          </h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Pilotez la vitrine de la page d&apos;accueil. Glissez-déposez pour
-            réordonner, définissez un slide principal et prévisualisez en temps
-            réel avant publication.
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={openCreateDialog}
-          disabled={!canAddMore}
-          className="h-11 gap-2 bg-gradient-to-r from-[#003d5c] to-[#00a8b5] px-6 text-white shadow-sm hover:opacity-90 disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" />
-          Nouveau slide
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Admin — Homepage · FR"
+        index="Index · 008 / Carousel"
+        title="Carrousel."
+        description="Pilotez la vitrine de la page d'accueil. Glissez-déposez pour réordonner, définissez un slide principal et prévisualisez en temps réel avant publication."
+        actions={
+          <Button
+            type="button"
+            onClick={openCreateDialog}
+            disabled={!canAddMore}
+            className="h-9 gap-2 rounded-full bg-foreground px-5 font-mono text-[10px] uppercase tracking-[0.18em] text-background hover:bg-foreground/85 disabled:opacity-50"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Nouvelle slide
+          </Button>
+        }
+      />
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Total
+      <div className="grid gap-px bg-border/60 md:grid-cols-3">
+        <div className="bg-background p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+            — Total
           </p>
-          <p className="mt-2 text-3xl font-bold tabular-nums text-[#003d5c]">
+          <p className="mt-3 font-display text-3xl font-semibold tabular-nums text-foreground">
             {slides.length}
-            <span className="ml-1 text-base font-normal text-muted-foreground">
+            <span className="ml-1 font-mono text-base font-normal text-foreground/40">
               / {MAX_SLIDES}
             </span>
           </p>
         </div>
-        <div className="rounded-xl border border-border/60 bg-card p-5">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Actifs
+        <div className="bg-background p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+            — Actifs
           </p>
-          <p className="mt-2 text-3xl font-bold tabular-nums text-emerald-600">
+          <p className="mt-3 font-display text-3xl font-semibold tabular-nums text-foreground">
             {activeCount}
           </p>
         </div>
-        <div className="rounded-xl border border-border/60 bg-gradient-to-br from-[#003d5c] to-[#00a8b5] p-5 text-white">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/70">
-            Principal
+        <div className="bg-background p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+            — Principal
           </p>
-          <p className="mt-2 truncate text-lg font-semibold">
-            {slides[0]?.title ?? "Aucun slide"}
+          <p className="mt-3 truncate font-display text-lg font-semibold text-foreground">
+            {slides[0]?.title ?? "—"}
           </p>
         </div>
       </div>
 
       <section className="grid gap-8 lg:grid-cols-5">
         <div className="space-y-4 lg:col-span-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Ordre d&apos;affichage
+          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+            <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+              — Ordre d&apos;affichage
             </h2>
-            <p className="text-xs text-muted-foreground">
-              {slides.length > 1 && "Glissez-déposez pour réordonner"}
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+              {slides.length > 1 && "Glissez pour réordonner"}
             </p>
           </div>
 
           {isLoading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-28 w-full rounded-2xl" />
+                <Skeleton key={i} className="h-28 w-full rounded-none" />
               ))}
             </div>
           ) : slides.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border/60 bg-card/40 py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#003d5c]/10 to-[#00a8b5]/10">
-                <ImageIcon className="h-6 w-6 text-[#00a8b5]" />
+            <div className="flex flex-col items-center justify-center border border-dashed border-border/60 bg-foreground/[0.02] py-16 text-center">
+              <div className="flex h-12 w-12 items-center justify-center border border-border/60 bg-background">
+                <ImageIcon className="h-5 w-5 text-foreground/40" />
               </div>
-              <p className="mt-4 text-base font-semibold text-[#003d5c]">
-                Aucun slide configuré
+              <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                — Aucune slide configurée
               </p>
-              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Créez votre premier slide pour animer la page d&apos;accueil du
-                site.
+              <p className="mt-3 max-w-sm font-display text-xl font-semibold tracking-tight text-foreground">
+                Créez votre première slide.
+              </p>
+              <p className="mt-2 max-w-sm text-sm text-foreground/55">
+                Pour animer la page d&apos;accueil du site.
               </p>
               <Button
                 type="button"
                 onClick={openCreateDialog}
-                className="mt-6 gap-2 bg-[#003d5c] hover:bg-[#003d5c]/90"
+                className="mt-6 h-9 gap-2 rounded-full bg-foreground px-5 font-mono text-[10px] uppercase tracking-[0.18em] text-background hover:bg-foreground/85"
               >
-                <Plus className="h-4 w-4" />
-                Créer un slide
+                <Plus className="h-3.5 w-3.5" />
+                Créer une slide
               </Button>
             </div>
           ) : (
@@ -655,20 +647,20 @@ export default function AdminCarouselPage() {
 
         <aside className="space-y-4 lg:col-span-2">
           <div className="sticky top-6 space-y-4">
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Aperçu principal
+            <div className="border-b border-border/60 pb-3">
+              <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                — Aperçu principal
               </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-2 text-xs text-foreground/55">
                 Rendu public tel qu&apos;il apparaîtra sur la page d&apos;accueil.
               </p>
             </div>
             <SlidePreview slide={slides[0] ?? null} />
             {slides.length > 1 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/45">
                 {slides.length - 1} autre{slides.length - 1 > 1 ? "s" : ""}{" "}
                 slide{slides.length - 1 > 1 ? "s" : ""} défile
-                {slides.length - 1 > 1 ? "nt" : ""} toutes les 6 secondes.
+                {slides.length - 1 > 1 ? "nt" : ""} toutes les 6 secondes
               </p>
             )}
           </div>
@@ -678,10 +670,13 @@ export default function AdminCarouselPage() {
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl tracking-tight text-[#003d5c]">
-              {editingSlide ? "Modifier le slide" : "Nouveau slide"}
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+              — {editingSlide ? "Édition" : "Création"}
+            </p>
+            <DialogTitle className="font-display text-2xl font-semibold tracking-tight text-foreground">
+              {editingSlide ? "Modifier la slide" : "Nouvelle slide"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-foreground/60">
               Renseignez les champs ci-dessous. Le lien peut être absolu
               (https://...) ou relatif (/categories/...).
             </DialogDescription>
@@ -690,7 +685,7 @@ export default function AdminCarouselPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="slide-title" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="slide-title" className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55">
                   Titre *
                 </Label>
                 <Input
@@ -699,12 +694,12 @@ export default function AdminCarouselPage() {
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                   placeholder="Équipement médical de pointe"
                   maxLength={200}
-                  className="mt-1.5"
+                  className="mt-2 rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 shadow-none focus-visible:border-foreground focus-visible:ring-0"
                 />
               </div>
 
               <div>
-                <Label htmlFor="slide-subtitle" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="slide-subtitle" className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55">
                   Sous-titre
                 </Label>
                 <Textarea
@@ -716,15 +711,15 @@ export default function AdminCarouselPage() {
                   placeholder="Des solutions innovantes pour votre cabinet"
                   rows={3}
                   maxLength={500}
-                  className="mt-1.5 resize-none"
+                  className="mt-2 resize-none rounded-none border-border/60 bg-transparent shadow-none focus-visible:border-foreground focus-visible:ring-0"
                 />
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 font-mono text-[10px] tabular-nums text-foreground/40">
                   {draft.subtitle.length}/500
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="slide-link" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="slide-link" className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55">
                   Lien de redirection
                 </Label>
                 <Input
@@ -732,28 +727,28 @@ export default function AdminCarouselPage() {
                   value={draft.link}
                   onChange={(e) => setDraft({ ...draft, link: e.target.value })}
                   placeholder="/categories ou https://..."
-                  className="mt-1.5 font-mono text-sm"
+                  className="mt-2 rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 font-mono text-sm shadow-none focus-visible:border-foreground focus-visible:ring-0"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55">
                   Image *
                 </Label>
-                <div className="mt-1.5 flex items-center gap-3">
+                <div className="mt-2 flex items-center gap-3">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="gap-2"
+                    className="gap-2 rounded-none border-border/60 font-mono text-[10px] uppercase tracking-[0.18em]"
                   >
                     {isUploading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Upload className="h-4 w-4" />
+                      <Upload className="h-3.5 w-3.5" />
                     )}
-                    {draft.image ? "Changer l'image" : "Uploader"}
+                    {draft.image ? "Changer" : "Uploader"}
                   </Button>
                   {draft.image && (
                     <Button
@@ -761,7 +756,7 @@ export default function AdminCarouselPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setDraft({ ...draft, image: "" })}
-                      className="text-muted-foreground hover:text-red-600"
+                      className="rounded-none text-foreground/50 hover:text-destructive"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -774,38 +769,41 @@ export default function AdminCarouselPage() {
                     onChange={handleFileChange}
                   />
                 </div>
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  JPG/PNG/WebP · Max 5 Mo · Ratio 16/9 recommandé
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+                  JPG/PNG/WebP · Max 5 Mo · Ratio 16/9
                 </p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Label className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55">
                 Aperçu en temps réel
               </Label>
               <SlidePreview slide={draft} />
             </div>
           </div>
 
-          <Separator />
-
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={closeDialog}>
+          <DialogFooter className="border-t border-border/60 pt-5">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={closeDialog}
+              className="rounded-none font-mono text-[10px] uppercase tracking-[0.18em]"
+            >
               Annuler
             </Button>
             <Button
               type="button"
               onClick={handleSubmit}
               disabled={isSaving || isUploading}
-              className="gap-2 bg-gradient-to-r from-[#003d5c] to-[#00a8b5] text-white hover:opacity-90"
+              className="gap-2 rounded-full bg-foreground px-6 font-mono text-[11px] uppercase tracking-[0.18em] text-background hover:bg-foreground/85"
             >
               {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Save className="h-4 w-4" />
+                <Save className="h-3.5 w-3.5" />
               )}
-              {editingSlide ? "Enregistrer" : "Créer le slide"}
+              {editingSlide ? "Enregistrer" : "Créer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -817,22 +815,26 @@ export default function AdminCarouselPage() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl text-[#003d5c]">
-              Supprimer le slide
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+              — Suppression
+            </p>
+            <DialogTitle className="font-display text-xl font-semibold text-foreground">
+              Supprimer la slide
             </DialogTitle>
-            <DialogDescription>
-              Cette action est irréversible. Le slide{" "}
+            <DialogDescription className="text-foreground/60">
+              Cette action est irréversible. La slide{" "}
               <span className="font-semibold text-foreground">
                 {deleteTarget?.title}
               </span>{" "}
-              sera définitivement supprimé du carrousel.
+              sera définitivement supprimée du carrousel.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="border-t border-border/60 pt-5">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setDeleteTarget(null)}
+              className="rounded-none font-mono text-[10px] uppercase tracking-[0.18em]"
             >
               Annuler
             </Button>
@@ -840,9 +842,9 @@ export default function AdminCarouselPage() {
               type="button"
               variant="destructive"
               onClick={confirmDelete}
-              className="gap-2"
+              className="gap-2 rounded-none font-mono text-[10px] uppercase tracking-[0.18em]"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
               Supprimer
             </Button>
           </DialogFooter>

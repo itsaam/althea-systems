@@ -1,57 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
-import {
-  ArrowRight,
-  Award,
-  HeartPulse,
-  Microscope,
-  ShieldCheck,
-  Sparkles,
-  Stethoscope,
-  Truck,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "À propos d'Althea Systems",
+  title: "À propos — Althea Systems",
   description:
-    "Althea Systems distribue des équipements médicaux sélectionnés avec exigence pour les professionnels de santé européens depuis plus de 15 ans.",
+    "Althea Systems distribue des équipements médicaux sélectionnés avec exigence pour les professionnels de santé européens depuis 2011.",
   alternates: { canonical: "/about" },
 };
 
-const VALUES = [
-  {
-    icon: ShieldCheck,
-    title: "Exigence clinique",
-    description:
-      "Chaque produit est évalué par notre comité médical avant référencement. Certifications CE, IVDR et ISO 13485 non négociables.",
-  },
-  {
-    icon: HeartPulse,
-    title: "Proximité professionnelle",
-    description:
-      "Une équipe terrain qui parle le langage des soignants. Support sous 24h, SAV en France, interlocuteurs dédiés aux structures.",
-  },
-  {
-    icon: Microscope,
-    title: "Innovation mesurée",
-    description:
-      "Nous référençons des technologies éprouvées, pas des gadgets. L'intérêt du patient et la fiabilité opérationnelle avant tout.",
-  },
-  {
-    icon: Truck,
-    title: "Logistique maîtrisée",
-    description:
-      "Stock européen, livraison 48h garantie, traçabilité bout en bout. Les commandes urgentes sont traitées en priorité.",
-  },
-];
-
 const STATS = [
-  { value: "15+", label: "années d'expérience" },
-  { value: "2 500+", label: "professionnels de santé" },
-  { value: "48h", label: "livraison garantie" },
-  { value: "98%", label: "satisfaction clients" },
+  { value: "2011", label: "Fondé à Lyon" },
+  { value: "4 800", label: "Praticiens équipés" },
+  { value: "48H", label: "Livraison garantie" },
+  { value: "ISO 13485", label: "Certification" },
 ];
 
 const MILESTONES = [
@@ -59,216 +20,237 @@ const MILESTONES = [
     year: "2011",
     title: "Fondation",
     description:
-      "Créée par une équipe d'ingénieurs biomédicaux et de praticiens, Althea Systems ouvre son premier entrepôt à Lyon.",
+      "Quatre ingénieurs biomédicaux et deux praticiens ouvrent le premier entrepôt Althea à Lyon. Dix références, un comité de sélection, zéro concession.",
   },
   {
     year: "2015",
-    title: "Certification ISO 13485",
+    title: "ISO 13485",
     description:
-      "Adoption du standard international pour les dispositifs médicaux. Extension du catalogue à l'imagerie et à la chirurgie.",
+      "Certification internationale pour les dispositifs médicaux. Le catalogue s'élargit à l'imagerie diagnostique et aux consommables de chirurgie.",
   },
   {
     year: "2019",
-    title: "Expansion européenne",
+    title: "Europe",
     description:
-      "Ouverture de hubs logistiques en Belgique et en Allemagne. Support multilingue pour les clients de l'Union européenne.",
+      "Hubs logistiques en Belgique puis en Allemagne. Support multilingue, tarifs professionnels paneuropéens, intégrations ERP hospitalières.",
   },
   {
     year: "2023",
-    title: "Plateforme digitale",
+    title: "Plateforme",
     description:
-      "Lancement de la nouvelle plateforme e-commerce avec tarifs pro, commandes récurrentes et intégration aux ERP hospitaliers.",
+      "Refonte complète du e-commerce : commandes récurrentes, devis en ligne, historique structure, traçabilité de bout en bout.",
   },
   {
     year: "2026",
     title: "Aujourd'hui",
     description:
-      "Plus de 4 000 références distribuées dans toute l'Europe, une équipe de 80 collaborateurs, un engagement RSE renforcé.",
+      "Plus de 4 000 références, 80 collaborateurs, une équipe commerciale terrain dans six pays. Indépendants, toujours.",
   },
 ];
 
-export default async function AboutPage() {
-  const t = await getTranslations("aboutPage");
-  return (
-    <div>
-      <section className="relative overflow-hidden border-b bg-[#003d5c] text-white">
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 25% 25%, white 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute -left-32 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-white/5 blur-3xl"
-          aria-hidden="true"
-        />
-        <div
-          className="absolute -right-32 top-0 h-[400px] w-[400px] rounded-full bg-primary/20 blur-3xl"
-          aria-hidden="true"
-        />
+const VALUES = [
+  {
+    index: "01",
+    title: "Exigence clinique",
+    body: "Chaque produit passe par notre comité médical avant référencement. CE, IVDR, MDR, ISO 13485 : non négociables.",
+  },
+  {
+    index: "02",
+    title: "Proximité terrain",
+    body: "Une équipe qui parle le langage des soignants. Interlocuteurs dédiés, visites sur site, support humain sous 24h.",
+  },
+  {
+    index: "03",
+    title: "Innovation mesurée",
+    body: "Nous référençons des technologies éprouvées, pas des gadgets. Fiabilité opérationnelle avant promesse marketing.",
+  },
+  {
+    index: "04",
+    title: "Logistique maîtrisée",
+    body: "Stock européen multi-sites, livraison 48h garantie, traçabilité bout en bout. Les urgences sont traitées en priorité.",
+  },
+];
 
-        <div className="container relative py-20 md:py-28 lg:py-32">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur">
-              <Sparkles className="h-3 w-3" aria-hidden="true" />
-              {t("hero.eyebrow")}
-            </div>
-            <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
-              {t.rich("hero.title", {
-                em: (chunks) => (
-                  <span className="italic text-white/80">{chunks}</span>
-                ),
-              })}
-            </h1>
-            <p className="mt-6 max-w-2xl text-base text-white/70 md:text-lg">
-              {t("hero.subtitle")}
+export default function AboutPage() {
+  return (
+    <div className="bg-background text-foreground">
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden border-b border-border/60">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-16 pt-24 sm:px-6 lg:px-10 lg:pb-24 lg:pt-32">
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+              Althea Systems — About · FR
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button
-                asChild
-                size="lg"
-                className="h-12 bg-white text-[#003d5c] hover:bg-white/90"
+            <p className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/40 tabular-nums sm:block">
+              Index · 005 / About
+            </p>
+          </div>
+
+          <h1 className="mt-16 font-display text-hero leading-[0.88] tracking-[-0.035em] text-foreground lg:mt-24">
+            Depuis 2011<span className="text-electric-indigo-500">.</span>
+          </h1>
+
+          <div className="mt-12 grid grid-cols-1 gap-6 border-t border-border/60 pt-8 lg:grid-cols-12">
+            <p className="text-lead text-foreground/70 lg:col-span-6 lg:col-start-1">
+              Althea Systems est un distributeur européen d&apos;équipements
+              médicaux indépendant, fondé par des professionnels de santé.
+              Nous sélectionnons, certifions et livrons uniquement ce que nous
+              utiliserions nous-mêmes.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 lg:col-span-5 lg:col-start-8 lg:justify-end">
+              <Link
+                href="/categories"
+                className="rounded-full bg-foreground px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-electric-indigo-500"
               >
-                <Link href="/products">
-                  {t("hero.ctaPrimary")}
-                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="h-12 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                Voir le catalogue
+              </Link>
+              <Link
+                href="/contact"
+                className="rounded-full border border-foreground/20 px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
               >
-                <Link href="/contact">{t("hero.ctaSecondary")}</Link>
-              </Button>
+                Parler à un conseiller
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-b bg-muted/20">
-        <div className="container py-10 md:py-14">
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-10">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="border-l-2 border-primary pl-4">
-                <div className="text-3xl font-bold tracking-tight md:text-4xl">
-                  {stat.value}
-                </div>
-                <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground md:text-sm">
-                  {stat.label}
-                </p>
+      {/* ── Stats strip ─────────────────────────────────────────── */}
+      <section className="border-b border-border/60">
+        <div className="mx-auto w-full max-w-[1400px] px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-8 border-t border-border/60 pt-8 sm:grid-cols-4">
+            {STATS.map((s) => (
+              <div key={s.label} className="flex flex-col gap-1.5">
+                <span className="font-display text-3xl leading-none tabular-nums tracking-[-0.02em] text-foreground sm:text-4xl">
+                  {s.value}
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+                  {s.label}
+                </span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="container py-16 md:py-24">
-        <div className="grid gap-12 md:grid-cols-2 md:gap-16">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-              Notre histoire
-            </p>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-              Une maison de distribution, pas un marketplace.
-            </h2>
-          </div>
-          <div className="space-y-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-            <p>
-              Althea Systems est née en 2011 d&apos;un constat simple : les
-              professionnels de santé perdaient un temps considérable à
-              chercher, comparer et qualifier les équipements dont ils
-              avaient besoin au quotidien. Nos fondateurs, tous issus du
-              milieu biomédical, ont voulu construire un intermédiaire de
-              confiance, à taille humaine.
-            </p>
-            <p>
-              Contrairement aux marketplaces généralistes, nous ne référençons
-              pas tout ce qui existe. Chaque fabricant passe par un processus
-              d&apos;évaluation clinique et logistique. Chaque produit est
-              testé par notre comité. Nous assumons des choix — et nous
-              tenons à les expliquer.
-            </p>
-            <p>
-              En quinze ans, nous sommes devenus l&apos;un des partenaires de
-              référence des cabinets, cliniques et hôpitaux en France et en
-              Europe. Toujours à taille humaine, toujours indépendants.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y bg-muted/30">
-        <div className="container py-16 md:py-24">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-              Nos valeurs
-            </p>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-              Quatre principes non négociables.
-            </h2>
-            <p className="mt-4 text-base text-muted-foreground">
-              Ce qui guide nos décisions d&apos;achat, notre relation clients
-              et notre engagement au quotidien.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            {VALUES.map((value) => {
-              const Icon = value.icon;
-              return (
-                <div
-                  key={value.title}
-                  className="group relative overflow-hidden rounded-2xl border bg-card p-6 transition-all hover:border-primary/40 hover:shadow-lg"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <h3 className="mt-5 text-lg font-bold tracking-tight">
-                    {value.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {value.description}
-                  </p>
-                </div>
-              );
-            })}
+      {/* ── Histoire ────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden border-b border-border/60">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-10">
+            <div className="lg:col-span-5">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+                Histoire · 001 / Méthode
+              </p>
+              <h2 className="mt-4 font-display text-h1 leading-[1] tracking-[-0.03em] text-foreground">
+                Une maison,
+                <br />
+                pas un marketplace
+                <span className="text-electric-indigo-500">.</span>
+              </h2>
+            </div>
+            <div className="flex flex-col gap-5 text-body text-foreground/75 lg:col-span-6 lg:col-start-7">
+              <p>
+                Althea Systems est née d&apos;un constat simple : les
+                professionnels de santé perdaient un temps considérable à
+                chercher, comparer et qualifier les équipements dont ils
+                avaient besoin au quotidien. Nos fondateurs, tous issus du
+                milieu biomédical, ont voulu construire un intermédiaire de
+                confiance, à taille humaine.
+              </p>
+              <p>
+                Contrairement aux marketplaces généralistes, nous ne
+                référençons pas tout ce qui existe. Chaque fabricant passe par
+                un processus d&apos;évaluation clinique et logistique. Chaque
+                produit est testé par notre comité. Nous assumons des choix —
+                et nous tenons à les expliquer.
+              </p>
+              <p>
+                En quinze ans, nous sommes devenus l&apos;un des partenaires
+                de référence des cabinets, cliniques et hôpitaux en France et
+                en Europe. Toujours à taille humaine, toujours indépendants,
+                toujours financés par nos propres ventes.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="container py-16 md:py-24">
-        <div className="mx-auto max-w-3xl">
-          <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-              15 ans d&apos;évolution
-            </p>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-              Notre parcours.
-            </h2>
+      {/* ── Valeurs ─────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden border-b border-border/60">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-5">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+                Valeurs · 002 / Principes
+              </p>
+              <h2 className="mt-4 font-display text-h1 leading-[1] tracking-[-0.03em] text-foreground">
+                Quatre principes
+                <br />
+                non négociables
+                <span className="text-electric-indigo-500">.</span>
+              </h2>
+            </div>
           </div>
 
-          <ol className="relative mt-14 space-y-10 border-l-2 border-dashed border-border pl-8 md:pl-12">
-            {MILESTONES.map((milestone) => (
-              <li key={milestone.year} className="relative">
-                <div
-                  className="absolute -left-[42px] flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary bg-background md:-left-[50px]"
-                  aria-hidden="true"
-                >
-                  <div className="h-2 w-2 rounded-full bg-primary" />
+          <div className="mt-16 grid grid-cols-1 gap-x-10 gap-y-12 border-t border-border/60 pt-12 md:grid-cols-2">
+            {VALUES.map((v) => (
+              <article
+                key={v.index}
+                className="group flex flex-col gap-4 border-t border-border/40 pt-8 first:border-t-0 first:pt-0 md:[&:nth-child(2)]:border-t-0 md:[&:nth-child(2)]:pt-0"
+              >
+                <div className="flex items-baseline gap-4">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.22em] tabular-nums text-foreground/40 group-hover:text-electric-indigo-500">
+                    {v.index} / 04
+                  </span>
                 </div>
-                <p className="font-mono text-xs font-semibold uppercase tracking-wider text-primary">
-                  {milestone.year}
-                </p>
-                <h3 className="mt-1 text-lg font-bold tracking-tight md:text-xl">
-                  {milestone.title}
+                <h3 className="font-display text-h3 leading-[1.05] tracking-[-0.02em] text-foreground">
+                  {v.title}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground md:text-base">
-                  {milestone.description}
+                <p className="max-w-md text-body text-foreground/70">
+                  {v.body}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Timeline ────────────────────────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden border-b border-border/60">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-5">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+                Parcours · 003 / Timeline
+              </p>
+              <h2 className="mt-4 font-display text-h1 leading-[1] tracking-[-0.03em] text-foreground">
+                Quinze ans
+                <br />
+                d&apos;itération
+                <span className="text-electric-indigo-500">.</span>
+              </h2>
+            </div>
+          </div>
+
+          <ol className="mt-16 border-t border-border/60">
+            {MILESTONES.map((m, i) => (
+              <li
+                key={m.year}
+                className="group grid grid-cols-1 gap-6 border-b border-border/40 py-10 transition-colors hover:bg-foreground/[0.015] md:grid-cols-12 md:gap-10"
+              >
+                <div className="flex items-baseline gap-4 md:col-span-3">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-foreground/40">
+                    {String(i + 1).padStart(2, "0")} / {MILESTONES.length}
+                  </span>
+                  <span className="font-display text-2xl tabular-nums tracking-[-0.02em] text-foreground group-hover:text-electric-indigo-500 md:text-3xl">
+                    {m.year}
+                  </span>
+                </div>
+                <h3 className="font-display text-h3 leading-[1.05] tracking-[-0.02em] text-foreground md:col-span-4">
+                  {m.title}
+                </h3>
+                <p className="text-body text-foreground/70 md:col-span-5">
+                  {m.description}
                 </p>
               </li>
             ))}
@@ -276,42 +258,56 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="border-t bg-[#003d5c] text-white">
-        <div className="container py-16 md:py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/90">
-              <Award className="h-3 w-3" aria-hidden="true" />
-              Certifications
-            </div>
-            <h2 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
-              Des standards européens, pas des promesses.
-            </h2>
-            <p className="mt-4 text-base text-white/70">
-              Tous nos équipements sont conformes aux réglementations CE, IVDR
-              et MDR en vigueur. Nous opérons sous certification{" "}
-              <strong className="text-white">ISO 13485</strong> et{" "}
-              <strong className="text-white">ISO 9001</strong>.
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button
-                asChild
-                size="lg"
-                className="h-12 bg-white text-[#003d5c] hover:bg-white/90"
+      {/* ── Certifications / CTA final ──────────────────────────── */}
+      <section className="relative isolate grain overflow-hidden">
+        <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col items-start gap-10 px-4 py-24 sm:px-6 lg:px-10 lg:py-32">
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+            Certifications · 004 / Standards
+          </p>
+          <h2 className="max-w-5xl font-display text-h1 leading-[1] tracking-[-0.03em] text-foreground">
+            Des standards européens,
+            <br />
+            pas des promesses
+            <span className="text-electric-indigo-500">.</span>
+          </h2>
+
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-border/60 pt-6">
+            {[
+              "CE",
+              "IVDR",
+              "MDR",
+              "ISO 13485",
+              "ISO 9001",
+              "Made in EU",
+            ].map((spec) => (
+              <span
+                key={spec}
+                className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/60"
               >
-                <Link href="/contact">
-                  <Stethoscope className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Nous contacter
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="h-12 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                {spec}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 pt-4">
+            <Link
+              href="/contact"
+              className="group inline-flex items-center gap-3 rounded-full bg-foreground px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-electric-indigo-500"
+            >
+              Nous contacter
+              <span
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
               >
-                <Link href="/products">Voir le catalogue</Link>
-              </Button>
-            </div>
+                →
+              </span>
+            </Link>
+            <Link
+              href="/categories"
+              className="inline-flex items-center rounded-full border border-foreground/20 px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
+            >
+              Explorer le catalogue
+            </Link>
           </div>
         </div>
       </section>

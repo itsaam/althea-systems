@@ -2,19 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   BarChart,
   Bar,
   XAxis,
@@ -23,6 +10,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { cn } from "@/lib/utils";
+import {
+  MOCK_SALES_5WEEKS,
+  MOCK_SALES_7DAYS,
+  signalDegradedMode,
+} from "@/lib/admin/mock-data";
 
 interface SalesChartDataPoint {
   date: string;
@@ -32,118 +25,159 @@ interface SalesChartDataPoint {
 
 type Period = "7days" | "5weeks";
 
+function CustomTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: SalesChartDataPoint }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="border border-border/80 bg-background px-3 py-2 shadow-sm">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
+        {d.date}
+      </p>
+      <p className="mt-1.5 font-display text-[18px] font-semibold leading-none tracking-tight text-foreground tabular-nums">
+        {d.sales.toLocaleString("fr-FR", {
+          style: "currency",
+          currency: "EUR",
+          maximumFractionDigits: 0,
+        })}
+      </p>
+      <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+        <span className="tabular-nums">{d.orders}</span> commandes
+      </p>
+    </div>
+  );
+}
+
 export default function SalesChart() {
   const [data, setData] = useState<SalesChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("7days");
 
   useEffect(() => {
-    async function fetchSalesData() {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
       try {
-        setLoading(true);
-        const response = await fetch(
+        const res = await fetch(
           `/api/admin/dashboard/sales-chart?period=${period}`
         );
-        if (!response.ok)
-          throw new Error("Erreur lors du chargement des ventes");
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error("Erreur:", error);
+        if (!res.ok) throw new Error("sales-unavailable");
+        const json = (await res.json()) as SalesChartDataPoint[];
+        if (!cancelled) setData(json);
+      } catch {
+        if (!cancelled) {
+          setData(period === "7days" ? MOCK_SALES_7DAYS : MOCK_SALES_5WEEKS);
+          signalDegradedMode();
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
-
-    fetchSalesData();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [period]);
 
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: Array<{ payload: SalesChartDataPoint }>;
-  }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload as SalesChartDataPoint;
-      return (
-        <div className="bg-background border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold mb-1">{data.date}</p>
-          <p className="text-sm text-muted-foreground">
-            Ventes:{" "}
-            <span className="font-bold text-foreground">
-              {data.sales.toLocaleString("fr-FR", {
-                style: "currency",
-                currency: "EUR",
-              })}
-            </span>
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Commandes:{" "}
-            <span className="font-bold text-foreground">{data.orders}</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Évolution des ventes</CardTitle>
-          <Select
-            value={period}
-            onValueChange={(value) => setPeriod(value as Period)}
-          >
-            <SelectTrigger className="w-[180px]" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7days">7 derniers jours</SelectItem>
-              <SelectItem value="5weeks">5 dernières semaines</SelectItem>
-            </SelectContent>
-          </Select>
+    <section className="border-t border-border/60 pt-6">
+      <header className="mb-6 flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+            <span className="mr-1.5 tabular-nums text-foreground/35">05</span>
+            Évolution des ventes
+          </p>
+          <p className="mt-2 font-display text-[18px] font-medium leading-none tracking-tight text-foreground">
+            Revenu cumulé
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
+        <div className="flex items-center gap-3">
+          {(["7days", "5weeks"] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPeriod(p)}
+              className={cn(
+                "font-mono text-[10px] uppercase tracking-[0.18em] transition-colors",
+                period === p
+                  ? "text-electric-indigo-500"
+                  : "text-foreground/40 hover:text-foreground/70"
+              )}
+            >
+              {p === "7days" ? "7 jours" : "5 semaines"}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <div className="h-[280px]">
         {loading ? (
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="text-muted-foreground">Chargement...</div>
+          <div className="flex h-full items-center justify-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+              Chargement
+            </p>
           </div>
         ) : data.length === 0 ? (
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-            Aucune donnée disponible
+          <div className="flex h-full items-center justify-center">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+              Aucune donnée
+            </p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="2 4"
+                stroke="currentColor"
+                className="text-foreground/10"
+                vertical={false}
+              />
               <XAxis
                 dataKey="date"
-                className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  fill: "currentColor",
+                }}
+                className="text-foreground/45"
               />
               <YAxis
-                className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
-                tickFormatter={(value) =>
-                  `${(value / 1000).toFixed(0)}k€`
-                }
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  fill: "currentColor",
+                }}
+                className="text-foreground/45"
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                width={40}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "currentColor", className: "text-foreground/[0.04]" }}
+              />
               <Bar
                 dataKey="sales"
-                fill="#00a8b5"
-                radius={[4, 4, 0, 0]}
-                name="Ventes"
+                fill="currentColor"
+                className="text-foreground"
+                radius={[2, 2, 0, 0]}
+                maxBarSize={32}
               />
             </BarChart>
           </ResponsiveContainer>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
