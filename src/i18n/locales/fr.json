@@ -252,5 +252,24 @@
     "orderPlaced": "Commande passée avec succès",
     "itemAdded": "Article ajouté au panier",
     "itemRemoved": "Article retiré du panier"
+  },
+  "chatbot": {
+    "title": "Assistant Althea",
+    "subtitle": "Posez vos questions sur nos équipements",
+    "placeholder": "Écrivez votre message…",
+    "send": "Envoyer",
+    "open": "Ouvrir l'assistant",
+    "close": "Fermer l'assistant",
+    "clear": "Effacer la conversation",
+    "clearConfirm": "Supprimer tout l'historique ?",
+    "greeting": "Bonjour ! Je suis l'assistant Althea Systems. Comment puis-je vous aider aujourd'hui ?",
+    "typing": "L'assistant écrit…",
+    "errorNetwork": "Impossible de joindre l'assistant. Vérifiez votre connexion et réessayez.",
+    "errorUnavailable": "L'assistant est temporairement indisponible. Réessayez plus tard.",
+    "errorGeneric": "Une erreur est survenue. Réessayez ou rafraîchissez la page.",
+    "retry": "Réessayer",
+    "disclaimer": "IA générative — vérifiez les informations importantes.",
+    "you": "Vous",
+    "assistant": "Assistant"
   }
 }
