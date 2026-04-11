@@ -166,8 +166,8 @@
   --muted: #e9e2e5;                 /* shadow-grey-100 */
   --muted-foreground: #725a64;      /* shadow-grey-600 */
 
-  --accent: #a236c9;                /* lavender-mist-500 */
-  --accent-foreground: #ffffff;
+  --accent: #e9e2e5;                /* shadow-grey-100 — neutral hover */
+  --accent-foreground: #1d1619;     /* shadow-grey-900 */
 
   --destructive: oklch(0.577 0.245 27.325);
 
@@ -214,7 +214,7 @@
   --muted: #392d32;                 /* shadow-grey-800 */
   --muted-foreground: #bca9b1;      /* shadow-grey-300 */
 
-  --accent: #b55ed4;                /* lavender-mist-400 */
+  --accent: #392d32;                /* shadow-grey-800 — neutral hover */
   --accent-foreground: #f4f1f2;     /* shadow-grey-50 */
 
   --destructive: oklch(0.704 0.191 22.216);

@@ -96,7 +96,7 @@ export default function HorizontalCategories({
                   )}
 
                   <div className="absolute inset-0 bg-gradient-to-t from-shadow-grey-950/85 via-shadow-grey-950/30 to-transparent" />
-                  <div className="absolute inset-0 ring-1 ring-inset ring-white/0 transition-colors duration-500 group-hover:ring-electric-indigo-500/70" />
+                  <div className="absolute inset-0 ring-1 ring-inset ring-white/0 transition-colors duration-500 group-hover:ring-white/40" />
 
                   <div className="absolute inset-x-8 bottom-8">
                     <p className="font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-white/60">
@@ -105,7 +105,7 @@ export default function HorizontalCategories({
                     <h3 className="mt-4 text-h3 font-semibold leading-[1.05] text-white">
                       {category.name}
                     </h3>
-                    <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-white/70 transition-colors duration-300 group-hover:text-electric-indigo-300">
+                    <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-white/70 transition-colors duration-300 group-hover:text-white">
                       Explorer →
                     </p>
                   </div>

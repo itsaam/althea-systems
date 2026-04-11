@@ -82,7 +82,7 @@ function ProductPanel({
         </p>
         <Link
           href={`/products/${product.slug}`}
-          className="group mt-10 inline-flex items-center gap-2 border-b border-foreground pb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors duration-500 hover:border-electric-indigo-500 hover:text-electric-indigo-500"
+          className="group mt-10 inline-flex items-center gap-2 border-b border-foreground pb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors duration-500 hover:border-foreground hover:text-foreground"
         >
           Voir le produit
           <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />

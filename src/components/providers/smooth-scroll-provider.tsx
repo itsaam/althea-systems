@@ -2,6 +2,13 @@
 
 import { useEffect, type ReactNode } from "react";
 import Lenis from "lenis";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// Register once at module scope to avoid re-registering on every mount.
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function SmoothScrollProvider({
   children,
@@ -23,15 +30,25 @@ export default function SmoothScrollProvider({
       smoothWheel: true,
     });
 
-    let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+    // Expose globally so other components (e.g. drag-driven carousels)
+    // can pipe their gestures through the same smooth scroll loop.
+    (window as unknown as { __lenis?: Lenis }).__lenis = lenis;
+
+    // Bridge Lenis <-> GSAP ScrollTrigger so that any pinned/scrubbed
+    // animation stays in sync with the smooth scroll loop.
+    const onScroll = () => ScrollTrigger.update();
+    lenis.on("scroll", onScroll);
+
+    const tickerCallback = (time: number) => {
+      lenis.raf(time * 1000);
     };
-    rafId = requestAnimationFrame(raf);
+    gsap.ticker.add(tickerCallback);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      lenis.off("scroll", onScroll);
+      gsap.ticker.remove(tickerCallback);
+      delete (window as unknown as { __lenis?: Lenis }).__lenis;
       lenis.destroy();
     };
   }, []);

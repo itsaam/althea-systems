@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import SocialLinks from "@/components/shared/social-links";
 
 const linkClass =
-  "font-mono text-[11px] lowercase tracking-[0.14em] text-white/60 transition-colors duration-300 hover:text-electric-indigo-300 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950";
+  "font-mono text-[11px] lowercase tracking-[0.14em] text-white/60 transition-colors duration-300 hover:text-white rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950";
 
 const columnHeadingClass =
   "font-mono text-[10px] uppercase tracking-[0.22em] text-white/40 mb-5";
@@ -16,14 +16,30 @@ export default async function Footer() {
 
   return (
     <footer
-      className="relative border-t border-white/10 bg-shadow-grey-950 text-white"
+      className="relative isolate overflow-hidden border-t border-white/10 bg-shadow-grey-950 text-white"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
         {tFooter("heading")}
       </h2>
 
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-24 pb-10">
+      {/* Giant ALTHEA outline wordmark — full-bleed editorial backdrop */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden leading-none"
+      >
+        <span
+          className="select-none whitespace-nowrap font-display text-[34vw] font-semibold leading-[0.8] tracking-[-0.04em]"
+          style={{
+            WebkitTextStroke: "1px rgba(255,255,255,0.07)",
+            color: "transparent",
+          }}
+        >
+          ALTHEA
+        </span>
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-24 pb-10">
         {/* ── Top grid : tagline + columns ────────────────────── */}
         <div className="grid gap-16 md:grid-cols-12 md:gap-10">
           <div className="md:col-span-5">

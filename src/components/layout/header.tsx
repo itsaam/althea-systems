@@ -73,7 +73,7 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 aria-current={isActive(link.href) ? "page" : undefined}
-                className="font-mono text-[11px] lowercase tracking-[0.14em] text-foreground/55 transition-colors duration-300 hover:text-electric-indigo-500 aria-[current=page]:text-foreground rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-indigo-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="font-mono text-[11px] lowercase tracking-[0.14em] text-foreground/55 transition-colors duration-300 hover:text-foreground aria-[current=page]:text-foreground rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {tNav(link.key)}
               </Link>

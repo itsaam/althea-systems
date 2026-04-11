@@ -1,88 +1,124 @@
-import { ArrowUpRight } from "lucide-react";
-import SplitText from "@/components/ui/split-text";
 import ScrollReveal from "@/components/ui/scroll-reveal";
-import MagneticButton from "@/components/ui/magnetic-button";
+import { prisma } from "@/lib/prisma";
+import CtaProductsCarousel, {
+  type CarouselProduct,
+} from "./cta-products-carousel";
 
-export default function CtaFinal() {
+const FALLBACK_PRODUCTS: CarouselProduct[] = [
+  {
+    id: "fallback-1",
+    slug: "echographe-portable-h7",
+    name: "Échographe portable H7",
+    price: 8400,
+    image: null,
+    categoryName: "Imagerie",
+  },
+  {
+    id: "fallback-2",
+    slug: "table-examen-electrique-e2",
+    name: "Table d'examen électrique E2",
+    price: 2150,
+    image: null,
+    categoryName: "Mobilier clinique",
+  },
+  {
+    id: "fallback-3",
+    slug: "moniteur-multiparametrique-m9",
+    name: "Moniteur multiparamétrique M9",
+    price: 3600,
+    image: null,
+    categoryName: "Monitoring",
+  },
+  {
+    id: "fallback-4",
+    slug: "autoclave-classe-b-22l",
+    name: "Autoclave classe B 22L",
+    price: 4290,
+    image: null,
+    categoryName: "Stérilisation",
+  },
+  {
+    id: "fallback-5",
+    slug: "defibrillateur-semi-auto-x3",
+    name: "Défibrillateur semi-auto X3",
+    price: 1690,
+    image: null,
+    categoryName: "Urgence",
+  },
+  {
+    id: "fallback-6",
+    slug: "scialytique-led-mobile",
+    name: "Scialytique LED mobile",
+    price: 980,
+    image: null,
+    categoryName: "Éclairage",
+  },
+];
+
+async function getCarouselProducts(): Promise<CarouselProduct[]> {
+  try {
+    const featured = await prisma.product.findMany({
+      where: { featured: true },
+      orderBy: [{ featuredOrder: "asc" }, { createdAt: "desc" }],
+      take: 6,
+      include: { category: true },
+    });
+
+    let products = featured;
+
+    if (featured.length < 6) {
+      const excludeIds = featured.map((p) => p.id);
+      const fallback = await prisma.product.findMany({
+        where: excludeIds.length
+          ? { id: { notIn: excludeIds } }
+          : undefined,
+        orderBy: { createdAt: "desc" },
+        take: 6 - featured.length,
+        include: { category: true },
+      });
+      products = [...featured, ...fallback];
+    }
+
+    if (products.length === 0) return FALLBACK_PRODUCTS;
+
+    return products.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      price: Number(p.price),
+      image: p.images?.[0] ?? null,
+      categoryName: p.category?.name ?? null,
+    }));
+  } catch {
+    return FALLBACK_PRODUCTS;
+  }
+}
+
+export default async function CtaFinal() {
+  const products = await getCarouselProducts();
+
   return (
-    <section className="relative isolate grain flex min-h-[100svh] flex-col justify-between overflow-hidden bg-shadow-grey-950 py-28 text-white md:py-36">
-      {/* Horizon line */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-white/10"
-      />
+    <>
+      {/* ── Pinned horizontal products carousel ─────────────── */}
+      {/* Must NOT be wrapped in a transformed / overflow-hidden parent,       */}
+      {/* otherwise GSAP ScrollTrigger pin breaks. Rendered as a standalone    */}
+      {/* sibling section so the pin anchors cleanly to the viewport.         */}
+      {products.length > 0 && (
+        <CtaProductsCarousel products={products} />
+      )}
 
-      {/* Giant outline wordmark — full-bleed editorial backdrop */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-[-6vw] z-0 flex justify-center overflow-hidden leading-none"
-      >
-        <span
-          className="select-none whitespace-nowrap font-display text-[28vw] font-semibold leading-[0.8] tracking-[-0.04em]"
-          style={{
-            WebkitTextStroke: "1px rgba(255,255,255,0.08)",
-            color: "transparent",
-          }}
-        >
-          ALTHEA
-        </span>
-      </div>
-
-      <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col px-4 sm:px-6 lg:px-10">
-        {/* ── Top eyebrow row ──────────────────────────────── */}
-        <ScrollReveal>
-          <div className="flex flex-col gap-6 text-[10px] sm:flex-row sm:items-center sm:justify-between">
-            <span className="font-mono uppercase tracking-[0.22em] text-white/50">
-              Althea Systems <span className="mx-2 text-white/20">—</span>{" "}
-              Contact · FR
-            </span>
-            <span className="font-mono uppercase tracking-[0.22em] tabular-nums text-white/35">
-              Index · END
-            </span>
-          </div>
-        </ScrollReveal>
-      </div>
-
-      {/* ── Centered focal block : title + lead + CTA ──────── */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col items-center px-4 text-center sm:px-6 lg:px-10">
-        <h2 className="font-display text-hero text-white">
-          <SplitText as="span" text="Travaillons" className="block" />
-          <SplitText
-            as="span"
-            text="ensemble."
-            delay={0.2}
-            className="block text-electric-indigo-400"
-          />
-        </h2>
-
-        <ScrollReveal delay={0.4}>
-          <p className="mx-auto mt-10 max-w-md text-lead text-white/75">
-            Une réponse humaine sous 24h. Pas un formulaire.
-          </p>
-        </ScrollReveal>
-
-        <ScrollReveal delay={0.55} className="mt-12">
-          <MagneticButton
-            href="/contact"
-            className="group inline-flex items-center gap-3 rounded-full bg-white px-12 py-6 font-mono text-[12px] uppercase tracking-[0.18em] text-shadow-grey-950 transition-colors duration-500 hover:bg-electric-indigo-400 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-electric-indigo-400"
-          >
-            Démarrer
-            <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-          </MagneticButton>
-        </ScrollReveal>
-      </div>
-
-      {/* ── Bottom footer line — human signal ──────────────── */}
-      <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10">
-        <ScrollReveal delay={0.7}>
-          <div className="flex items-center justify-center border-t border-white/10 pt-8">
-            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/45">
-              Lun–Ven <span className="mx-2 text-white/20">·</span> 09h–19h{" "}
-              <span className="mx-2 text-white/20">·</span> Paris
-            </span>
-          </div>
-        </ScrollReveal>
-      </div>
-    </section>
+      {/* ── Bottom block : manifesto statement ───────────────── */}
+      <section className="relative isolate grain overflow-hidden bg-background py-32 text-foreground md:py-48">
+        <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col items-center px-4 text-center sm:px-6 lg:px-10">
+          <ScrollReveal>
+            <h2 className="font-display text-h1 leading-[1.05] tracking-[-0.02em] text-foreground">
+              Nous équipons ceux qui ne font
+              <br className="hidden sm:block" />
+              {" "}pas de compromis<span className="text-electric-indigo-500">.</span>
+            </h2>
+          </ScrollReveal>
+        </div>
+      </section>
+    </>
   );
 }

@@ -93,14 +93,14 @@ export default function Hero() {
             >
               <MagneticButton
                 href="/categories"
-                className="group inline-flex items-center gap-3 rounded-full bg-foreground px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors duration-500 hover:bg-electric-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-electric-indigo-500"
+                className="group inline-flex items-center gap-3 rounded-full bg-foreground px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors duration-500 hover:bg-foreground/85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
               >
                 Explorer le catalogue
                 <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
               </MagneticButton>
               <Link
                 href="/contact"
-                className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60 underline-offset-4 transition-colors duration-300 hover:text-electric-indigo-500 hover:underline"
+                className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60 underline-offset-4 transition-colors duration-300 hover:text-foreground hover:underline"
               >
                 Parler à un conseiller
               </Link>
