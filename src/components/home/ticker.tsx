@@ -29,13 +29,13 @@ export default function Ticker() {
         className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-shadow-grey-50 to-transparent"
       />
 
-      <div className="ticker-track flex min-w-max items-center gap-12">
+      <div className="ticker-track flex min-w-max items-center">
         {doubled.map((mark, i) => {
           const Icon = mark.icon;
           return (
             <div
               key={`${mark.label}-${i}`}
-              className="flex shrink-0 items-center gap-3 text-shadow-grey-700"
+              className="flex shrink-0 items-center gap-3 pr-12 text-shadow-grey-700"
             >
               <Icon className="h-4 w-4 text-electric-indigo-500" />
               <span className="font-mono text-[11px] uppercase tracking-[0.18em]">

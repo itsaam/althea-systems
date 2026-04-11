@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Hero from "@/components/home/hero";
+import HeroSlideBand from "@/components/home/hero-slide-band";
 import Ticker from "@/components/home/ticker";
 import CategoriesGrid from "@/components/home/categories-grid";
 import FeaturedProducts from "@/components/home/featured-products";
@@ -37,7 +38,8 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
-      <Hero slides={slides} />
+      <Hero />
+      <HeroSlideBand slides={slides} />
       <Ticker />
       <CategoriesGrid />
       <FeaturedProducts />
