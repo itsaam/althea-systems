@@ -1,9 +1,24 @@
 "use client";
 
-import SwaggerUI from "swagger-ui-react";
-import "swagger-ui-react/swagger-ui.css";
+import { useEffect, useRef } from "react";
+import { SwaggerUIBundle } from "swagger-ui-dist";
+import "swagger-ui-dist/swagger-ui.css";
 
 export default function DocsPage() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    SwaggerUIBundle({
+      domNode: ref.current,
+      url: "/api/docs",
+      docExpansion: "list",
+      defaultModelsExpandDepth: -1,
+      tryItOutEnabled: true,
+      presets: [SwaggerUIBundle.presets.apis],
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       <div
@@ -30,12 +45,7 @@ export default function DocsPage() {
           API Docs
         </span>
       </div>
-      <SwaggerUI
-        url="/api/docs"
-        docExpansion="list"
-        defaultModelsExpandDepth={-1}
-        tryItOutEnabled={true}
-      />
+      <div ref={ref} />
     </div>
   );
 }
