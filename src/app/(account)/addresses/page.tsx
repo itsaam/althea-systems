@@ -8,18 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function AddressesPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold tracking-tight md:text-2xl">
-          Carnet d&apos;adresses
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Ajoutez, modifiez et définissez vos adresses de livraison et de
-          facturation par défaut.
-        </p>
-      </div>
-      <AddressList />
-    </div>
-  );
+  return <AddressList />;
 }

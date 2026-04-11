@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AccountPageHeader from "@/components/account/account-page-header";
 import OrderHistory from "@/components/account/order-history";
 
 export const metadata: Metadata = {
@@ -9,16 +10,13 @@ export const metadata: Metadata = {
 
 export default function OrdersPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold tracking-tight md:text-2xl">
-          Historique des commandes
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Consultez, filtrez et téléchargez les factures de toutes vos
-          commandes passées.
-        </p>
-      </div>
+    <div className="space-y-12">
+      <AccountPageHeader
+        eyebrow="Activité"
+        index="Index · 002 / Orders"
+        title="Mes commandes."
+        description="Consultez, filtrez et téléchargez les factures de toutes vos commandes passées."
+      />
       <OrderHistory />
     </div>
   );

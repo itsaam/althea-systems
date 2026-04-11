@@ -4,16 +4,22 @@ import { useRouter } from "next/navigation";
 import PageHeader from "@/components/admin/shell/page-header";
 import ProductForm from "@/components/admin/product-form";
 
-export default function NewProductPage() {
+interface EditProductPageClientProps {
+  productId: string;
+}
+
+export default function EditProductPageClient({
+  productId,
+}: EditProductPageClientProps) {
   const router = useRouter();
 
   return (
     <div className="space-y-10">
       <PageHeader
         eyebrow="Admin — Catalogue · FR"
-        index="Index · 002 / Product New"
-        title="Nouveau produit."
-        description="Créez un nouveau produit dans le catalogue. Renseignez identité, description, tarifs, visuels et options de publication."
+        index="Index · 002 / Product Edit"
+        title="Éditer le produit."
+        description="Modifiez les informations du produit, ses visuels, ses tarifs et son statut de publication."
         actions={
           <button
             type="button"
@@ -24,7 +30,7 @@ export default function NewProductPage() {
           </button>
         }
       />
-      <ProductForm />
+      <ProductForm productId={productId} />
     </div>
   );
 }

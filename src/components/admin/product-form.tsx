@@ -6,21 +6,26 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import DOMPurify from "dompurify";
+import Image from "next/image";
+import { Eye, Loader2 } from "lucide-react";
 
 import { productFormSchema, type ProductFormData } from "@/lib/validators/product";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import { MultiImageUpload } from "@/components/admin/multi-image-upload";
 import { useDebounce } from "@/hooks/use-debounce";
-import { Eye } from "lucide-react";
-import Image from "next/image";
+import { signalDegradedMode } from "@/lib/admin/mock-data";
 
 interface ProductFormProps {
   productId?: string;
@@ -39,11 +44,35 @@ const TVA_LABELS: Record<string, string> = {
 };
 
 const TVA_RATES: Record<string, number> = {
-  TVA_20: 1.20,
-  TVA_10: 1.10,
+  TVA_20: 1.2,
+  TVA_10: 1.1,
   TVA_5_5: 1.055,
-  TVA_0: 1.00,
+  TVA_0: 1.0,
 };
+
+const LABEL_CLASS =
+  "font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/55";
+const INPUT_CLASS =
+  "mt-3 h-11 rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 text-[15px] text-foreground shadow-none placeholder:text-foreground/30 focus-visible:border-foreground focus-visible:ring-0";
+const INPUT_MONO_CLASS =
+  "mt-3 h-11 rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 font-mono text-[15px] tabular-nums text-foreground shadow-none placeholder:text-foreground/30 focus-visible:border-foreground focus-visible:ring-0";
+const SECTION_CLASS = "space-y-6 border-b border-border/60 pb-10";
+const ERROR_CLASS =
+  "mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-destructive";
+
+function SectionHeader({ index, label }: { index: string; label: string }) {
+  return (
+    <header className="flex items-center gap-3">
+      <span
+        aria-hidden
+        className="h-1.5 w-1.5 rounded-full bg-electric-indigo-500"
+      />
+      <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/55">
+        {index} — {label}
+      </h2>
+    </header>
+  );
+}
 
 export default function ProductForm({ productId }: ProductFormProps) {
   const router = useRouter();
@@ -60,7 +89,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
     reset,
   } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
-    mode: 'onChange',
+    mode: "onChange",
     defaultValues: {
       name: "",
       slug: "",
@@ -91,12 +120,17 @@ export default function ProductForm({ productId }: ProductFormProps) {
   // Charger les catégories
   useEffect(() => {
     fetch("/api/categories")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Erreur API");
+        return res.json();
+      })
       .then((data) => {
         setCategories(data.categories || []);
       })
       .catch(() => {
-        toast.error("Impossible de charger les catégories");
+        // Silent fallback — DB unavailable in dev backdoor mode
+        signalDegradedMode();
+        setCategories([]);
       });
   }, []);
 
@@ -147,7 +181,7 @@ export default function ProductForm({ productId }: ProductFormProps) {
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "")
-        .replace(/-{2,}/g, '-');
+        .replace(/-{2,}/g, "-");
       setValue("slug", slug, { shouldValidate: true });
     }
   }, [debouncedName, productId, setValue]);
@@ -156,7 +190,9 @@ export default function ProductForm({ productId }: ProductFormProps) {
     setIsLoading(true);
 
     try {
-      const url = productId ? `/api/admin/products/${productId}` : `/api/admin/products`;
+      const url = productId
+        ? `/api/admin/products/${productId}`
+        : `/api/admin/products`;
       const method = productId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -170,7 +206,11 @@ export default function ProductForm({ productId }: ProductFormProps) {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success(productId ? "Produit mis à jour avec succès" : "Produit créé avec succès");
+        toast.success(
+          productId
+            ? "Produit mis à jour avec succès"
+            : "Produit créé avec succès"
+        );
         router.push("/admin/products");
         router.refresh();
       } else {
@@ -189,137 +229,151 @@ export default function ProductForm({ productId }: ProductFormProps) {
 
   if (productId && isLoading && !watchedValues.name) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-muted-foreground">Chargement...</div>
+      <div className="flex items-center justify-center border border-border/60 bg-foreground/[0.02] py-16">
+        <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Chargement
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-4xl">
-        {/* Section Informations générales */}
-        <div className="space-y-6">
-          <h2 className="text-lg font-semibold border-b pb-2">Informations générales</h2>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="max-w-4xl space-y-10"
+      >
+        {/* Section 01 — Identification */}
+        <section className={SECTION_CLASS}>
+          <SectionHeader index="01" label="Identification" />
 
-          {/* Nom */}
           <div>
-            <Label htmlFor="name">
-              Nom du produit <span className="text-destructive">*</span>
+            <Label htmlFor="name" className={LABEL_CLASS}>
+              Nom du produit *
             </Label>
             <Input
               id="name"
               {...register("name")}
               placeholder="Ex: Stéthoscope électronique 3M Littmann"
               disabled={isLoading}
+              className={INPUT_CLASS}
             />
-            {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+            {errors.name && <p className={ERROR_CLASS}>{errors.name.message}</p>}
           </div>
 
-          {/* Slug */}
           <div>
-            <Label htmlFor="slug">
-              Slug SEO <span className="text-destructive">*</span>
+            <Label htmlFor="slug" className={LABEL_CLASS}>
+              Slug SEO *
             </Label>
             <Input
               id="slug"
               {...register("slug")}
               placeholder="Ex: stethoscope-electronique-3m-littmann"
               disabled={isLoading}
+              className={`${INPUT_CLASS} font-mono`}
             />
-            <p className="text-sm text-muted-foreground mt-1">
-              URL du produit : /products/{watchedValues.slug || "..."}
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+              URL — /products/{watchedValues.slug || "…"}
             </p>
-            {errors.slug && <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>}
+            {errors.slug && <p className={ERROR_CLASS}>{errors.slug.message}</p>}
           </div>
 
-          {/* SKU */}
           <div>
-            <Label htmlFor="sku">SKU (optionnel)</Label>
+            <Label htmlFor="sku" className={LABEL_CLASS}>
+              SKU (optionnel)
+            </Label>
             <Input
               id="sku"
               {...register("sku")}
               placeholder="Ex: STH-3M-001"
               disabled={isLoading}
+              className={`${INPUT_CLASS} font-mono`}
             />
-            {errors.sku && <p className="text-sm text-destructive mt-1">{errors.sku.message}</p>}
+            {errors.sku && <p className={ERROR_CLASS}>{errors.sku.message}</p>}
           </div>
 
-          {/* Catégorie */}
           <div>
-            <Label htmlFor="categoryId">Catégorie</Label>
-            <Select
-              value={watchedValues.categoryId || undefined}
-              onValueChange={(value) => setValue("categoryId", value || null, { shouldValidate: true, shouldDirty: true })}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une catégorie" />
-              </SelectTrigger>
-              <SelectContent>
+            <Label htmlFor="categoryId" className={LABEL_CLASS}>
+              Catégorie
+            </Label>
+            <div className="mt-3 border-b border-border/60">
+              <select
+                id="categoryId"
+                value={watchedValues.categoryId || ""}
+                onChange={(e) =>
+                  setValue("categoryId", e.target.value || null, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                disabled={isLoading}
+                className="h-11 w-full appearance-none bg-transparent pr-6 text-[15px] text-foreground focus:outline-none disabled:opacity-50"
+              >
+                <option value="">Sélectionner une catégorie</option>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <option key={category.id} value={category.id}>
                     {category.name}
-                  </SelectItem>
+                  </option>
                 ))}
-              </SelectContent>
-            </Select>
-            {errors.categoryId && <p className="text-sm text-destructive mt-1">{errors.categoryId.message}</p>}
+              </select>
+            </div>
+            {errors.categoryId && (
+              <p className={ERROR_CLASS}>{errors.categoryId.message}</p>
+            )}
           </div>
-        </div>
+        </section>
 
-        {/* Section Description */}
-        <div className="space-y-6">
-          <h2 className="text-lg font-semibold border-b pb-2">Description</h2>
+        {/* Section 02 — Description */}
+        <section className={SECTION_CLASS}>
+          <SectionHeader index="02" label="Description" />
 
           <div>
-            <RichTextEditor
-              value={watchDescription || ""}
-              onChange={(html) => setValue("description", html, { shouldValidate: true, shouldDirty: true })}
-              placeholder="Décrivez les avantages et caractéristiques du produit..."
-              disabled={isLoading}
-            />
-            {errors.description && <p className="text-sm text-destructive mt-1">{errors.description.message}</p>}
+            <Label className={LABEL_CLASS}>Description marketing</Label>
+            <div className="mt-3">
+              <RichTextEditor
+                value={watchDescription || ""}
+                onChange={(html) =>
+                  setValue("description", html, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                placeholder="Décrivez les avantages et caractéristiques du produit…"
+                disabled={isLoading}
+              />
+            </div>
+            {errors.description && (
+              <p className={ERROR_CLASS}>{errors.description.message}</p>
+            )}
           </div>
 
           <div>
+            <Label htmlFor="technicalSpecs" className={LABEL_CLASS}>
+              Spécifications techniques
+            </Label>
             <Textarea
               id="technicalSpecs"
               {...register("technicalSpecs")}
-              placeholder="Ex: Dimensions, poids, matériaux, certifications..."
+              placeholder="Ex: Dimensions, poids, matériaux, certifications…"
               rows={5}
               disabled={isLoading}
+              className="mt-3 resize-none rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 text-[15px] text-foreground shadow-none placeholder:text-foreground/30 focus-visible:border-foreground focus-visible:ring-0"
             />
-            <p className="text-sm text-muted-foreground mt-1">
-              Spécifications techniques du produit
-            </p>
-            {errors.technicalSpecs && <p className="text-sm text-destructive mt-1">{errors.technicalSpecs.message}</p>}
+            {errors.technicalSpecs && (
+              <p className={ERROR_CLASS}>{errors.technicalSpecs.message}</p>
+            )}
           </div>
-        </div>
+        </section>
 
-        {/* Section Images */}
-        <div className="space-y-6">
-          <h2 className="text-lg font-semibold border-b pb-2">Images</h2>
+        {/* Section 03 — Prix & TVA */}
+        <section className={SECTION_CLASS}>
+          <SectionHeader index="03" label="Prix & stock" />
 
-          <div>
-            <MultiImageUpload
-              value={watchImages}
-              onChange={(urls) => setValue("images", urls, { shouldValidate: true, shouldDirty: true })}
-              disabled={isLoading}
-            />
-            {errors.images && <p className="text-sm text-destructive mt-1">{errors.images.message}</p>}
-          </div>
-        </div>
-
-        {/* Section Prix et Stock */}
-        <div className="space-y-6">
-          <h2 className="text-lg font-semibold border-b pb-2">Prix et stock</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Prix HT */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <Label htmlFor="price">
-                Prix HT (€) <span className="text-destructive">*</span>
+              <Label htmlFor="price" className={LABEL_CLASS}>
+                Prix HT (€) *
               </Label>
               <Input
                 id="price"
@@ -327,91 +381,141 @@ export default function ProductForm({ productId }: ProductFormProps) {
                 step="0.01"
                 min="0"
                 {...register("price", { valueAsNumber: true })}
-                placeholder="Ex: 99.99"
+                placeholder="99.99"
                 disabled={isLoading}
+                className={INPUT_MONO_CLASS}
               />
-              {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+              {errors.price && (
+                <p className={ERROR_CLASS}>{errors.price.message}</p>
+              )}
             </div>
 
-            {/* Prix comparaison */}
             <div>
-              <Label htmlFor="comparePrice">Prix de comparaison HT (€)</Label>
+              <Label htmlFor="comparePrice" className={LABEL_CLASS}>
+                Prix barré HT (€)
+              </Label>
               <Input
                 id="comparePrice"
                 type="number"
                 step="0.01"
                 min="0"
-                {...register("comparePrice", { 
-                  setValueAs: (v) => (v === "" || v === null ? null : parseFloat(v)),
+                {...register("comparePrice", {
+                  setValueAs: (v) =>
+                    v === "" || v === null ? null : parseFloat(v),
                 })}
-                placeholder="Ex: 129.99"
+                placeholder="129.99"
                 disabled={isLoading}
+                className={INPUT_MONO_CLASS}
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                Prix barré (si promotion)
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+                Optionnel — affiché barré en cas de promo
               </p>
-              {errors.comparePrice && <p className="text-sm text-destructive mt-1">{errors.comparePrice.message}</p>}
+              {errors.comparePrice && (
+                <p className={ERROR_CLASS}>{errors.comparePrice.message}</p>
+              )}
             </div>
 
-            {/* TVA */}
             <div>
-              <Label htmlFor="tva">
-                Taux de TVA <span className="text-destructive">*</span>
+              <Label htmlFor="tva" className={LABEL_CLASS}>
+                Taux de TVA *
               </Label>
-              <Select
-                value={watchTva}
-                onValueChange={(value) => setValue("tva", value as "TVA_20" | "TVA_10" | "TVA_5_5" | "TVA_0", { shouldValidate: true, shouldDirty: true })}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un taux" />
-                </SelectTrigger>
-                <SelectContent>
+              <div className="mt-3 border-b border-border/60">
+                <select
+                  id="tva"
+                  value={watchTva}
+                  onChange={(e) =>
+                    setValue(
+                      "tva",
+                      e.target.value as
+                        | "TVA_20"
+                        | "TVA_10"
+                        | "TVA_5_5"
+                        | "TVA_0",
+                      { shouldValidate: true, shouldDirty: true }
+                    )
+                  }
+                  disabled={isLoading}
+                  className="h-11 w-full appearance-none bg-transparent pr-6 font-mono text-[15px] tabular-nums text-foreground focus:outline-none disabled:opacity-50"
+                >
                   {Object.entries(TVA_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
+                    <option key={value} value={value}>
                       {label}
-                    </SelectItem>
+                    </option>
                   ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground mt-1">
-                Prix TTC : {calculatePriceTTC(watchPrice || 0, watchTva).toFixed(2)} €
+                </select>
+              </div>
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] tabular-nums text-foreground/40">
+                TTC —{" "}
+                {calculatePriceTTC(watchPrice || 0, watchTva).toFixed(2)} €
               </p>
-              {errors.tva && <p className="text-sm text-destructive mt-1">{errors.tva.message}</p>}
+              {errors.tva && <p className={ERROR_CLASS}>{errors.tva.message}</p>}
             </div>
 
-            {/* Stock */}
             <div>
-              <Label htmlFor="stock">
-                Stock <span className="text-destructive">*</span>
+              <Label htmlFor="stock" className={LABEL_CLASS}>
+                Stock *
               </Label>
               <Input
                 id="stock"
                 type="number"
                 min="0"
                 {...register("stock", { valueAsNumber: true })}
-                placeholder="Ex: 50"
+                placeholder="50"
                 disabled={isLoading}
+                className={INPUT_MONO_CLASS}
               />
-              {errors.stock && <p className="text-sm text-destructive mt-1">{errors.stock.message}</p>}
+              {errors.stock && (
+                <p className={ERROR_CLASS}>{errors.stock.message}</p>
+              )}
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Section Paramètres */}
-        <div className="space-y-6">
-          <h2 className="text-lg font-semibold border-b pb-2">Paramètres</h2>
+        {/* Section 04 — Images */}
+        <section className={SECTION_CLASS}>
+          <SectionHeader index="04" label="Images" />
 
-          {/* Priorité */}
           <div>
-            <Label htmlFor="priority">
-              Priorité d&apos;affichage : {watchPriority}
+            <Label className={LABEL_CLASS}>Galerie produit</Label>
+            <div className="mt-3">
+              <MultiImageUpload
+                value={watchImages}
+                onChange={(urls) =>
+                  setValue("images", urls, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                disabled={isLoading}
+              />
+            </div>
+            {errors.images && (
+              <p className={ERROR_CLASS}>{errors.images.message}</p>
+            )}
+          </div>
+        </section>
+
+        {/* Section 05 — Options */}
+        <section className={SECTION_CLASS}>
+          <SectionHeader index="05" label="Options & publication" />
+
+          <div>
+            <Label htmlFor="priority" className={LABEL_CLASS}>
+              Priorité d&apos;affichage —{" "}
+              <span className="tabular-nums text-foreground">
+                {watchPriority}
+              </span>
             </Label>
-            <div className="pt-2">
+            <div className="pt-4">
               <Slider
                 id="priority"
                 value={[watchPriority]}
-                onValueChange={([value]) => setValue("priority", value, { shouldValidate: true, shouldDirty: true })}
+                onValueChange={([value]) =>
+                  setValue("priority", value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
                 min={0}
                 max={100}
                 step={1}
@@ -419,102 +523,123 @@ export default function ProductForm({ productId }: ProductFormProps) {
                 className="w-full"
               />
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Plus la priorité est élevée, plus le produit sera mis en avant (0 = normal, 100 = maximum)
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+              0 = Normal · 100 = Max · Influence l&apos;ordre d&apos;apparition
             </p>
-            {errors.priority && <p className="text-sm text-destructive mt-1">{errors.priority.message}</p>}
+            {errors.priority && (
+              <p className={ERROR_CLASS}>{errors.priority.message}</p>
+            )}
           </div>
 
-          {/* Produit mis en avant */}
-          <div className="flex items-center justify-between space-x-2 border rounded-lg p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="featured">Produit mis en avant</Label>
-              <p className="text-sm text-muted-foreground">
-                Afficher ce produit dans les sélections spéciales
+          <div className="flex items-center justify-between gap-6 border border-border/60 p-5">
+            <div className="min-w-0 space-y-1">
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground">
+                Produit mis en avant
+              </p>
+              <p className="text-[13px] text-foreground/55">
+                Affiché dans les sélections spéciales et la page d&apos;accueil.
               </p>
             </div>
             <Switch
               id="featured"
               checked={watchedValues.featured}
-              onCheckedChange={(checked) => setValue("featured", checked, { shouldValidate: true, shouldDirty: true })}
+              onCheckedChange={(checked) =>
+                setValue("featured", checked, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
               disabled={isLoading}
             />
           </div>
 
-          {/* Statut */}
           <div>
-            <Label htmlFor="status">
-              Statut de publication <span className="text-destructive">*</span>
+            <Label htmlFor="status" className={LABEL_CLASS}>
+              Statut de publication *
             </Label>
-            <Select
-              value={watchedValues.status}
-              onValueChange={(value) => setValue("status", value as "DRAFT" | "PUBLISHED", { shouldValidate: true, shouldDirty: true })}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="DRAFT">Brouillon</SelectItem>
-                <SelectItem value="PUBLISHED">Publié</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="mt-3 border-b border-border/60">
+              <select
+                id="status"
+                value={watchedValues.status}
+                onChange={(e) =>
+                  setValue("status", e.target.value as "DRAFT" | "PUBLISHED", {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                disabled={isLoading}
+                className="h-11 w-full appearance-none bg-transparent pr-6 text-[15px] text-foreground focus:outline-none disabled:opacity-50"
+              >
+                <option value="DRAFT">Brouillon</option>
+                <option value="PUBLISHED">Publié</option>
+              </select>
+            </div>
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
               Seuls les produits publiés sont visibles sur le site
             </p>
-            {errors.status && <p className="text-sm text-destructive mt-1">{errors.status.message}</p>}
+            {errors.status && (
+              <p className={ERROR_CLASS}>{errors.status.message}</p>
+            )}
           </div>
-        </div>
+        </section>
 
-        {/* Boutons d'action */}
-        <div className="flex gap-4 pt-6 border-t">
-          <Button
+        {/* Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <button
             type="button"
-            variant="outline"
             onClick={() => setShowPreview(true)}
             disabled={isLoading || !watchedValues.name}
+            className="inline-flex h-10 items-center gap-2 rounded-none border border-border/60 px-4 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors hover:border-foreground disabled:opacity-50"
           >
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye className="h-3.5 w-3.5" />
             Prévisualiser
-          </Button>
+          </button>
 
-          <div className="flex-1" />
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/admin/products")}
-            disabled={isLoading}
-          >
-            Annuler
-          </Button>
-
-          <Button type="submit" disabled={isLoading || !isDirty}>
-            {isLoading
-              ? "Enregistrement..."
-              : productId
-              ? "Mettre à jour"
-              : watchedValues.status === "PUBLISHED"
-              ? "Publier"
-              : "Enregistrer en brouillon"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/admin/products")}
+              disabled={isLoading}
+              className="h-10 rounded-none px-4 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60 transition-colors hover:text-foreground disabled:opacity-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || (!!productId && !isDirty)}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-6 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors hover:bg-foreground/85 disabled:opacity-50"
+            >
+              {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {isLoading
+                ? "Enregistrement"
+                : productId
+                  ? "Mettre à jour"
+                  : watchedValues.status === "PUBLISHED"
+                    ? "Publier"
+                    : "Enregistrer"}
+            </button>
+          </div>
         </div>
       </form>
 
       {/* Modal de prévisualisation */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Prévisualisation du produit</DialogTitle>
-            <DialogDescription>
-              Aperçu de l&apos;affichage du produit sur le site
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+              — Prévisualisation
+            </p>
+            <DialogTitle className="font-display text-2xl font-semibold tracking-tight text-foreground">
+              Aperçu produit
+            </DialogTitle>
+            <DialogDescription className="text-foreground/60">
+              Rendu tel qu&apos;il apparaîtra sur le site public.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Images */}
             {watchImages.length > 0 ? (
-              <div className="relative aspect-square rounded-lg overflow-hidden border">
+              <div className="relative aspect-square overflow-hidden border border-border/60">
                 <Image
                   src={watchImages[0]}
                   alt={watchedValues.name}
@@ -523,66 +648,96 @@ export default function ProductForm({ productId }: ProductFormProps) {
                 />
               </div>
             ) : (
-              <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground">Aucune image</p>
+              <div className="flex aspect-square items-center justify-center border border-dashed border-border/60 bg-foreground/[0.02]">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+                  Aucune image
+                </p>
               </div>
             )}
 
-            {/* Informations */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-2xl font-bold">{watchedValues.name || "Nom du produit"}</h3>
+                <h3 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+                  {watchedValues.name || "Nom du produit"}
+                </h3>
                 {watchedValues.sku && (
-                  <p className="text-sm text-muted-foreground">SKU: {watchedValues.sku}</p>
+                  <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+                    SKU · {watchedValues.sku}
+                  </p>
                 )}
               </div>
 
-              {/* Prix */}
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">
-                  {calculatePriceTTC(watchPrice || 0, watchTva).toFixed(2)} € TTC
+              <div className="flex items-baseline gap-3">
+                <span className="font-display text-3xl font-semibold tabular-nums text-foreground">
+                  {calculatePriceTTC(watchPrice || 0, watchTva).toFixed(2)} €
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+                  TTC
                 </span>
                 {watchedValues.comparePrice && (
-                  <span className="text-lg text-muted-foreground line-through">
-                    {calculatePriceTTC(watchedValues.comparePrice, watchTva).toFixed(2)} €
+                  <span className="font-mono text-base tabular-nums text-foreground/40 line-through">
+                    {calculatePriceTTC(
+                      watchedValues.comparePrice,
+                      watchTva
+                    ).toFixed(2)}{" "}
+                    €
                   </span>
                 )}
               </div>
 
-              <div className="text-sm text-muted-foreground">
-                Prix HT : {(watchPrice || 0).toFixed(2)} € | TVA : {TVA_LABELS[watchTva]}
-              </div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] tabular-nums text-foreground/45">
+                HT · {(watchPrice || 0).toFixed(2)} € — TVA ·{" "}
+                {TVA_LABELS[watchTva]}
+              </p>
 
-              {/* Stock */}
               <div>
                 {watchedValues.stock > 0 ? (
-                  <span className="text-sm text-green-600">En stock ({watchedValues.stock} disponible{watchedValues.stock > 1 ? "s" : ""})</span>
+                  <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    En stock · {watchedValues.stock}
+                  </span>
                 ) : (
-                  <span className="text-sm text-red-600">Rupture de stock</span>
+                  <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-destructive">
+                    <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                    Rupture de stock
+                  </span>
                 )}
               </div>
 
-              {/* Description */}
               {watchDescription && (
-                <div>
-                  <h4 className="font-semibold mb-2">Description</h4>
+                <div className="border-t border-border/60 pt-4">
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+                    — Description
+                  </p>
                   <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ 
-                      __html: DOMPurify.sanitize(watchDescription || '', {
-                        ALLOWED_TAGS: ['p', 'strong', 'em', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'br'],
-                        ALLOWED_ATTR: ['href', 'class', 'target', 'rel']
-                      })
+                    className="prose prose-sm max-w-none text-foreground/80"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(watchDescription || "", {
+                        ALLOWED_TAGS: [
+                          "p",
+                          "strong",
+                          "em",
+                          "h2",
+                          "h3",
+                          "ul",
+                          "ol",
+                          "li",
+                          "a",
+                          "br",
+                        ],
+                        ALLOWED_ATTR: ["href", "class", "target", "rel"],
+                      }),
                     }}
                   />
                 </div>
               )}
 
-              {/* Caractéristiques techniques */}
               {watchedValues.technicalSpecs && (
-                <div>
-                  <h4 className="font-semibold mb-2">Caractéristiques techniques</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                <div className="border-t border-border/60 pt-4">
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/45">
+                    — Spécifications techniques
+                  </p>
+                  <p className="whitespace-pre-wrap text-sm text-foreground/70">
                     {watchedValues.technicalSpecs}
                   </p>
                 </div>

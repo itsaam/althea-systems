@@ -2,29 +2,35 @@
 
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/admin/shell/page-header";
-import ProductForm from "@/components/admin/product-form";
+import CategoryForm from "@/components/admin/category-form";
 
-export default function NewProductPage() {
+interface EditCategoryPageClientProps {
+  categoryId: string;
+}
+
+export default function EditCategoryPageClient({
+  categoryId,
+}: EditCategoryPageClientProps) {
   const router = useRouter();
 
   return (
     <div className="space-y-10">
       <PageHeader
         eyebrow="Admin — Catalogue · FR"
-        index="Index · 002 / Product New"
-        title="Nouveau produit."
-        description="Créez un nouveau produit dans le catalogue. Renseignez identité, description, tarifs, visuels et options de publication."
+        index="Index · 006 / Category Edit"
+        title="Éditer la catégorie."
+        description="Modifiez le nom, le slug, la description ou l'image de cette catégorie."
         actions={
           <button
             type="button"
-            onClick={() => router.push("/admin/products")}
+            onClick={() => router.push("/admin/categories")}
             className="h-9 rounded-none px-3 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/60 transition-colors hover:text-foreground"
           >
-            Retour catalogue
+            Retour catégories
           </button>
         }
       />
-      <ProductForm />
+      <CategoryForm categoryId={categoryId} />
     </div>
   );
 }

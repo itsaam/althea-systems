@@ -1,19 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Loader2, Lock, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface ProfileData {
   firstName: string;
@@ -21,6 +10,11 @@ interface ProfileData {
   phone: string;
   email: string;
 }
+
+const INPUT_BASE =
+  "block w-full border-0 border-b border-border/60 bg-transparent px-0 py-3 text-[17px] text-foreground transition-colors placeholder:text-foreground/30 focus:border-foreground focus:outline-none focus:ring-0";
+const LABEL_BASE =
+  "block font-mono text-[11px] uppercase tracking-[0.2em] text-foreground/55";
 
 export default function ProfileForm() {
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +31,7 @@ export default function ProfileForm() {
     fetch("/api/profile")
       .then((res) => res.json())
       .then((data) => {
-        if (data.user) {
+        if (data?.user) {
           setProfile({
             firstName: data.user.firstName ?? "",
             lastName: data.user.lastName ?? "",
@@ -76,13 +70,12 @@ export default function ProfileForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Erreur lors de la mise à jour");
+        toast.error(data?.error || "Erreur lors de la mise à jour");
         return;
       }
 
       toast.success("Profil mis à jour", {
         description: "Vos informations sont enregistrées.",
-        icon: <Check className="h-4 w-4" />,
       });
       setIsDirty(false);
     } catch {
@@ -94,123 +87,120 @@ export default function ProfileForm() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="mt-2 h-4 w-64" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
+      <section aria-busy="true" className="space-y-6">
+        <div className="space-y-3">
+          <div className="h-3 w-48 animate-pulse rounded bg-foreground/5" />
+          <div className="h-4 w-72 animate-pulse rounded bg-foreground/5" />
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="h-10 animate-pulse rounded bg-foreground/5" />
+          <div className="h-10 animate-pulse rounded bg-foreground/5" />
+        </div>
+        <div className="h-10 animate-pulse rounded bg-foreground/5" />
+        <div className="h-10 animate-pulse rounded bg-foreground/5" />
+      </section>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Informations personnelles</CardTitle>
-        <CardDescription>
-          Ces informations apparaîtront sur vos factures et lors de vos livraisons.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="firstName">Prénom</Label>
-              <Input
-                id="firstName"
-                value={profile.firstName}
-                onChange={(e) => updateField("firstName", e.target.value)}
-                placeholder="Jean"
-                autoComplete="given-name"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lastName">Nom</Label>
-              <Input
-                id="lastName"
-                value={profile.lastName}
-                onChange={(e) => updateField("lastName", e.target.value)}
-                placeholder="Dupont"
-                autoComplete="family-name"
-              />
-            </div>
-          </div>
+    <section className="space-y-8">
+      <div className="space-y-3">
+        <p className="font-mono text-[12px] uppercase tracking-[0.22em] text-foreground/55">
+          <span className="mr-1.5 opacity-60">—</span>
+          Informations personnelles
+        </p>
+        <p className="text-[16px] leading-relaxed text-foreground/65">
+          Affichées sur vos factures et livraisons.
+        </p>
+      </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="email" className="flex items-center gap-1.5">
-              Email
-              <Lock
-                className="h-3 w-3 text-muted-foreground"
-                aria-hidden="true"
-              />
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={profile.email}
-              disabled
-              className="bg-muted"
-              autoComplete="email"
+      <form onSubmit={handleSubmit} className="space-y-8" noValidate>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label htmlFor="firstName" className={LABEL_BASE}>
+              Prénom
+            </label>
+            <input
+              id="firstName"
+              value={profile.firstName}
+              onChange={(e) => updateField("firstName", e.target.value)}
+              placeholder="Jean"
+              autoComplete="given-name"
+              className={INPUT_BASE}
             />
-            <p className="text-xs text-muted-foreground">
-              L&apos;email sert d&apos;identifiant de connexion et ne peut pas
-              être modifié. Contactez le support pour toute demande.
-            </p>
           </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="phone">Téléphone</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={profile.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
-              placeholder="06 12 34 56 78"
-              autoComplete="tel"
-              inputMode="tel"
+          <div className="space-y-2">
+            <label htmlFor="lastName" className={LABEL_BASE}>
+              Nom
+            </label>
+            <input
+              id="lastName"
+              value={profile.lastName}
+              onChange={(e) => updateField("lastName", e.target.value)}
+              placeholder="Dupont"
+              autoComplete="family-name"
+              className={INPUT_BASE}
             />
-            <p className="text-xs text-muted-foreground">
-              Utilisé uniquement pour le suivi de vos commandes.
-            </p>
           </div>
+        </div>
 
-          <div className="flex flex-col-reverse items-stretch gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-muted-foreground">
-              {isDirty
-                ? "Modifications non enregistrées"
-                : "Toutes vos modifications sont enregistrées"}
-            </p>
-            <Button
-              type="submit"
-              disabled={isSaving || !isDirty}
-              className="h-10"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2
-                    className="mr-2 h-4 w-4 animate-spin"
-                    aria-hidden="true"
-                  />
-                  Enregistrement…
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Enregistrer
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        <div className="space-y-2">
+          <label htmlFor="email" className={LABEL_BASE}>
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={profile.email}
+            disabled
+            autoComplete="email"
+            className={cn(INPUT_BASE, "cursor-not-allowed text-foreground/50")}
+          />
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/40">
+            Non modifiable
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="phone" className={LABEL_BASE}>
+            Téléphone
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            value={profile.phone}
+            onChange={(e) => updateField("phone", e.target.value)}
+            placeholder="06 12 34 56 78"
+            autoComplete="tel"
+            inputMode="tel"
+            className={INPUT_BASE}
+          />
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/40">
+            Suivi des commandes uniquement
+          </p>
+        </div>
+
+        <div className="flex flex-col-reverse items-stretch gap-4 border-t border-border/60 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p
+            className={cn(
+              "font-mono text-[11px] uppercase tracking-[0.18em]",
+              isDirty ? "text-foreground/65" : "text-foreground/40"
+            )}
+          >
+            {isDirty ? "Non enregistré" : "Enregistré"}
+          </p>
+          <button
+            type="submit"
+            disabled={isSaving || !isDirty}
+            className={cn(
+              "inline-flex items-center justify-center rounded-full bg-foreground px-10 py-4 font-mono text-[12px] uppercase tracking-[0.2em] text-background transition-opacity",
+              (isSaving || !isDirty) && "opacity-40"
+            )}
+          >
+            {isSaving ? "Enregistrement…" : "Enregistrer"}
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }

@@ -4,50 +4,49 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import {
-  LogOut,
-  MapPin,
-  Package,
-  ShieldCheck,
-  User,
-  Wallet,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  match?: (pathname: string) => boolean;
+};
+
+type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+const NAV_SECTIONS: NavSection[] = [
   {
-    href: "/profile",
-    label: "Mon profil",
-    description: "Informations personnelles",
-    icon: User,
+    label: "Compte",
+    items: [
+      { href: "/profile", label: "Profil" },
+      { href: "/addresses", label: "Adresses" },
+      { href: "/payments", label: "Paiement" },
+    ],
   },
   {
-    href: "/orders",
-    label: "Mes commandes",
-    description: "Historique et suivi",
-    icon: Package,
-  },
-  {
-    href: "/addresses",
-    label: "Mes adresses",
-    description: "Livraison et facturation",
-    icon: MapPin,
-  },
-  {
-    href: "/payments",
-    label: "Paiement",
-    description: "Moyens de paiement",
-    icon: Wallet,
+    label: "Activité",
+    items: [{ href: "/orders", label: "Commandes" }],
   },
 ];
 
-function getInitials(firstName?: string | null, lastName?: string | null, email?: string | null) {
+function isActive(pathname: string | null, item: NavItem): boolean {
+  if (!pathname) return false;
+  if (item.match) return item.match(pathname);
+  return pathname === item.href || pathname.startsWith(item.href + "/");
+}
+
+function getInitials(
+  firstName?: string | null,
+  lastName?: string | null,
+  email?: string | null
+) {
   const first = firstName?.trim()?.[0];
   const last = lastName?.trim()?.[0];
   if (first || last) return `${first ?? ""}${last ?? ""}`.toUpperCase();
-  return email?.[0]?.toUpperCase() ?? "?";
+  return email?.[0]?.toUpperCase() ?? "—";
 }
 
 interface AccountUser {
@@ -75,7 +74,9 @@ export default function AccountSidebar() {
           });
         }
       })
-      .finally(() => active && setIsLoading(false));
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -86,93 +87,94 @@ export default function AccountSidebar() {
     : "";
 
   return (
-    <aside className="w-full md:w-72 md:shrink-0">
-      <div className="rounded-2xl border bg-card p-5">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border/60 bg-background md:flex">
+      <div className="border-b border-border/60 px-6 py-7">
         {isLoading ? (
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-3 w-32" />
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 animate-pulse rounded-full bg-foreground/5" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-4 w-28 animate-pulse rounded bg-foreground/5" />
+              <div className="h-3 w-36 animate-pulse rounded bg-foreground/5" />
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-foreground/5 font-mono text-[14px] font-semibold tracking-wider text-foreground"
               aria-hidden="true"
             >
               {getInitials(user?.firstName, user?.lastName, user?.email)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">
+              <p className="truncate font-display text-[16px] font-semibold leading-tight text-foreground">
                 {fullName || "Bienvenue"}
               </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {user?.email ?? ""}
+              <p className="mt-1 truncate font-mono text-[11px] lowercase tracking-[0.08em] text-foreground/50">
+                {user?.email ?? "—"}
               </p>
             </div>
           </div>
         )}
       </div>
 
-      <nav className="mt-4 space-y-1" aria-label="Navigation du compte">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "group flex items-start gap-3 rounded-xl border border-transparent px-3 py-3 text-sm transition-all",
-                "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                isActive
-                  ? "border-primary/20 bg-primary/5"
-                  : "text-foreground/80 hover:text-foreground"
-              )}
-            >
-              <Icon
-                className={cn(
-                  "mt-0.5 h-4 w-4 shrink-0 transition-colors",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground group-hover:text-foreground"
-                )}
-                aria-hidden="true"
-              />
-              <div className="min-w-0 flex-1">
-                <span
-                  className={cn(
-                    "block font-medium leading-tight",
-                    isActive && "text-primary"
-                  )}
-                >
-                  {item.label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {item.description}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
+      <nav
+        className="flex-1 overflow-y-auto px-4 py-7"
+        aria-label="Navigation de l'espace client"
+      >
+        {NAV_SECTIONS.map((section, idx) => (
+          <div key={section.label} className={cn(idx > 0 && "mt-8")}>
+            <p className="px-3 pb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/45">
+              <span className="mr-1.5 opacity-60">—</span>
+              {section.label}
+            </p>
+            <ul className="space-y-1">
+              {section.items.map((item) => {
+                const active = isActive(pathname, item);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      className={cn(
+                        "group relative flex items-center rounded-sm px-3 py-2.5 font-mono text-[14px] lowercase tracking-[0.06em] transition-colors duration-200 ease-out",
+                        active
+                          ? "text-foreground"
+                          : "text-foreground/55 hover:text-foreground"
+                      )}
+                    >
+                      {active && (
+                        <span
+                          aria-hidden
+                          className="absolute left-0 top-1/2 h-5 w-[2px] -translate-y-1/2 bg-electric-indigo-500"
+                        />
+                      )}
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
 
-      <div className="mt-6 border-t pt-4">
-        <div className="mb-3 flex items-center gap-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-          Session active
+      <div className="border-t border-border/60 px-6 py-5">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className="font-mono text-[12px] uppercase tracking-[0.16em] text-foreground/55 transition-colors hover:text-foreground"
+          >
+            Retour
+          </Link>
+          <span className="text-foreground/20">·</span>
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="font-mono text-[12px] uppercase tracking-[0.16em] text-foreground/55 transition-colors hover:text-foreground"
+          >
+            Déconnexion
+          </button>
         </div>
-        <Button
-          variant="ghost"
-          className="h-10 w-full justify-start gap-2 text-sm text-muted-foreground hover:text-destructive"
-          onClick={() => signOut({ callbackUrl: "/" })}
-        >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-          Se déconnecter
-        </Button>
       </div>
     </aside>
   );
