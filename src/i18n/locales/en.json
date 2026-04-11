@@ -252,5 +252,24 @@
     "orderPlaced": "Order placed successfully",
     "itemAdded": "Item added to cart",
     "itemRemoved": "Item removed from cart"
+  },
+  "chatbot": {
+    "title": "Althea Assistant",
+    "subtitle": "Ask us about our medical equipment",
+    "placeholder": "Type your message…",
+    "send": "Send",
+    "open": "Open assistant",
+    "close": "Close assistant",
+    "clear": "Clear conversation",
+    "clearConfirm": "Delete all history?",
+    "greeting": "Hello! I'm the Althea Systems assistant. How can I help you today?",
+    "typing": "Assistant is typing…",
+    "errorNetwork": "Unable to reach the assistant. Check your connection and try again.",
+    "errorUnavailable": "The assistant is temporarily unavailable. Please try again later.",
+    "errorGeneric": "Something went wrong. Try again or refresh the page.",
+    "retry": "Retry",
+    "disclaimer": "Generative AI — please verify important information.",
+    "you": "You",
+    "assistant": "Assistant"
   }
 }

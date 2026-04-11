@@ -1,6 +1,7 @@
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
+import { ChatbotWidget } from "@/components/chatbot/chatbot-widget";
 
 export default function SiteLayout({
   children,
@@ -22,6 +23,7 @@ export default function SiteLayout({
         {children}
       </main>
       <Footer />
+      <ChatbotWidget />
     </>
   );
 }
