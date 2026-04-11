@@ -5,27 +5,12 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Loader2,
-  MailCheck,
-  UserPlus,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
 import PasswordStrengthMeter, {
   isPasswordValid,
 } from "./password-strength-meter";
 
 const GoogleIcon = () => (
-  <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
     <path
       fill="#4285F4"
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -47,7 +32,7 @@ const GoogleIcon = () => (
 
 const GitHubIcon = () => (
   <svg
-    className="h-5 w-5"
+    className="h-4 w-4"
     fill="currentColor"
     viewBox="0 0 24 24"
     aria-hidden="true"
@@ -57,8 +42,26 @@ const GitHubIcon = () => (
 );
 
 type FieldErrors = Partial<
-  Record<"firstName" | "lastName" | "email" | "password" | "confirmPassword" | "terms", string>
+  Record<
+    "firstName" | "lastName" | "email" | "password" | "confirmPassword" | "terms",
+    string
+  >
 >;
+
+const FIELD_WRAPPER =
+  "group relative border-b border-border/80 pb-2 transition-colors focus-within:border-electric-indigo-500";
+const FIELD_WRAPPER_ERROR =
+  "group relative border-b border-destructive pb-2 transition-colors";
+const LABEL_CLASS =
+  "block font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55";
+const INPUT_CLASS =
+  "mt-3 w-full border-0 bg-transparent p-0 text-[15px] text-foreground outline-none placeholder:text-foreground/30 focus:ring-0 disabled:opacity-50";
+const ERROR_LINE =
+  "mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-destructive";
+const OAUTH_BUTTON =
+  "group inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-border/70 bg-transparent font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-all hover:border-foreground hover:bg-foreground/5 disabled:opacity-50 disabled:hover:bg-transparent";
+const SUBMIT_BUTTON =
+  "group inline-flex h-14 w-full items-center justify-center gap-3 rounded-full bg-foreground px-10 font-mono text-[12px] uppercase tracking-[0.22em] text-background transition-all hover:bg-foreground/90 disabled:opacity-60";
 
 export default function RegisterForm() {
   const searchParams = useSearchParams();
@@ -140,8 +143,7 @@ export default function RegisterForm() {
 
       if (!response.ok) {
         setFormError(
-          result?.error ??
-            "Erreur lors de l'inscription. Veuillez réessayer."
+          result?.error ?? "Erreur lors de l'inscription. Veuillez réessayer."
         );
         return;
       }
@@ -171,155 +173,201 @@ export default function RegisterForm() {
     });
   };
 
+  // ── Success state ───────────────────────────────────────
   if (emailSent) {
     return (
-      <div className="space-y-6 text-center" role="status" aria-live="polite">
-        <div className="flex flex-col items-center gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-8 dark:border-emerald-900/50 dark:bg-emerald-950/40">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg">
-            <MailCheck className="h-7 w-7" aria-hidden="true" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-200">
-              Vérifiez votre boîte mail
-            </h2>
-            <p className="text-sm text-emerald-800/80 dark:text-emerald-300/80">
-              Un email de confirmation a été envoyé à
-            </p>
-            <p className="font-mono text-sm font-semibold text-emerald-900 dark:text-emerald-200">
-              {registeredEmail}
-            </p>
-            <p className="pt-2 text-xs text-emerald-700/80 dark:text-emerald-300/60">
-              Cliquez sur le lien dans l&apos;email pour activer votre compte.
-              Le lien expire dans 24 heures.
-            </p>
-          </div>
+      <div role="status" aria-live="polite" className="space-y-10">
+        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-electric-indigo-500">
+          — Email envoyé
+        </p>
+
+        <h2 className="font-display text-h3 leading-tight tracking-tight text-foreground">
+          Vérifiez votre
+          <br />
+          boîte mail<span className="text-electric-indigo-500">.</span>
+        </h2>
+
+        <div className="space-y-3 border-l-2 border-border/60 pl-6">
+          <p className="text-body text-foreground/70">
+            Un email de confirmation vient d&apos;être envoyé à
+          </p>
+          <p className="font-mono text-[13px] text-foreground">
+            {registeredEmail}
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+            Lien actif pendant 24h
+          </p>
         </div>
-        <div className="flex flex-col items-center gap-3 text-sm">
+
+        <div className="flex flex-col gap-4 border-t border-border/60 pt-8 font-mono text-[11px] uppercase tracking-[0.22em]">
           <button
             type="button"
-            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             onClick={() => {
               setEmailSent(false);
               setFormError(null);
             }}
+            className="inline-flex items-center gap-2 text-foreground/60 transition-colors hover:text-foreground"
           >
-            Utiliser un autre email
+            <span aria-hidden="true">↺</span>
+            <span>Utiliser un autre email</span>
           </button>
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 font-medium text-primary underline-offset-4 hover:underline"
+            className="inline-flex items-center gap-2 text-foreground/60 transition-colors hover:text-electric-indigo-500"
           >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Retour à la connexion
+            <span aria-hidden="true">←</span>
+            <span>Retour à la connexion</span>
           </Link>
         </div>
       </div>
     );
   }
 
+  // ── Form state ──────────────────────────────────────────
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
+      {/* ── OAuth providers ─────────────────────────────── */}
       <div className="space-y-3">
-        <Button
+        <button
           type="button"
-          variant="outline"
-          className="h-11 w-full"
+          className={OAUTH_BUTTON}
           onClick={() => handleOAuthLogin("google")}
           disabled={isLoading}
         >
           <GoogleIcon />
-          <span className="ml-2 font-medium">S&apos;inscrire avec Google</span>
-        </Button>
-        <Button
+          <span>S&apos;inscrire avec Google</span>
+        </button>
+        <button
           type="button"
-          variant="outline"
-          className="h-11 w-full"
+          className={OAUTH_BUTTON}
           onClick={() => handleOAuthLogin("github")}
           disabled={isLoading}
         >
           <GitHubIcon />
-          <span className="ml-2 font-medium">S&apos;inscrire avec GitHub</span>
-        </Button>
+          <span>S&apos;inscrire avec GitHub</span>
+        </button>
       </div>
 
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Ou avec votre email
-        </span>
+      {/* ── Divider ─────────────────────────────────────── */}
+      <div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+        <span className="h-px flex-1 bg-border/60" />
+        <span>ou avec email</span>
+        <span className="h-px flex-1 bg-border/60" />
       </div>
 
-      <form onSubmit={handleRegister} className="space-y-5" noValidate>
+      {/* ── Credentials form ────────────────────────────── */}
+      <form onSubmit={handleRegister} className="space-y-8" noValidate>
         {formError && (
           <div
             role="alert"
-            className="flex items-start gap-2.5 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+            className="border-l-2 border-destructive pl-4 font-mono text-[11px] uppercase tracking-[0.14em] text-destructive"
           >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{formError}</span>
+            {formError}
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="firstName">Prénom</Label>
-            <Input
-              id="firstName"
-              name="firstName"
-              placeholder="Jean"
-              autoComplete="given-name"
-              required
-              disabled={isLoading}
-              aria-invalid={!!fieldErrors.firstName}
-              onChange={() => clearFieldError("firstName")}
-              className={fieldErrors.firstName ? "border-destructive" : ""}
-            />
+        {/* First + last name */}
+        <div className="grid gap-8 sm:grid-cols-2">
+          <div>
+            <div
+              className={
+                fieldErrors.firstName ? FIELD_WRAPPER_ERROR : FIELD_WRAPPER
+              }
+            >
+              <label htmlFor="firstName" className={LABEL_CLASS}>
+                Prénom
+              </label>
+              <input
+                id="firstName"
+                name="firstName"
+                autoComplete="given-name"
+                required
+                disabled={isLoading}
+                aria-invalid={!!fieldErrors.firstName}
+                onChange={() => clearFieldError("firstName")}
+                className={INPUT_CLASS}
+                placeholder="Jean"
+              />
+            </div>
             {fieldErrors.firstName && (
-              <p className="text-xs text-destructive">{fieldErrors.firstName}</p>
+              <p className={ERROR_LINE}>{fieldErrors.firstName}</p>
             )}
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="lastName">Nom</Label>
-            <Input
-              id="lastName"
-              name="lastName"
-              placeholder="Dupont"
-              autoComplete="family-name"
+
+          <div>
+            <div
+              className={
+                fieldErrors.lastName ? FIELD_WRAPPER_ERROR : FIELD_WRAPPER
+              }
+            >
+              <label htmlFor="lastName" className={LABEL_CLASS}>
+                Nom
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                autoComplete="family-name"
+                required
+                disabled={isLoading}
+                aria-invalid={!!fieldErrors.lastName}
+                onChange={() => clearFieldError("lastName")}
+                className={INPUT_CLASS}
+                placeholder="Dupont"
+              />
+            </div>
+            {fieldErrors.lastName && (
+              <p className={ERROR_LINE}>{fieldErrors.lastName}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Email */}
+        <div>
+          <div
+            className={
+              fieldErrors.email ? FIELD_WRAPPER_ERROR : FIELD_WRAPPER
+            }
+          >
+            <label htmlFor="email" className={LABEL_CLASS}>
+              Email professionnel
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
               required
               disabled={isLoading}
-              aria-invalid={!!fieldErrors.lastName}
-              onChange={() => clearFieldError("lastName")}
-              className={fieldErrors.lastName ? "border-destructive" : ""}
+              aria-invalid={!!fieldErrors.email}
+              onChange={() => clearFieldError("email")}
+              className={INPUT_CLASS}
+              placeholder="jean@cabinet-medical.fr"
             />
-            {fieldErrors.lastName && (
-              <p className="text-xs text-destructive">{fieldErrors.lastName}</p>
-            )}
           </div>
+          {fieldErrors.email && <p className={ERROR_LINE}>{fieldErrors.email}</p>}
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email professionnel</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="jean@cabinet-medical.fr"
-            autoComplete="email"
-            required
-            disabled={isLoading}
-            aria-invalid={!!fieldErrors.email}
-            onChange={() => clearFieldError("email")}
-            className={fieldErrors.email ? "border-destructive" : ""}
-          />
-          {fieldErrors.email && (
-            <p className="text-xs text-destructive">{fieldErrors.email}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password">Mot de passe</Label>
-          <div className="relative">
-            <Input
+        {/* Password */}
+        <div>
+          <div
+            className={
+              fieldErrors.password ? FIELD_WRAPPER_ERROR : FIELD_WRAPPER
+            }
+          >
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className={LABEL_CLASS}>
+                Mot de passe
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40 transition-colors hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? "Masquer" : "Afficher"}
+              </button>
+            </div>
+            <input
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
@@ -332,38 +380,39 @@ export default function RegisterForm() {
                 clearFieldError("password");
               }}
               aria-invalid={!!fieldErrors.password}
-              className={
-                fieldErrors.password ? "border-destructive pr-10" : "pr-10"
-              }
+              className={INPUT_CLASS}
+              placeholder="••••••••"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute inset-y-0 right-0 flex h-full w-10 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={
-                showPassword
-                  ? "Masquer le mot de passe"
-                  : "Afficher le mot de passe"
-              }
-              tabIndex={-1}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              )}
-            </button>
           </div>
-          <PasswordStrengthMeter value={password} />
+          <div className="mt-4">
+            <PasswordStrengthMeter value={password} />
+          </div>
           {fieldErrors.password && (
-            <p className="text-xs text-destructive">{fieldErrors.password}</p>
+            <p className={ERROR_LINE}>{fieldErrors.password}</p>
           )}
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-          <div className="relative">
-            <Input
+        {/* Confirm password */}
+        <div>
+          <div
+            className={
+              fieldErrors.confirmPassword ? FIELD_WRAPPER_ERROR : FIELD_WRAPPER
+            }
+          >
+            <div className="flex items-center justify-between">
+              <label htmlFor="confirmPassword" className={LABEL_CLASS}>
+                Confirmer le mot de passe
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40 transition-colors hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? "Masquer" : "Afficher"}
+              </button>
+            </div>
+            <input
               id="confirmPassword"
               name="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
@@ -376,67 +425,47 @@ export default function RegisterForm() {
                 clearFieldError("confirmPassword");
               }}
               aria-invalid={!!fieldErrors.confirmPassword}
-              className={
-                fieldErrors.confirmPassword
-                  ? "border-destructive pr-10"
-                  : "pr-10"
-              }
+              className={INPUT_CLASS}
+              placeholder="••••••••"
             />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword((v) => !v)}
-              className="absolute inset-y-0 right-0 flex h-full w-10 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={
-                showConfirmPassword
-                  ? "Masquer le mot de passe"
-                  : "Afficher le mot de passe"
-              }
-              tabIndex={-1}
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              )}
-            </button>
           </div>
           {fieldErrors.confirmPassword && (
-            <p className="text-xs text-destructive">
-              {fieldErrors.confirmPassword}
-            </p>
+            <p className={ERROR_LINE}>{fieldErrors.confirmPassword}</p>
           )}
           {confirmPassword.length > 0 &&
             confirmPassword === password &&
             !fieldErrors.confirmPassword && (
-              <p className="flex items-center gap-1 text-xs text-emerald-600">
-                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                Les mots de passe correspondent
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-electric-indigo-500">
+                ✓ Mots de passe identiques
               </p>
             )}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="terms"
-              checked={acceptedTerms}
-              onCheckedChange={(checked) => {
-                setAcceptedTerms(checked === true);
-                clearFieldError("terms");
-              }}
-              disabled={isLoading}
-              aria-invalid={!!fieldErrors.terms}
-              className="mt-0.5"
-            />
-            <Label
-              htmlFor="terms"
-              className="cursor-pointer text-xs font-normal leading-relaxed text-muted-foreground"
-            >
+        {/* Terms */}
+        <div>
+          <label className="group flex cursor-pointer items-start gap-3">
+            <span className="relative mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border border-border/80 transition-colors group-hover:border-foreground">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => {
+                  setAcceptedTerms(e.target.checked);
+                  clearFieldError("terms");
+                }}
+                disabled={isLoading}
+                aria-invalid={!!fieldErrors.terms}
+                className="peer absolute inset-0 cursor-pointer opacity-0"
+              />
+              {acceptedTerms && (
+                <span aria-hidden="true" className="h-2 w-2 bg-foreground" />
+              )}
+            </span>
+            <span className="text-[12px] leading-relaxed text-foreground/65">
               J&apos;accepte les{" "}
               <Link
                 href="/cgu"
                 target="_blank"
-                className="font-medium text-primary underline-offset-4 hover:underline"
+                className="text-foreground underline decoration-border/60 underline-offset-4 transition-colors hover:text-electric-indigo-500 hover:decoration-electric-indigo-500"
               >
                 conditions générales de vente
               </Link>{" "}
@@ -444,45 +473,33 @@ export default function RegisterForm() {
               <Link
                 href="/mentions-legales"
                 target="_blank"
-                className="font-medium text-primary underline-offset-4 hover:underline"
+                className="text-foreground underline decoration-border/60 underline-offset-4 transition-colors hover:text-electric-indigo-500 hover:decoration-electric-indigo-500"
               >
                 politique de confidentialité
               </Link>{" "}
               d&apos;Althea Systems.
-            </Label>
-          </div>
+            </span>
+          </label>
           {fieldErrors.terms && (
-            <p className="text-xs text-destructive">{fieldErrors.terms}</p>
+            <p className={`${ERROR_LINE} ml-7`}>{fieldErrors.terms}</p>
           )}
         </div>
 
-        <Button type="submit" className="h-11 w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2
-                className="mr-2 h-4 w-4 animate-spin"
-                aria-hidden="true"
-              />
-              Création du compte...
-            </>
-          ) : (
-            <>
-              <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
-              Créer mon compte
-            </>
+        {/* Submit */}
+        <button type="submit" disabled={isLoading} className={SUBMIT_BUTTON}>
+          <span>
+            {isLoading ? "Création du compte…" : "Créer mon compte"}
+          </span>
+          {!isLoading && (
+            <span
+              aria-hidden="true"
+              className="transition-transform group-hover:translate-x-1"
+            >
+              →
+            </span>
           )}
-        </Button>
+        </button>
       </form>
-
-      <p className="text-center text-sm text-muted-foreground">
-        Déjà un compte ?{" "}
-        <Link
-          href={`/login${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          Se connecter
-        </Link>
-      </p>
     </div>
   );
 }
