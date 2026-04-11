@@ -11,7 +11,7 @@ export default async function Footer() {
 
   return (
     <footer
-      className="border-t bg-[#003d5c] text-white"
+      className="border-t border-white/10 bg-shadow-grey-950 text-white"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
@@ -28,14 +28,14 @@ export default async function Footer() {
             <address className="mt-6 space-y-3 not-italic">
               <a
                 href="mailto:contact@althea-systems.com"
-                className="flex items-center gap-2 text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                className="flex items-center gap-2 text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
               >
                 <Mail className="h-4 w-4" aria-hidden="true" />
                 contact@althea-systems.com
               </a>
               <a
                 href="tel:+33123456789"
-                className="flex items-center gap-2 text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                className="flex items-center gap-2 text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
               >
                 <Phone className="h-4 w-4" aria-hidden="true" />
                 +33 1 23 45 67 89
@@ -68,7 +68,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/categories"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tNav("categories")}
                 </Link>
@@ -76,7 +76,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tNav("about")}
                 </Link>
@@ -84,7 +84,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tNav("contact")}
                 </Link>
@@ -104,7 +104,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/login"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tCommon("login")}
                 </Link>
@@ -112,7 +112,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/register"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tCommon("register")}
                 </Link>
@@ -120,7 +120,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/orders"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tCommon("myOrders")}
                 </Link>
@@ -140,7 +140,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/cgu"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tFooter("terms")}
                 </Link>
@@ -148,7 +148,7 @@ export default async function Footer() {
               <li>
                 <Link
                   href="/mentions-legales"
-                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#003d5c]"
+                  className="text-sm text-white/85 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950"
                 >
                   {tFooter("legal")}
                 </Link>

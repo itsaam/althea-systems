@@ -1,13 +1,13 @@
 const STATS = [
   { value: "15", unit: "ans", label: "d'expertise terrain", caption: "depuis 2011" },
-  { value: "2 500", unit: "+", label: "professionnels équipés", caption: "hôpitaux, cliniques, cabinets" },
+  { value: "2\u202F500", unit: "+", label: "professionnels équipés", caption: "hôpitaux, cliniques, cabinets" },
   { value: "48", unit: "h", label: "de livraison garantie", caption: "France métropolitaine" },
   { value: "98", unit: "%", label: "clients fidèles", caption: "mesuré sur 12 mois" },
 ];
 
 export default function StatsBand() {
   return (
-    <section className="relative isolate overflow-hidden bg-shadow-grey-950 py-24 text-white md:py-36 grain">
+    <section className="relative isolate overflow-hidden bg-shadow-grey-900 py-24 text-white md:py-36 grain">
       {/* Gradient orbs */}
       <div
         aria-hidden="true"
@@ -39,13 +39,13 @@ export default function StatsBand() {
           {STATS.map((stat, i) => (
             <div
               key={stat.label}
-              className="group relative flex flex-col gap-3 bg-shadow-grey-950 p-10 transition-colors duration-500 hover:bg-shadow-grey-900 md:p-12"
+              className="group relative flex flex-col gap-3 bg-shadow-grey-900 p-10 transition-colors duration-500 hover:bg-shadow-grey-800 md:p-12"
             >
               <span className="eyebrow text-lavender-mist-400">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <dd className="font-display flex items-baseline text-[5.5rem] italic leading-none tracking-tight text-white md:text-[7rem]">
-                {stat.value}
+              <dd className="font-display flex items-baseline whitespace-nowrap text-[5.5rem] italic leading-none tracking-tight text-white md:text-[7rem]">
+                <span className="whitespace-nowrap">{stat.value}</span>
                 <span className="ml-1 text-4xl text-electric-indigo-300 md:text-5xl">
                   {stat.unit}
                 </span>
