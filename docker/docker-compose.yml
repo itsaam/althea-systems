@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
     container_name: althea-app
     ports:
       - "3000:3000"

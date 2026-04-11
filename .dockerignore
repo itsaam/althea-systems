@@ -33,7 +33,11 @@ yarn-error.log*
 
 # Tests
 __tests__
+e2e
 coverage
+test-results
+playwright-report
+playwright.config.ts
 vitest.config.ts
 vitest.setup.ts
 **/*.test.ts
@@ -47,10 +51,12 @@ docs
 !README.md
 CHANGELOG.md
 CONTRIBUTING.md
+ISSUES_AUDIT.md
 
 # Editor / IDE
 .vscode
 .idea
+.claude
 *.swp
 *.swo
 .DS_Store
@@ -59,6 +65,9 @@ CONTRIBUTING.md
 docker
 Dockerfile.local
 docker-compose*.yml
+
+# Scripts (dev-only tooling, not needed inside image)
+scripts
 
 # Misc
 .vercel
