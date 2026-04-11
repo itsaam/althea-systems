@@ -91,7 +91,7 @@ export const metadata: Metadata = {
       "Decouvrez notre gamme complete d'equipements medicaux pour les professionnels de sante.",
     images: [
       {
-        url: `${BASE_URL}/images/og-image.png`,
+        url: `https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/og/home.png`,
         width: 1200,
         height: 630,
         alt: "Althea Systems",
@@ -103,7 +103,7 @@ export const metadata: Metadata = {
     title: "Althea Systems - Equipement medical de pointe",
     description:
       "Equipements medicaux de haute qualite pour les professionnels de sante.",
-    images: [`${BASE_URL}/images/og-image.png`],
+    images: [`https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/og/home.png`],
   },
   alternates: {
     canonical: BASE_URL,
