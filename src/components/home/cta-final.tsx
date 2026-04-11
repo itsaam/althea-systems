@@ -4,61 +4,10 @@ import CtaProductsCarousel, {
   type CarouselProduct,
 } from "./cta-products-carousel";
 
-const FALLBACK_PRODUCTS: CarouselProduct[] = [
-  {
-    id: "fallback-1",
-    slug: "echographe-portable-h7",
-    name: "Échographe portable H7",
-    price: 8400,
-    image: null,
-    categoryName: "Imagerie",
-  },
-  {
-    id: "fallback-2",
-    slug: "table-examen-electrique-e2",
-    name: "Table d'examen électrique E2",
-    price: 2150,
-    image: null,
-    categoryName: "Mobilier clinique",
-  },
-  {
-    id: "fallback-3",
-    slug: "moniteur-multiparametrique-m9",
-    name: "Moniteur multiparamétrique M9",
-    price: 3600,
-    image: null,
-    categoryName: "Monitoring",
-  },
-  {
-    id: "fallback-4",
-    slug: "autoclave-classe-b-22l",
-    name: "Autoclave classe B 22L",
-    price: 4290,
-    image: null,
-    categoryName: "Stérilisation",
-  },
-  {
-    id: "fallback-5",
-    slug: "defibrillateur-semi-auto-x3",
-    name: "Défibrillateur semi-auto X3",
-    price: 1690,
-    image: null,
-    categoryName: "Urgence",
-  },
-  {
-    id: "fallback-6",
-    slug: "scialytique-led-mobile",
-    name: "Scialytique LED mobile",
-    price: 980,
-    image: null,
-    categoryName: "Éclairage",
-  },
-];
-
 async function getCarouselProducts(): Promise<CarouselProduct[]> {
   try {
     const featured = await prisma.product.findMany({
-      where: { featured: true },
+      where: { featured: true, status: "PUBLISHED" },
       orderBy: [{ featuredOrder: "asc" }, { createdAt: "desc" }],
       take: 6,
       include: { category: true },
@@ -69,17 +18,16 @@ async function getCarouselProducts(): Promise<CarouselProduct[]> {
     if (featured.length < 6) {
       const excludeIds = featured.map((p) => p.id);
       const fallback = await prisma.product.findMany({
-        where: excludeIds.length
-          ? { id: { notIn: excludeIds } }
-          : undefined,
+        where: {
+          status: "PUBLISHED",
+          ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
+        },
         orderBy: { createdAt: "desc" },
         take: 6 - featured.length,
         include: { category: true },
       });
       products = [...featured, ...fallback];
     }
-
-    if (products.length === 0) return FALLBACK_PRODUCTS;
 
     return products.map((p) => ({
       id: p.id,
@@ -90,7 +38,7 @@ async function getCarouselProducts(): Promise<CarouselProduct[]> {
       categoryName: p.category?.name ?? null,
     }));
   } catch {
-    return FALLBACK_PRODUCTS;
+    return [];
   }
 }
 
