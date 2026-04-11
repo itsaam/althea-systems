@@ -67,3 +67,6 @@ _bmad-output/
 
 # Agents doc
 AGENTS.md
+
+# Claude Code local settings (permissions, user-local state)
+.claude/
