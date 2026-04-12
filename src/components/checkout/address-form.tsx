@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Loader2, MapPin, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { CheckoutAddress } from "./types";
 import { EMPTY_ADDRESS } from "./types";
@@ -103,6 +104,9 @@ export default function AddressForm({
           const defaultAddr = list.find((a) => a.isDefault) ?? list[0];
           setSelectedSavedId(defaultAddr.id);
           setShowNewForm(false);
+        } else if (list.length === 0) {
+          // Aucune adresse enregistrée → afficher le formulaire directement
+          setShowNewForm(true);
         }
       })
       .catch(() => {
@@ -148,7 +152,10 @@ export default function AddressForm({
 
     const validationErrors = validateAddress(address);
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    if (Object.keys(validationErrors).length > 0) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
     onContinue(address, null);
   };
 
