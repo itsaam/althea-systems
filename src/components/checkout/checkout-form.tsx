@@ -130,7 +130,7 @@ export default function CheckoutForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             items: lineItems,
-            orderId: `cart-${Date.now()}`,
+            address,
           }),
         });
 
