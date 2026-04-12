@@ -16,10 +16,12 @@ export default function ConfirmationPage() {
 
   useEffect(() => {
     clearCart();
-    const ref =
-      sessionId ??
-      `ALT-${Date.now().toString(36).toUpperCase().slice(-8)}`;
-    setOrderRef(ref);
+    // Générer une ref courte et lisible — jamais afficher le session_id Stripe brut
+    const shortId = (sessionId ?? Date.now().toString(36))
+      .replace(/^cs_test_|^cs_live_/, "")
+      .slice(-8)
+      .toUpperCase();
+    setOrderRef(`ALT-${shortId}`);
   }, [clearCart, sessionId]);
 
   return (
@@ -30,7 +32,7 @@ export default function ConfirmationPage() {
             {/* Index marker */}
             <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
               <span>— Checkout · Confirmation</span>
-              <span className="tabular-nums">Ref · {orderRef || "—"}</span>
+              <span className="tabular-nums">{orderRef || "—"}</span>
             </div>
 
             {/* Main card */}
