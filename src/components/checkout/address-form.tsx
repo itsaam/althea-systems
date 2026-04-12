@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, MapPin, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ArrowUpRight, Loader2, MapPin, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CheckoutAddress } from "./types";
 import { EMPTY_ADDRESS } from "./types";
@@ -37,9 +34,15 @@ interface AddressFormProps {
 
 type AddressErrors = Partial<Record<keyof CheckoutAddress, string>>;
 
+const LABEL =
+  "font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/55";
+const INPUT =
+  "mt-3 h-11 w-full border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 text-[15px] text-foreground outline-none placeholder:text-foreground/30 transition-colors focus:border-foreground";
+const ERROR =
+  "mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-destructive";
+
 function validateAddress(address: CheckoutAddress): AddressErrors {
   const errors: AddressErrors = {};
-
   if (!address.firstName.trim()) errors.firstName = "Prénom requis";
   if (!address.lastName.trim()) errors.lastName = "Nom requis";
   if (!address.email.trim()) {
@@ -60,7 +63,6 @@ function validateAddress(address: CheckoutAddress): AddressErrors {
     errors.postalCode = "Code postal invalide";
   }
   if (!address.country.trim()) errors.country = "Pays requis";
-
   return errors;
 }
 
@@ -87,7 +89,6 @@ export default function AddressForm({
 
   useEffect(() => {
     if (!isAuthenticated) return;
-
     let cancelled = false;
     setIsLoadingAddresses(true);
 
@@ -98,7 +99,6 @@ export default function AddressForm({
         const list: SavedAddress[] =
           body?.data?.addresses ?? body?.addresses ?? [];
         setSavedAddresses(list);
-
         if (list.length > 0 && !initialAddress && !initialSavedAddressId) {
           const defaultAddr = list.find((a) => a.isDefault) ?? list[0];
           setSelectedSavedId(defaultAddr.id);
@@ -149,17 +149,15 @@ export default function AddressForm({
     const validationErrors = validateAddress(address);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
-
     onContinue(address, null);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-10">
+      {/* Saved addresses */}
       {isAuthenticated && savedAddresses.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Adresses enregistrées
-          </h3>
+        <div className="space-y-4">
+          <p className={LABEL}>Adresses enregistrées</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {savedAddresses.map((saved) => {
               const isSelected =
@@ -173,32 +171,26 @@ export default function AddressForm({
                     setShowNewForm(false);
                   }}
                   className={cn(
-                    "rounded-lg border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "flex flex-col items-start gap-3 border bg-background p-5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2",
                     isSelected
-                      ? "border-primary bg-primary/5 shadow-sm"
-                      : "border-border hover:border-primary/60"
+                      ? "border-foreground"
+                      : "border-border/60 hover:border-foreground/60"
                   )}
                   aria-pressed={isSelected}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="font-medium">
-                        {saved.firstName} {saved.lastName}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5 text-foreground/60" strokeWidth={1.5} />
+                    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-foreground">
+                      {saved.firstName} {saved.lastName}
+                    </span>
                     {saved.isDefault && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-primary">
-                        Par défaut
+                      <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/40">
+                        · Défaut
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {saved.street}
-                    {saved.street2 ? `, ${saved.street2}` : ""}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {saved.postalCode} {saved.city}, {saved.country}
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+                    {saved.street}, {saved.postalCode} {saved.city}
                   </p>
                 </button>
               );
@@ -210,14 +202,14 @@ export default function AddressForm({
                 setSelectedSavedId(null);
               }}
               className={cn(
-                "flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-4 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                "flex flex-col items-center justify-center gap-2 border border-dashed p-5 font-mono text-[10px] uppercase tracking-[0.22em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2",
                 showNewForm
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+                  ? "border-foreground text-foreground"
+                  : "border-border/60 text-foreground/50 hover:border-foreground/60 hover:text-foreground"
               )}
               aria-pressed={showNewForm}
             >
-              <Plus className="h-5 w-5" aria-hidden="true" />
+              <Plus className="h-4 w-4" />
               Nouvelle adresse
             </button>
           </div>
@@ -225,170 +217,93 @@ export default function AddressForm({
       )}
 
       {isLoadingAddresses && (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Chargement de vos adresses...
+        <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Chargement
         </p>
       )}
 
+      {/* New address form */}
       {showNewForm && (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="firstName">Prénom *</Label>
-              <Input
-                id="firstName"
-                value={address.firstName}
-                onChange={(e) => handleChange("firstName", e.target.value)}
-                placeholder="Jean"
-                autoComplete="given-name"
-                aria-invalid={!!errors.firstName}
-                className={errors.firstName ? "border-destructive" : ""}
-              />
-              {errors.firstName && (
-                <p className="text-xs text-destructive">{errors.firstName}</p>
-              )}
+        <div className="space-y-6 border-t border-border/60 pt-8">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label htmlFor="firstName" className={LABEL}>Prénom *</label>
+              <input id="firstName" value={address.firstName} onChange={(e) => handleChange("firstName", e.target.value)} placeholder="Jean" autoComplete="given-name" className={cn(INPUT, errors.firstName && "border-destructive focus:border-destructive")} />
+              {errors.firstName && <p className={ERROR}>{errors.firstName}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lastName">Nom *</Label>
-              <Input
-                id="lastName"
-                value={address.lastName}
-                onChange={(e) => handleChange("lastName", e.target.value)}
-                placeholder="Dupont"
-                autoComplete="family-name"
-                aria-invalid={!!errors.lastName}
-                className={errors.lastName ? "border-destructive" : ""}
-              />
-              {errors.lastName && (
-                <p className="text-xs text-destructive">{errors.lastName}</p>
-              )}
+            <div>
+              <label htmlFor="lastName" className={LABEL}>Nom *</label>
+              <input id="lastName" value={address.lastName} onChange={(e) => handleChange("lastName", e.target.value)} placeholder="Dupont" autoComplete="family-name" className={cn(INPUT, errors.lastName && "border-destructive focus:border-destructive")} />
+              {errors.lastName && <p className={ERROR}>{errors.lastName}</p>}
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={address.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                placeholder="jean@example.com"
-                autoComplete="email"
-                aria-invalid={!!errors.email}
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email}</p>
-              )}
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label htmlFor="email" className={LABEL}>Email *</label>
+              <input id="email" type="email" value={address.email} onChange={(e) => handleChange("email", e.target.value)} placeholder="jean@example.com" autoComplete="email" className={cn(INPUT, errors.email && "border-destructive focus:border-destructive")} />
+              {errors.email && <p className={ERROR}>{errors.email}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Téléphone *</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={address.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
-                placeholder="06 12 34 56 78"
-                autoComplete="tel"
-                aria-invalid={!!errors.phone}
-                className={errors.phone ? "border-destructive" : ""}
-              />
-              {errors.phone && (
-                <p className="text-xs text-destructive">{errors.phone}</p>
-              )}
+            <div>
+              <label htmlFor="phone" className={LABEL}>Téléphone *</label>
+              <input id="phone" type="tel" value={address.phone} onChange={(e) => handleChange("phone", e.target.value)} placeholder="06 12 34 56 78" autoComplete="tel" className={cn(INPUT, errors.phone && "border-destructive focus:border-destructive")} />
+              {errors.phone && <p className={ERROR}>{errors.phone}</p>}
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="street">Adresse *</Label>
-            <Input
-              id="street"
-              value={address.street}
-              onChange={(e) => handleChange("street", e.target.value)}
-              placeholder="123 rue de la Paix"
-              autoComplete="address-line1"
-              aria-invalid={!!errors.street}
-              className={errors.street ? "border-destructive" : ""}
-            />
-            {errors.street && (
-              <p className="text-xs text-destructive">{errors.street}</p>
-            )}
+          <div>
+            <label htmlFor="street" className={LABEL}>Adresse *</label>
+            <input id="street" value={address.street} onChange={(e) => handleChange("street", e.target.value)} placeholder="123 rue de la Paix" autoComplete="address-line1" className={cn(INPUT, errors.street && "border-destructive focus:border-destructive")} />
+            {errors.street && <p className={ERROR}>{errors.street}</p>}
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="street2">Complément d&apos;adresse</Label>
-            <Input
-              id="street2"
-              value={address.street2 ?? ""}
-              onChange={(e) => handleChange("street2", e.target.value)}
-              placeholder="Bâtiment, étage, appartement (optionnel)"
-              autoComplete="address-line2"
-            />
+          <div>
+            <label htmlFor="street2" className={LABEL}>Complément</label>
+            <input id="street2" value={address.street2 ?? ""} onChange={(e) => handleChange("street2", e.target.value)} placeholder="Bâtiment, étage (optionnel)" autoComplete="address-line2" className={INPUT} />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5 sm:col-span-1">
-              <Label htmlFor="postalCode">Code postal *</Label>
-              <Input
-                id="postalCode"
-                value={address.postalCode}
-                onChange={(e) => handleChange("postalCode", e.target.value)}
-                placeholder="75000"
-                autoComplete="postal-code"
-                aria-invalid={!!errors.postalCode}
-                className={errors.postalCode ? "border-destructive" : ""}
-              />
-              {errors.postalCode && (
-                <p className="text-xs text-destructive">{errors.postalCode}</p>
-              )}
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div>
+              <label htmlFor="postalCode" className={LABEL}>Code postal *</label>
+              <input id="postalCode" value={address.postalCode} onChange={(e) => handleChange("postalCode", e.target.value)} placeholder="75000" autoComplete="postal-code" className={cn(INPUT, "font-mono", errors.postalCode && "border-destructive focus:border-destructive")} />
+              {errors.postalCode && <p className={ERROR}>{errors.postalCode}</p>}
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="city">Ville *</Label>
-              <Input
-                id="city"
-                value={address.city}
-                onChange={(e) => handleChange("city", e.target.value)}
-                placeholder="Paris"
-                autoComplete="address-level2"
-                aria-invalid={!!errors.city}
-                className={errors.city ? "border-destructive" : ""}
-              />
-              {errors.city && (
-                <p className="text-xs text-destructive">{errors.city}</p>
-              )}
+            <div className="sm:col-span-2">
+              <label htmlFor="city" className={LABEL}>Ville *</label>
+              <input id="city" value={address.city} onChange={(e) => handleChange("city", e.target.value)} placeholder="Paris" autoComplete="address-level2" className={cn(INPUT, errors.city && "border-destructive focus:border-destructive")} />
+              {errors.city && <p className={ERROR}>{errors.city}</p>}
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="country">Pays *</Label>
-            <select
-              id="country"
-              value={address.country}
-              onChange={(e) => handleChange("country", e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              autoComplete="country"
-            >
-              <option value="FR">France</option>
-              <option value="BE">Belgique</option>
-              <option value="CH">Suisse</option>
-              <option value="LU">Luxembourg</option>
-              <option value="DE">Allemagne</option>
-              <option value="ES">Espagne</option>
-              <option value="IT">Italie</option>
-              <option value="PT">Portugal</option>
-              <option value="NL">Pays-Bas</option>
-            </select>
+          <div>
+            <label htmlFor="country" className={LABEL}>Pays *</label>
+            <div className="mt-3 border-b border-border/60">
+              <select id="country" value={address.country} onChange={(e) => handleChange("country", e.target.value)} autoComplete="country" className="h-11 w-full appearance-none bg-transparent text-[15px] text-foreground outline-none">
+                <option value="FR">France</option>
+                <option value="BE">Belgique</option>
+                <option value="CH">Suisse</option>
+                <option value="LU">Luxembourg</option>
+                <option value="DE">Allemagne</option>
+                <option value="ES">Espagne</option>
+                <option value="IT">Italie</option>
+                <option value="PT">Portugal</option>
+                <option value="NL">Pays-Bas</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-between">
-        <Button type="button" variant="outline" onClick={onBack}>
-          Retour
-        </Button>
-        <Button type="submit">Continuer vers le paiement</Button>
+      {/* Actions */}
+      <div className="flex flex-col-reverse gap-3 border-t border-border/60 pt-8 sm:flex-row sm:justify-between">
+        <button type="button" onClick={onBack} className="h-11 px-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/60 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:underline">
+          ← Retour
+        </button>
+        <button type="submit" className="group/cta inline-flex h-11 items-center gap-3 border border-foreground bg-background px-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2">
+          Continuer
+          <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
+        </button>
       </div>
     </form>
   );

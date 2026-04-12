@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, Lock, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowUpRight, CreditCard, Lock, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PaymentFormProps {
@@ -20,82 +19,79 @@ export default function PaymentForm({
 
   return (
     <form
-      className="space-y-6"
+      className="space-y-10"
       onSubmit={(e) => {
         e.preventDefault();
         onContinue(method);
       }}
     >
-      <div className="space-y-3">
-        <button
-          type="button"
-          onClick={() => setMethod("stripe")}
-          className={cn(
-            "flex w-full items-start gap-4 rounded-lg border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            method === "stripe"
-              ? "border-primary bg-primary/5 shadow-sm"
-              : "border-border hover:border-primary/60"
-          )}
-          aria-pressed={method === "stripe"}
-        >
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-              method === "stripe"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
-            )}
-          >
-            <CreditCard className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-semibold">Carte bancaire</p>
-              <div className="flex items-center gap-1.5">
-                <span className="rounded bg-white px-2 py-0.5 text-[10px] font-bold text-[#1434CB] shadow-sm">
-                  VISA
-                </span>
-                <span className="rounded bg-white px-2 py-0.5 text-[10px] font-bold text-[#EB001B] shadow-sm">
-                  MC
-                </span>
-              </div>
+      {/* Payment option */}
+      <button
+        type="button"
+        onClick={() => setMethod("stripe")}
+        className={cn(
+          "flex w-full items-start gap-5 border bg-background p-6 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2",
+          method === "stripe"
+            ? "border-foreground"
+            : "border-border/60 hover:border-foreground/60"
+        )}
+        aria-pressed={method === "stripe"}
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-border/60">
+          <CreditCard className="h-4 w-4 text-foreground/70" strokeWidth={1.5} />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-mono text-[13px] uppercase tracking-[0.14em] text-foreground">
+              Carte bancaire
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="border border-border/60 bg-background px-2 py-0.5 font-mono text-[9px] font-medium tabular-nums text-foreground/60">
+                VISA
+              </span>
+              <span className="border border-border/60 bg-background px-2 py-0.5 font-mono text-[9px] font-medium tabular-nums text-foreground/60">
+                MC
+              </span>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Paiement sécurisé via Stripe. Vos données ne transitent jamais
-              par nos serveurs.
+          </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-foreground/60">
+            Paiement sécurisé via Stripe. Vos données ne transitent jamais
+            par nos serveurs.
+          </p>
+        </div>
+      </button>
+
+      {/* Security notice */}
+      <div className="border border-dashed border-border/60 bg-background p-6">
+        <div className="flex items-start gap-4">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-foreground/60" strokeWidth={1.5} />
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground">
+              Paiement 100 % sécurisé
+            </p>
+            <p className="mt-2 text-[13px] leading-relaxed text-foreground/60">
+              Chiffrement SSL 256-bit, conformité PCI-DSS niveau 1. Vos
+              informations bancaires sont traitées directement par Stripe,
+              certifié par les autorités bancaires européennes.
             </p>
           </div>
-        </button>
-      </div>
-
-      <div className="flex items-start gap-3 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4">
-        <ShieldCheck
-          className="mt-0.5 h-5 w-5 shrink-0 text-primary"
-          aria-hidden="true"
-        />
-        <div className="space-y-1">
-          <p className="text-sm font-medium">Paiement 100 % sécurisé</p>
-          <p className="text-xs text-muted-foreground">
-            Chiffrement SSL 256-bit, conformité PCI-DSS niveau 1. Vos
-            informations bancaires sont traitées directement par Stripe,
-            certifié par les autorités bancaires européennes.
-          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-        <span>
-          La saisie des informations de carte aura lieu sur la page
-          sécurisée Stripe après confirmation de votre commande.
-        </span>
-      </div>
+      <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+        <Lock className="h-3 w-3" />
+        Saisie de la carte sur page sécurisée Stripe après confirmation.
+      </p>
 
-      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-between">
-        <Button type="button" variant="outline" onClick={onBack}>
-          Retour
-        </Button>
-        <Button type="submit">Continuer vers la confirmation</Button>
+      {/* Actions */}
+      <div className="flex flex-col-reverse gap-3 border-t border-border/60 pt-8 sm:flex-row sm:justify-between">
+        <button type="button" onClick={onBack} className="h-11 px-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/60 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:underline">
+          ← Retour
+        </button>
+        <button type="submit" className="group/cta inline-flex h-11 items-center gap-3 border border-foreground bg-background px-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2">
+          Continuer
+          <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
+        </button>
       </div>
     </form>
   );

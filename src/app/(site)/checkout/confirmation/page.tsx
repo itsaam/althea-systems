@@ -3,15 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Mail, Package, Sparkles } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { ArrowUpRight, Check, Mail, Package } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 
 export default function ConfirmationPage() {
@@ -31,92 +23,124 @@ export default function ConfirmationPage() {
   }, [clearCart, sessionId]);
 
   return (
-    <div className="container py-12 md:py-20">
-      <div className="mx-auto max-w-2xl">
-        <Card className="overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-12 text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-              <CheckCircle2 className="h-10 w-10" aria-hidden="true" />
-            </div>
-            <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">
-              Commande confirmée !
-            </h1>
-            <p className="mt-3 text-sm text-muted-foreground md:text-base">
-              Merci pour votre confiance. Votre commande a bien été
-              enregistrée.
-            </p>
-          </div>
-
-          <CardContent className="space-y-6 p-6 md:p-8">
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Référence commande
-              </p>
-              <p className="mt-1 font-mono text-lg font-semibold">
-                {orderRef || "—"}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Date : {new Date().toLocaleDateString("fr-FR", { dateStyle: "long" })}
-              </p>
+    <div className="bg-background text-foreground">
+      <section className="relative isolate grain overflow-hidden">
+        <div className="relative z-10 mx-auto flex min-h-[70vh] w-full max-w-[1400px] items-center justify-center px-4 py-24 sm:px-6 lg:px-10">
+          <div className="w-full max-w-[640px]">
+            {/* Index marker */}
+            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+              <span>— Checkout · Confirmation</span>
+              <span className="tabular-nums">Ref · {orderRef || "—"}</span>
             </div>
 
-            <div className="space-y-3">
-              <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                Prochaines étapes
-              </h2>
-              <div className="space-y-3">
-                <div className="flex gap-3 rounded-lg border p-3">
-                  <Mail className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                  <div className="text-sm">
-                    <p className="font-medium">Email de confirmation</p>
-                    <p className="text-muted-foreground">
-                      Vous recevrez un récapitulatif détaillé par email d&apos;ici
-                      quelques minutes.
-                    </p>
-                  </div>
+            {/* Main card */}
+            <div className="mt-6 border border-border/60 bg-background">
+              {/* Success header */}
+              <div className="border-b border-border/60 px-8 py-10 text-center md:px-12 md:py-14">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center border border-foreground bg-foreground text-background">
+                  <Check className="h-5 w-5" strokeWidth={2.5} />
                 </div>
-                <div className="flex gap-3 rounded-lg border p-3">
-                  <Package className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                  <div className="text-sm">
-                    <p className="font-medium">Préparation & expédition</p>
-                    <p className="text-muted-foreground">
-                      Votre commande sera préparée sous 24-48h ouvrées. Vous
-                      recevrez un email dès son expédition.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {isGuest && (
-              <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4 text-sm">
-                <p className="font-medium">Suivez votre commande plus facilement</p>
-                <p className="mt-1 text-muted-foreground">
-                  Créez un compte avec la même adresse email pour accéder à
-                  l&apos;historique, au suivi et aux factures.
+                <h1 className="mt-8 font-display text-[34px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground md:text-[40px]">
+                  Commande confirmée
+                  <span
+                    aria-hidden
+                    className="ml-1 inline-block h-1.5 w-1.5 translate-y-[-0.25em] rounded-full bg-electric-indigo-500 align-middle"
+                  />
+                </h1>
+                <p className="mt-4 text-[14px] leading-relaxed text-foreground/60">
+                  Merci pour votre confiance. Votre commande a bien été
+                  enregistrée.
                 </p>
-                <Button asChild variant="link" className="mt-1 h-auto p-0">
-                  <Link href="/register">Créer un compte →</Link>
-                </Button>
               </div>
-            )}
 
-            <Separator />
+              {/* Reference */}
+              <div className="border-b border-border/60 px-8 py-6 md:px-12">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+                  Référence commande
+                </p>
+                <p className="mt-2 font-mono text-[18px] font-medium tabular-nums text-foreground">
+                  {orderRef || "—"}
+                </p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+                  {new Date().toLocaleDateString("fr-FR", {
+                    dateStyle: "long",
+                  })}
+                </p>
+              </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="flex-1">
-                <Link href={isGuest ? "/" : "/orders"}>
-                  {isGuest ? "Retour à l'accueil" : "Voir mes commandes"}
+              {/* Next steps */}
+              <div className="space-y-4 px-8 py-8 md:px-12">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                  — Prochaines étapes
+                </p>
+
+                <div className="flex gap-4 border border-border/60 p-5">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-foreground/60" strokeWidth={1.5} />
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-foreground">
+                      Email de confirmation
+                    </p>
+                    <p className="mt-2 text-[13px] leading-relaxed text-foreground/60">
+                      Récapitulatif détaillé envoyé d&apos;ici quelques minutes.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 border border-border/60 p-5">
+                  <Package className="mt-0.5 h-4 w-4 shrink-0 text-foreground/60" strokeWidth={1.5} />
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-foreground">
+                      Préparation & expédition
+                    </p>
+                    <p className="mt-2 text-[13px] leading-relaxed text-foreground/60">
+                      Commande préparée sous 24-48h ouvrées. Notification
+                      dès expédition.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Guest upsell */}
+              {isGuest && (
+                <div className="border-t border-dashed border-border/60 px-8 py-6 md:px-12">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                    Suivez votre commande
+                  </p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-foreground/60">
+                    Créez un compte avec la même adresse email pour accéder au
+                    suivi, à l&apos;historique et aux factures.
+                  </p>
+                  <Link
+                    href="/register"
+                    className="mt-3 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground transition-colors hover:text-foreground/60"
+                  >
+                    Créer un compte →
+                  </Link>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-col gap-3 border-t border-border/60 p-8 sm:flex-row md:p-12">
+                <Link
+                  href={isGuest ? "/" : "/orders"}
+                  className="group/cta inline-flex h-11 flex-1 items-center justify-between gap-3 border border-foreground bg-background px-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-background"
+                >
+                  <span>
+                    {isGuest ? "Retour à l'accueil" : "Mes commandes"}
+                  </span>
+                  <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
                 </Link>
-              </Button>
-              <Button asChild variant="outline" className="flex-1">
-                <Link href="/products">Continuer mes achats</Link>
-              </Button>
+                <Link
+                  href="/categories"
+                  className="inline-flex h-11 flex-1 items-center justify-center border border-border/60 px-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/60 transition-colors hover:border-foreground hover:text-foreground"
+                >
+                  Continuer mes achats
+                </Link>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -3,18 +3,9 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ShoppingBag } from "lucide-react";
+import { ArrowUpRight, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import CheckoutSteps, { CHECKOUT_STEPS } from "./checkout-steps";
 import AuthStep from "./auth-step";
 import AddressForm from "./address-form";
@@ -24,6 +15,16 @@ import type { CheckoutAddress, CheckoutMode } from "./types";
 
 const SHIPPING_COST = 10;
 const TAX_RATE = 0.2;
+
+function formatPrice(value: number) {
+  if (!Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
 
 export default function CheckoutForm() {
   const router = useRouter();
@@ -45,26 +46,32 @@ export default function CheckoutForm() {
   );
   const grandTotal = subtotal + SHIPPING_COST + tax;
 
+  // ── Empty state ────────────────────────────────────────
   if (!isAuthLoading && items.length === 0) {
     return (
-      <Card className="border-orange-200 bg-orange-50/40">
-        <CardContent className="flex flex-col items-center gap-4 p-8 text-center sm:flex-row sm:text-left">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
-            <ShoppingBag className="h-6 w-6" aria-hidden="true" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-orange-900">
-              Votre panier est vide
-            </p>
-            <p className="mt-1 text-sm text-orange-800/80">
-              Ajoutez des articles avant de procéder au paiement.
-            </p>
-          </div>
-          <Button onClick={() => router.push("/products")}>
-            Continuer vos achats
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="border-y border-border/60 py-24 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center border border-border/60">
+          <ShoppingBag
+            className="h-4 w-4 text-foreground/60"
+            aria-hidden="true"
+            strokeWidth={1.5}
+          />
+        </div>
+        <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/50">
+          Panier · 000 / Vide
+        </p>
+        <p className="mt-4 text-body text-foreground/70">
+          Ajoutez des articles avant de procéder au paiement.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push("/categories")}
+          className="group/back mt-8 inline-flex h-11 items-center gap-3 border border-foreground bg-background px-6 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-background"
+        >
+          Explorer le catalogue
+          <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/back:-translate-y-0.5 group-hover/back:translate-x-0.5" />
+        </button>
+      </div>
     );
   }
 
@@ -137,7 +144,7 @@ export default function CheckoutForm() {
         const { url } = await response.json();
 
         if (url) {
-          toast.success("Redirection vers le paiement sécurisé...");
+          toast.success("Redirection vers le paiement sécurisé…");
           window.location.href = url;
           return;
         }
@@ -160,138 +167,171 @@ export default function CheckoutForm() {
     }
   };
 
+  const currentStepConfig = CHECKOUT_STEPS[currentStep - 1];
+
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardContent className="p-6 sm:p-8">
-          <CheckoutSteps
-            currentStep={currentStep}
-            completedStep={completedStep}
-            onStepClick={goTo}
-          />
-        </CardContent>
-      </Card>
+    <div className="space-y-12">
+      {/* ── Stepper ────────────────────────────────── */}
+      <div className="border-y border-border/60 py-8">
+        <CheckoutSteps
+          currentStep={currentStep}
+          completedStep={completedStep}
+          onStepClick={goTo}
+        />
+      </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>{CHECKOUT_STEPS[currentStep - 1].label}</CardTitle>
-              <CardDescription>
-                {CHECKOUT_STEPS[currentStep - 1].description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {currentStep === 1 && (
-                <AuthStep
-                  isAuthenticated={isAuthenticated}
-                  userName={user?.name ?? null}
-                  userEmail={user?.email ?? null}
-                  onContinueAuthenticated={() =>
-                    handleAuthContinue("authenticated")
-                  }
-                  onContinueGuest={() => handleAuthContinue("guest")}
-                />
-              )}
+      {/* ── Main grid ──────────────────────────────── */}
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-16">
+        {/* Active step panel */}
+        <div className="min-w-0">
+          <header className="mb-10">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+              Étape {String(currentStep).padStart(2, "0")} / {String(CHECKOUT_STEPS.length).padStart(2, "0")}
+            </p>
+            <h2 className="mt-3 font-display text-[32px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground md:text-[40px]">
+              {currentStepConfig.label}
+              <span
+                aria-hidden
+                className="ml-1 inline-block h-1.5 w-1.5 translate-y-[-0.25em] rounded-full bg-electric-indigo-500 align-middle"
+              />
+            </h2>
+            <p className="mt-3 max-w-md text-[14px] leading-relaxed text-foreground/60">
+              {currentStepConfig.description}
+            </p>
+          </header>
 
-              {currentStep === 2 && (
-                <AddressForm
-                  initialAddress={address}
-                  initialSavedAddressId={savedAddressId}
-                  isAuthenticated={mode === "authenticated"}
-                  userEmail={user?.email ?? null}
-                  onBack={() => setCurrentStep(1)}
-                  onContinue={handleAddressContinue}
-                />
-              )}
+          <div>
+            {currentStep === 1 && (
+              <AuthStep
+                isAuthenticated={isAuthenticated}
+                userName={user?.name ?? null}
+                userEmail={user?.email ?? null}
+                onContinueAuthenticated={() =>
+                  handleAuthContinue("authenticated")
+                }
+                onContinueGuest={() => handleAuthContinue("guest")}
+              />
+            )}
 
-              {currentStep === 3 && (
-                <PaymentForm
-                  selected={paymentMethod}
-                  onBack={() => setCurrentStep(2)}
-                  onContinue={handlePaymentContinue}
-                />
-              )}
+            {currentStep === 2 && (
+              <AddressForm
+                initialAddress={address}
+                initialSavedAddressId={savedAddressId}
+                isAuthenticated={mode === "authenticated"}
+                userEmail={user?.email ?? null}
+                onBack={() => setCurrentStep(1)}
+                onContinue={handleAddressContinue}
+              />
+            )}
 
-              {currentStep === 4 && address && (
-                <OrderReview
-                  address={address}
-                  items={items.map((item) => ({
-                    id: item.id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                  }))}
-                  subtotal={subtotal}
-                  shipping={SHIPPING_COST}
-                  tax={tax}
-                  total={grandTotal}
-                  isGuest={mode === "guest"}
-                  onEditAddress={() => setCurrentStep(2)}
-                  onEditPayment={() => setCurrentStep(3)}
-                  onConfirm={handleConfirmOrder}
-                  onBack={() => setCurrentStep(3)}
-                  isSubmitting={isSubmitting}
-                />
-              )}
-            </CardContent>
-          </Card>
+            {currentStep === 3 && (
+              <PaymentForm
+                selected={paymentMethod}
+                onBack={() => setCurrentStep(2)}
+                onContinue={handlePaymentContinue}
+              />
+            )}
+
+            {currentStep === 4 && address && (
+              <OrderReview
+                address={address}
+                items={items.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                }))}
+                subtotal={subtotal}
+                shipping={SHIPPING_COST}
+                tax={tax}
+                total={grandTotal}
+                isGuest={mode === "guest"}
+                onEditAddress={() => setCurrentStep(2)}
+                onEditPayment={() => setCurrentStep(3)}
+                onConfirm={handleConfirmOrder}
+                onBack={() => setCurrentStep(3)}
+                isSubmitting={isSubmitting}
+              />
+            )}
+          </div>
         </div>
 
-        <aside aria-label="Récapitulatif de commande">
-          <Card className="lg:sticky lg:top-24">
-            <CardHeader>
-              <CardTitle className="text-base">Récapitulatif</CardTitle>
-              <CardDescription>
-                {items.length} article{items.length > 1 ? "s" : ""} dans votre
-                panier
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-3">
-                {items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-start justify-between gap-3 text-sm"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium leading-tight">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Qté : {item.quantity}
-                      </p>
-                    </div>
-                    <p className="whitespace-nowrap font-medium">
-                      {(item.price * item.quantity).toFixed(2)} €
+        {/* Sticky summary sidebar */}
+        <aside
+          aria-label="Récapitulatif de commande"
+          className="lg:sticky lg:top-24 lg:self-start"
+        >
+          <div className="border border-border/60 bg-background">
+            <header className="flex items-center justify-between border-b border-border/60 px-6 py-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                — Récapitulatif
+              </p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40 tabular-nums">
+                {String(items.length).padStart(2, "0")} art.
+              </p>
+            </header>
+
+            {/* Items */}
+            <ul className="divide-y divide-border/40 px-6">
+              {items.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-start justify-between gap-3 py-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-[11px] uppercase tracking-[0.14em] text-foreground">
+                      {item.name}
                     </p>
-                  </li>
-                ))}
-              </ul>
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] tabular-nums text-foreground/40">
+                      Qté · {item.quantity}
+                    </p>
+                  </div>
+                  <p className="whitespace-nowrap font-mono text-[12px] tabular-nums text-foreground/80">
+                    {formatPrice(item.price * item.quantity)}
+                  </p>
+                </li>
+              ))}
+            </ul>
 
-              <Separator />
-
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Sous-total</dt>
-                  <dd>{subtotal.toFixed(2)} €</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Livraison</dt>
-                  <dd>{SHIPPING_COST.toFixed(2)} €</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">TVA (20 %)</dt>
-                  <dd>{tax.toFixed(2)} €</dd>
-                </div>
-              </dl>
-
-              <Separator />
-
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span>{grandTotal.toFixed(2)} €</span>
+            {/* Totals */}
+            <dl className="space-y-3 border-t border-border/60 px-6 py-6">
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+                  Sous-total
+                </dt>
+                <dd className="font-mono text-[12px] tabular-nums text-foreground">
+                  {formatPrice(subtotal)}
+                </dd>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+                  Livraison
+                </dt>
+                <dd className="font-mono text-[12px] tabular-nums text-foreground">
+                  {formatPrice(SHIPPING_COST)}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+                  TVA · 20%
+                </dt>
+                <dd className="font-mono text-[12px] tabular-nums text-foreground">
+                  {formatPrice(tax)}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="border-t border-border/60 px-6 py-6">
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/60">
+                  Total TTC
+                </p>
+                <p className="font-mono text-[22px] font-medium tabular-nums text-foreground">
+                  {formatPrice(grandTotal)}
+                </p>
+              </div>
+            </div>
+          </div>
         </aside>
       </div>
     </div>
