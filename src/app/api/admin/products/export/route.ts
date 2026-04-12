@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
-import * as XLSX from "xlsx";
+import { generateExport } from "@/lib/export";
 import type { Prisma } from "@prisma/client";
 
 import { authOptions } from "@/lib/auth";
@@ -127,27 +127,12 @@ export const GET = withApiLogger(async (req: NextRequest) => {
       };
     });
 
-    // Création du workbook
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Produits");
-
-    // Génération du fichier
-    let buffer: Buffer;
-    let filename: string;
-    let contentType: string;
-
-    if (format === "excel") {
-      buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
-      filename = `produits_${new Date().toISOString().split("T")[0]}.xlsx`;
-      contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    } else {
-      // CSV
-      const csv = XLSX.utils.sheet_to_csv(worksheet);
-      buffer = Buffer.from(csv, "utf-8");
-      filename = `produits_${new Date().toISOString().split("T")[0]}.csv`;
-      contentType = "text/csv";
-    }
+    // Génération via exceljs (remplace xlsx vulnérable)
+    const { buffer, contentType, extension } = await generateExport(exportData, {
+      format: format as "csv" | "excel",
+      sheetName: "Produits",
+    });
+    const filename = `produits_${new Date().toISOString().split("T")[0]}.${extension}`;
 
     productLogger.info(
       LogMessages.admin.exportGenere(`${format.toUpperCase()} - ${products.length} produits`)

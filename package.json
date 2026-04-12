@@ -68,6 +68,7 @@
     "dotenv": "^17.2.3",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.38.0",
     "gsap": "^3.13.0",
     "ioredis": "^5.8.2",
@@ -95,7 +96,6 @@
     "swagger-ui-dist": "^5.32.2",
     "tailwind-merge": "^3.4.0",
     "winston": "^3.18.3",
-    "xlsx": "^0.18.5",
     "zod": "^4.1.13",
     "zustand": "^5.0.9"
   },

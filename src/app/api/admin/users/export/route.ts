@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import * as XLSX from "xlsx";
+import { generateExport } from "@/lib/export";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -41,24 +41,11 @@ export async function GET(req: NextRequest) {
       Inscription: new Date(user.createdAt).toLocaleDateString("fr-FR"),
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Utilisateurs");
-
-    let buffer: Buffer;
-    let filename: string;
-    let contentType: string;
-
-    if (format === "excel") {
-      buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
-      filename = `utilisateurs_${new Date().toISOString().split("T")[0]}.xlsx`;
-      contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    } else {
-      const csv = XLSX.utils.sheet_to_csv(worksheet);
-      buffer = Buffer.from(csv, "utf-8");
-      filename = `utilisateurs_${new Date().toISOString().split("T")[0]}.csv`;
-      contentType = "text/csv";
-    }
+    const { buffer, contentType, extension } = await generateExport(exportData, {
+      format: format as "csv" | "excel",
+      sheetName: "Utilisateurs",
+    });
+    const filename = `utilisateurs_${new Date().toISOString().split("T")[0]}.${extension}`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new NextResponse(buffer as any, {

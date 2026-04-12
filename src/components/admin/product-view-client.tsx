@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Pencil, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 
 import type { ProductStatus, TvaRate } from "@prisma/client";
 
@@ -233,7 +234,12 @@ export default function ProductViewClient({ product }: ProductViewClientProps) {
           <CardContent>
             <div
               className="prose prose-sm max-w-none dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: product.description }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(product.description, {
+                  ALLOWED_TAGS: ["p", "strong", "em", "h2", "h3", "ul", "ol", "li", "a", "br"],
+                  ALLOWED_ATTR: ["href", "class", "target", "rel"],
+                }),
+              }}
             />
           </CardContent>
         </Card>
