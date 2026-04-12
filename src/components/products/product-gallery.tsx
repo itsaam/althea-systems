@@ -30,7 +30,7 @@ export default function ProductGallery({ images, alt }: ProductGalleryProps) {
                 onClick={() => setActiveIndex(i)}
                 aria-label={`Image ${i + 1} de ${alt}`}
                 aria-pressed={isActive}
-                className={`group relative aspect-square w-20 shrink-0 overflow-hidden rounded-xl border transition-all duration-500 ease-out-expo md:w-full ${
+                className={`group relative aspect-square w-20 shrink-0 overflow-hidden rounded-[2px] border transition-all duration-500 ease-out-expo md:w-full ${
                   isActive
                     ? "border-electric-indigo-500 shadow-[0_12px_30px_-12px_rgba(91,18,237,0.35)]"
                     : "border-shadow-grey-200 hover:border-shadow-grey-400"
@@ -60,7 +60,7 @@ export default function ProductGallery({ images, alt }: ProductGalleryProps) {
       {/* Main image */}
       <div className="order-1 md:order-2">
         <div
-          className={`group relative aspect-square overflow-hidden rounded-3xl border border-shadow-grey-200 bg-shadow-grey-100 shadow-[0_40px_120px_-40px_rgba(29,22,25,0.25)] transition-all duration-700 ease-out-expo ${
+          className={`group relative aspect-[4/5] overflow-hidden rounded-[2px] border border-border/60 bg-foreground/[0.04] transition-all duration-700 ease-out-expo ${
             zoomed ? "cursor-zoom-out" : "cursor-zoom-in"
           }`}
           onClick={() => hasImages && setZoomed((v) => !v)}

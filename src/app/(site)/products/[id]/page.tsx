@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, ArrowUpRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import ProductGallery from "@/components/products/product-gallery";
 import ProductInfo from "@/components/products/product-info";
 import ProductDetailsTabs from "@/components/products/product-details-tabs";
@@ -243,50 +243,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <SimilarProducts products={similarProducts} />
       </div>
 
-      {/* ── About Althea slim band ───────────────────── */}
-      <section className="relative isolate overflow-hidden border-t border-shadow-grey-200 bg-shadow-grey-950 text-white grain">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-32 top-1/2 h-[420px] w-[420px] -translate-y-1/2 rounded-full bg-lavender-mist-500 opacity-25 blur-[160px]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-20 top-0 h-[360px] w-[360px] rounded-full bg-electric-indigo-500 opacity-20 blur-[140px]"
-        />
-
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-10 px-6 py-20 md:flex-row md:items-end md:justify-between md:gap-16 md:px-10 md:py-28">
-          <div className="max-w-2xl">
-            <p className="eyebrow text-lavender-mist-300">À propos d&apos;Althea</p>
-            <h2 className="font-display mt-6 text-display-sm text-white">
-              L&apos;équipement médical,{" "}
-              <em className="not-italic italic text-brand-gradient">
-                sans bruit ni compromis.
-              </em>
-            </h2>
-            <p className="mt-8 max-w-xl text-base leading-relaxed text-shadow-grey-300">
-              Depuis 2011, Althea Systems sélectionne et certifie les
-              équipements qui équipent cabinets, cliniques et hôpitaux partout
-              en France. On choisit bien, on livre vite, on répond vraiment.
-            </p>
-          </div>
-          <div className="flex flex-col gap-4">
-            <Link
-              href="/about"
-              className="group inline-flex items-center justify-between gap-4 rounded-full border border-white/20 bg-white/5 px-6 py-4 backdrop-blur-xl transition-all duration-500 ease-out-expo hover:bg-white hover:text-shadow-grey-950"
-            >
-              <span className="text-sm font-medium">Découvrir Althea</span>
-              <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out-expo group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-            </Link>
-            <Link
-              href="/contact"
-              className="group inline-flex items-center justify-between gap-4 rounded-full border border-transparent px-6 py-4 text-shadow-grey-300 transition-all duration-500 ease-out-expo hover:text-white"
-            >
-              <span className="text-sm font-medium">Contacter un conseiller</span>
-              <span className="block h-px w-8 bg-current transition-all duration-500 ease-out-expo group-hover:w-12" />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       <ProductJsonLd
         name={product.name}
