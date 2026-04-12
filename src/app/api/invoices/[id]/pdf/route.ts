@@ -27,9 +27,23 @@ export async function GET(
       return NextResponse.json({ error: "Facture introuvable" }, { status: 404 });
     }
 
-    // PDF déjà sur R2 → redirect direct
+    // PDF déjà sur R2 → proxy (pas de redirect pour éviter les erreurs CORS)
     if (invoice.pdfUrl) {
-      return NextResponse.redirect(invoice.pdfUrl);
+      try {
+        const r2Res = await fetch(invoice.pdfUrl);
+        if (r2Res.ok && r2Res.body) {
+          return new Response(r2Res.body, {
+            status: 200,
+            headers: {
+              "Content-Type": "application/pdf",
+              "Content-Disposition": `attachment; filename="${invoice.invoiceNumber}.pdf"`,
+              "Cache-Control": "private, max-age=3600",
+            },
+          });
+        }
+      } catch {
+        apiLogger.warn(`R2 fetch échoué pour ${invoice.invoiceNumber}, fallback génération`);
+      }
     }
 
     // Fallback : génération à la volée
