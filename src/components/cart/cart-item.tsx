@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Minus, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Minus, Plus, X } from "lucide-react";
 
 interface CartItemProps {
   id: string;
@@ -10,9 +10,21 @@ interface CartItemProps {
   price: number;
   quantity: number;
   image?: string;
+  index?: number;
+  total?: number;
   onIncrease: (id: string) => void;
   onDecrease: (id: string) => void;
   onRemove: (id: string) => void;
+}
+
+function formatPrice(value: number) {
+  if (!Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 export default function CartItem({
@@ -21,79 +33,100 @@ export default function CartItem({
   price,
   quantity,
   image,
+  index,
+  total,
   onIncrease,
   onDecrease,
   onRemove,
 }: CartItemProps) {
   const t = useTranslations("cart");
+  const lineTotal = price * quantity;
+  const ref =
+    typeof index === "number" && typeof total === "number"
+      ? `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`
+      : null;
 
   return (
-    <div className="flex flex-col gap-4 border-b py-4 sm:flex-row sm:items-start sm:gap-5">
-      <div className="flex gap-4 sm:contents">
-        <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-muted sm:h-24 sm:w-24">
-          {image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={image}
-              alt={name}
-              className="h-full w-full object-cover"
-            />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-2 text-sm font-medium leading-snug sm:text-base">
-            {name}
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {price.toFixed(2)} €
-          </p>
-          <div className="mt-3 inline-flex items-center rounded-md border">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-none rounded-l-md"
-              onClick={() => onDecrease(id)}
-              aria-label={t("decreaseQuantity", { name })}
-            >
-              <Minus className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
-            <span
-              className="min-w-8 px-2 text-center text-sm font-medium tabular-nums"
-              aria-live="polite"
-            >
-              {quantity}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-none rounded-r-md"
-              onClick={() => onIncrease(id)}
-              aria-label={t("increaseQuantity", { name })}
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
-          </div>
+    <article className="grid grid-cols-[88px_1fr] items-start gap-5 py-8 sm:grid-cols-[120px_1fr_auto] sm:gap-8">
+      {/* Image */}
+      <div className="relative aspect-square w-[88px] overflow-hidden bg-foreground/[0.04] ring-1 ring-inset ring-border/60 sm:w-[120px]">
+        {image ? (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            sizes="120px"
+            className="object-cover grayscale transition-[filter] duration-500 hover:grayscale-0"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-foreground/[0.04]" />
+        )}
+        {ref && (
+          <span className="absolute left-2 top-2 font-mono text-[9px] uppercase tracking-[0.22em] tabular-nums text-foreground/40">
+            {ref}
+          </span>
+        )}
+      </div>
+
+      {/* Meta + qty */}
+      <div className="min-w-0">
+        <h3 className="truncate font-mono text-[12px] uppercase tracking-[0.14em] text-foreground">
+          {name}
+        </h3>
+        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] tabular-nums text-foreground/50">
+          Prix unité · {formatPrice(price)}
+        </p>
+
+        {/* Qty stepper */}
+        <div className="mt-5 inline-flex items-center">
+          <button
+            type="button"
+            onClick={() => onDecrease(id)}
+            aria-label={t("decreaseQuantity", { name })}
+            className="inline-flex h-8 w-8 items-center justify-center border border-border/60 bg-background text-foreground/70 transition-colors hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+          >
+            <Minus className="h-3 w-3" aria-hidden="true" />
+          </button>
+          <span
+            className="inline-flex h-8 w-10 items-center justify-center border-y border-border/60 bg-background font-mono text-[12px] tabular-nums text-foreground"
+            aria-live="polite"
+          >
+            {quantity}
+          </span>
+          <button
+            type="button"
+            onClick={() => onIncrease(id)}
+            aria-label={t("increaseQuantity", { name })}
+            className="inline-flex h-8 w-8 items-center justify-center border border-border/60 bg-background text-foreground/70 transition-colors hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+          >
+            <Plus className="h-3 w-3" aria-hidden="true" />
+          </button>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:text-right">
-        <p className="text-base font-bold tabular-nums sm:text-lg">
-          {(price * quantity).toFixed(2)} €
-        </p>
-        <Button
+      {/* Line total + remove — stacks below on mobile */}
+      <div className="col-span-2 flex items-center justify-between border-t border-border/40 pt-5 sm:col-span-1 sm:flex-col sm:items-end sm:justify-between sm:self-stretch sm:border-0 sm:pt-0">
+        <div className="text-right">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+            Total
+          </p>
+          <p className="mt-1 font-mono text-[16px] font-medium tabular-nums text-foreground">
+            {formatPrice(lineTotal)}
+          </p>
+        </div>
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={() => onRemove(id)}
           aria-label={t("removeItemNamed", { name })}
+          className="group/rm inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-destructive focus-visible:outline-none focus-visible:text-destructive"
         >
-          <Trash2 className="h-4 w-4 sm:mr-1.5" aria-hidden="true" />
+          <X
+            className="h-3 w-3 transition-transform duration-300 group-hover/rm:rotate-90"
+            aria-hidden="true"
+          />
           <span className="hidden sm:inline">{t("remove")}</span>
-        </Button>
+        </button>
       </div>
-    </div>
+    </article>
   );
 }

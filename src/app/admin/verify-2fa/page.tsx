@@ -3,8 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ShieldCheck, Loader2, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Verify2FAPage() {
@@ -21,26 +20,22 @@ export default function Verify2FAPage() {
   }, []);
 
   const handleChange = (index: number, value: string) => {
-    // Accepter uniquement les chiffres
     if (!/^\d*$/.test(value)) return;
 
     const newCode = [...code];
-    newCode[index] = value.slice(-1); // Prendre le dernier caractère
+    newCode[index] = value.slice(-1);
     setCode(newCode);
 
-    // Auto-focus sur le prochain input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Si tous les champs sont remplis, soumettre automatiquement
     if (newCode.every((c) => c) && index === 5) {
       handleSubmit(newCode.join(""));
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    // Retour arrière : focus sur l'input précédent
     if (e.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -57,11 +52,9 @@ export default function Verify2FAPage() {
     });
     setCode(newCode);
 
-    // Focus sur le dernier input rempli ou le suivant
     const lastFilledIndex = Math.min(pastedData.length, 5);
     inputRefs.current[lastFilledIndex]?.focus();
 
-    // Soumettre si complet
     if (pastedData.length === 6) {
       handleSubmit(pastedData);
     }
@@ -87,14 +80,13 @@ export default function Verify2FAPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Mettre à jour la session avec twoFactorVerified = true
         await update({
           user: {
             ...session?.user,
             twoFactorVerified: true,
           },
         });
-        toast.success("Vérification réussie !");
+        toast.success("Vérification réussie");
         router.push("/admin");
         router.refresh();
       } else {
@@ -109,72 +101,140 @@ export default function Verify2FAPage() {
     }
   };
 
+  const isComplete = code.every((c) => c);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/50">
-      <div className="w-full max-w-md p-8 bg-background rounded-lg shadow-lg">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
+    <section className="relative isolate grain overflow-hidden">
+      <div className="relative z-10 mx-auto flex min-h-[70vh] w-full max-w-[1400px] items-center justify-center px-4 py-16 sm:px-6 lg:px-10">
+        <div className="w-full max-w-[520px]">
+          {/* Index marker */}
+          <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+            <span>— Admin · Sécurité</span>
+            <span className="tabular-nums">Index · 007 / 2FA</span>
           </div>
-          <h1 className="text-2xl font-bold">Vérification 2FA</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Entrez le code à 6 chiffres de votre application
-            d&apos;authentification
+
+          {/* Main card */}
+          <div className="mt-6 border border-border/60 bg-background p-8 md:p-10">
+            {/* Icon + eyebrow */}
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 items-center justify-center border border-border/60">
+                <ShieldCheck
+                  className="h-4 w-4 text-foreground/70"
+                  strokeWidth={1.5}
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+                  Authentification forte
+                </p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/50">
+                  Time-based · TOTP
+                </p>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h1 className="mt-10 font-display text-[34px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground md:text-[40px]">
+              Vérification
+              <br />
+              en deux temps
+              <span
+                aria-hidden
+                className="ml-1 inline-block h-1.5 w-1.5 translate-y-[-0.25em] rounded-full bg-electric-indigo-500 align-middle"
+              />
+            </h1>
+
+            <p className="mt-4 max-w-md text-[14px] leading-relaxed text-foreground/60">
+              Ouvrez votre application d&apos;authentification (Google
+              Authenticator, Authy, 1Password…) et entrez le code à 6 chiffres
+              ci-dessous.
+            </p>
+
+            {/* Error banner */}
+            {error && (
+              <div
+                role="alert"
+                className="mt-8 flex items-center gap-3 border border-destructive/60 bg-background px-4 py-3"
+              >
+                <span
+                  aria-hidden
+                  className="h-1 w-1 shrink-0 rounded-full bg-destructive"
+                />
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-destructive">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Code inputs */}
+            <div
+              className="mt-10 flex justify-between gap-2 sm:gap-3"
+              onPaste={handlePaste}
+            >
+              {code.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  disabled={isLoading}
+                  aria-label={`Chiffre ${index + 1} sur 6`}
+                  className="h-16 w-full max-w-[64px] border-x-0 border-t-0 border-b-2 border-border/60 bg-transparent text-center font-mono text-3xl font-medium tabular-nums text-foreground outline-none transition-colors focus:border-foreground disabled:opacity-50"
+                />
+              ))}
+            </div>
+
+            {/* Progress indicator */}
+            <div className="mt-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+              <span>État</span>
+              <span className="tabular-nums">
+                {code.filter((c) => c).length} / 6
+              </span>
+            </div>
+
+            {/* CTA */}
+            <button
+              type="button"
+              onClick={() => handleSubmit()}
+              disabled={isLoading || !isComplete}
+              className="group/cta mt-10 inline-flex h-12 w-full items-center justify-between gap-3 border border-foreground bg-background px-5 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:border-border/60 disabled:bg-background disabled:text-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
+            >
+              <span className="inline-flex items-center gap-3">
+                {isLoading && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                )}
+                {isLoading ? "Vérification" : "Vérifier le code"}
+              </span>
+              <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5 group-disabled/cta:translate-x-0 group-disabled/cta:translate-y-0" />
+            </button>
+
+            {/* Recovery link */}
+            <div className="mt-8 border-t border-border/60 pt-6">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+                Accès perdu ?
+              </p>
+              <button
+                type="button"
+                className="mt-2 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground transition-colors hover:text-foreground/60 focus-visible:outline-none focus-visible:underline"
+              >
+                → Utiliser un code de récupération
+              </button>
+            </div>
+          </div>
+
+          {/* Helper line */}
+          <p className="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
+            Vous pouvez coller votre code directement (⌘V)
           </p>
         </div>
-
-        {error && (
-          <div className="mb-4 p-3 text-sm text-red-500 bg-red-50 rounded-md text-center">
-            {error}
-          </div>
-        )}
-
-        <div className="flex gap-2 justify-center mb-6" onPaste={handlePaste}>
-          {code.map((digit, index) => (
-            <Input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              disabled={isLoading}
-              className="w-12 h-14 text-center text-2xl font-bold"
-            />
-          ))}
-        </div>
-
-        <Button
-          onClick={() => handleSubmit()}
-          disabled={isLoading || code.some((c) => !c)}
-          className="w-full"
-        >
-          {isLoading ? "Vérification..." : "Vérifier"}
-        </Button>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Vous n&apos;avez pas accès à votre application ?{" "}
-          <button className="text-primary hover:underline">
-            Utiliser un code de récupération
-          </button>
-        </p>
       </div>
-    </div>
+    </section>
   );
 }
