@@ -1254,6 +1254,43 @@ env:
 
 **Solution** : `npm audit fix` suivi de mises a jour manuelles : next 16.2.3, fast-xml-parser 5.5.8, prisma 6.19.3, @aws-sdk 3.1029.0. Resultat : 1 vulnerabilite restante (non corrigeable).
 
+### 21.17 CSP bloquait les factures, avatars Google et autocomplete
+
+**Probleme** : La Content Security Policy (CSP) du middleware bloquait trois fonctionnalites critiques :
+- Telechargement des factures PDF depuis R2 (`connect-src` manquait le CDN R2)
+- Affichage des avatars Google OAuth (`img-src` manquait `lh3.googleusercontent.com`)
+- Autocomplete d'adresse via API Adresse BAN (`connect-src` manquait `api-adresse.data.gouv.fr`)
+
+**Solution** : Ajout des domaines dans les directives `img-src` et `connect-src` de la CSP dans `middleware.ts` et `security.ts`.
+
+**Lecon apprise** : Toujours tester les fonctionnalites avec la console du navigateur ouverte (onglet Console) pour detecter les blocages CSP. Les erreurs CSP ne sont pas visibles dans les logs serveur.
+
+### 21.18 Webhook Stripe : commande inexistante en DB
+
+**Probleme** : Le webhook `checkout.session.completed` crashait avec `prisma.order.update() — No record was found for an update`. Le checkout Stripe envoyait un faux orderId (`cart-123456`) dans les metadata sans jamais creer de row Order en base de donnees.
+
+**Cause racine** : Le flow de paiement etait incomplet. Le client envoyait les items a l'API `/api/stripe/checkout` qui creait directement une session Stripe sans persister la commande.
+
+**Solution** : Refactoring complet de la route checkout :
+1. Creer l'adresse de livraison en DB
+2. Calculer les totaux (sous-total, TVA, livraison)
+3. Creer l'Order (status PENDING) + OrderItems + StatusHistory
+4. Decrementer le stock des produits
+5. Passer le vrai `order.id` dans les metadata Stripe
+6. Le webhook met simplement a jour le status vers CONFIRMED/PAID
+
+### 21.19 Facture PDF non brandee
+
+**Probleme** : Le PDF de facture utilisait des couleurs generiques (indigo Tailwind `#4f46e5`, navy `#1a1a2e`) et des informations societe par defaut ("Ma Societe SAS"). Incoherent avec la charte graphique Althea Systems.
+
+**Solution** : Reecriture complete de `src/lib/pdf.tsx` avec la palette Althea (shadow-grey-900 pour le texte, electric-indigo-500 pour l'accent). Header en texte `althea.` + `Medical · Systems` en mono caps. Suppression de la dependance `sharp` pour la conversion SVG→PNG du logo (remplace par du texte).
+
+### 21.20 Galerie produit : image 88px au lieu de pleine largeur
+
+**Probleme** : La galerie produit utilisait un grid CSS `[88px_1fr]` (colonne thumbnails + colonne principale). Quand un produit n'avait qu'une seule image, la grille placait l'image dans la premiere cellule de 88px au lieu de la colonne `1fr`. Resultat : image minuscule.
+
+**Solution** : Condition dans ProductGallery : si `images.length <= 1`, ne pas appliquer le grid 2 colonnes. Le container principal passe en `w-full` et l'image remplit tout l'espace disponible (col-span-7 dans le layout produit).
+
 ---
 
 ## 22. Pistes d'amelioration
