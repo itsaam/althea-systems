@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGrid from "@/components/products/product-grid";
+import {
+  BreadcrumbJsonLd,
+  CollectionPageJsonLd,
+} from "@/components/seo/json-ld";
 import { productLogger } from "@/lib/logger/exports";
 import { prisma } from "@/lib/prisma";
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_APP_URL || "https://althea.vjuya.me";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -72,12 +79,20 @@ export async function generateMetadata({
 
   const description =
     category.description ||
-    `Decouvrez nos equipements medicaux dans la categorie ${category.name}.`;
+    `Althea Systems — Sélection certifiée de ${category.name.toLowerCase()} pour les professionnels de santé. ISO 13485, marquage CE, livraison 48h.`;
   const canonical = `/categories/${category.slug}`;
 
   return {
     title: `${category.name} — Althea Systems`,
     description,
+    keywords: [
+      "Althea Systems",
+      "Althea",
+      category.name,
+      `${category.name} médical`,
+      "équipement médical",
+      "matériel médical professionnel",
+    ],
     openGraph: {
       title: `${category.name} — Althea Systems`,
       description,
@@ -108,9 +123,26 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
 
   const productCount = category.products.length;
+  const categoryUrl = `${BASE_URL}/categories/${category.slug}`;
+  const categoryDescription =
+    category.description ||
+    `Découvrez notre sélection de ${category.name.toLowerCase()} chez Althea Systems. Équipement certifié ISO 13485 et CE, livraison 48h.`;
 
   return (
     <div className="bg-background text-foreground">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Accueil", url: BASE_URL },
+          { name: "Catégories", url: `${BASE_URL}/categories` },
+          { name: category.name, url: categoryUrl },
+        ]}
+      />
+      <CollectionPageJsonLd
+        name={`${category.name} — Althea Systems`}
+        description={categoryDescription}
+        url={categoryUrl}
+        numberOfItems={productCount}
+      />
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="relative isolate grain overflow-hidden border-b border-border/60">
         <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-16 pt-24 sm:px-6 lg:px-10 lg:pb-20 lg:pt-32">

@@ -60,22 +60,39 @@ export const metadata: Metadata = {
   },
   description:
     "Althea Systems propose une gamme complete d'equipements medicaux de haute qualite pour les professionnels de sante. Livraison rapide, prix competitifs.",
+  applicationName: "Althea Systems",
   keywords: [
+    "Althea",
+    "Althea Systems",
+    "Althea Systems France",
     "equipement medical",
     "materiel medical",
     "dispositif medical",
-    "Althea Systems",
     "professionnel de sante",
+    "e-commerce medical",
+    "imagerie medicale",
+    "autoclave",
+    "defibrillateur",
+    "moniteur patient",
   ],
-  authors: [{ name: "Althea Systems" }],
+  authors: [{ name: "Althea Systems", url: BASE_URL }],
   creator: "Althea Systems",
   publisher: "Althea Systems",
+  category: "Medical Equipment",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
+      noimageindex: false,
       "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
@@ -84,6 +101,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
+    alternateLocale: ["en_US", "ar"],
     url: BASE_URL,
     siteName: "Althea Systems",
     title: "Althea Systems - Equipement medical de pointe",
@@ -94,12 +112,15 @@ export const metadata: Metadata = {
         url: `https://pub-578e3fbcadaa433fb571ec293b300e3c.r2.dev/og/home.png`,
         width: 1200,
         height: 630,
-        alt: "Althea Systems",
+        alt: "Althea Systems — L'équipement médical, repensé.",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
+    site: "@altheasystems",
+    creator: "@altheasystems",
     title: "Althea Systems - Equipement medical de pointe",
     description:
       "Equipements medicaux de haute qualite pour les professionnels de sante.",
@@ -107,7 +128,40 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: BASE_URL,
+    languages: {
+      "fr-FR": BASE_URL,
+      "en-US": BASE_URL,
+      ar: BASE_URL,
+      "x-default": BASE_URL,
+    },
+    types: {
+      "application/rss+xml": `${BASE_URL}/feed.xml`,
+    },
   },
+  verification: {
+    // Remplir avec les tokens réels une fois les services connectés :
+    // Google : https://search.google.com/search-console
+    // Bing   : https://www.bing.com/webmasters
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: {
+      "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION || "",
+    },
+  },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+};
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f1f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e090c" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default async function RootLayout({

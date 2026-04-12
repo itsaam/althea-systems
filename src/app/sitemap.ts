@@ -51,20 +51,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Dynamic product pages
+  // Dynamic product pages — use slug, not id (product URLs are /products/[slug])
   let productPages: MetadataRoute.Sitemap = [];
   try {
     const products = await prisma.product.findMany({
       where: { status: "PUBLISHED" },
-      select: { id: true, updatedAt: true },
+      select: { slug: true, updatedAt: true, images: true },
       orderBy: { updatedAt: "desc" },
     });
 
     productPages = products.map((product) => ({
-      url: `${BASE_URL}/products/${product.id}`,
+      url: `${BASE_URL}/products/${product.slug}`,
       lastModified: product.updatedAt,
       changeFrequency: "weekly" as const,
       priority: 0.8,
+      images: product.images.length > 0 ? [product.images[0]] : undefined,
     }));
   } catch {
     // Fail gracefully if DB is unavailable
@@ -74,6 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let categoryPages: MetadataRoute.Sitemap = [];
   try {
     const categories = await prisma.category.findMany({
+      where: { active: true },
       select: { slug: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
     });

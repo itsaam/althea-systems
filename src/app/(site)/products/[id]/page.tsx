@@ -113,16 +113,27 @@ export async function generateMetadata({
     };
   }
 
-  const description =
-    product.description ||
-    `Decouvrez ${product.name} chez Althea Systems. Equipement medical de qualite.`;
-  const productUrl = `${BASE_URL}/products/${product.id}`;
+  // Plain-text description extracted from HTML (if any), truncated for SEO
+  const rawDescription =
+    product.description?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ||
+    "";
+  const description = rawDescription
+    ? `${rawDescription.slice(0, 155)}${rawDescription.length > 155 ? "…" : ""}`
+    : `${product.name} chez Althea Systems — équipement médical certifié ISO 13485 et CE, livraison 48h. Prix à partir de ${Number(product.price).toFixed(0)} €.`;
+  const productUrl = `${BASE_URL}/products/${product.slug}`;
 
   return {
-    title: product.name,
+    title: `${product.name} — Althea Systems`,
     description,
+    keywords: [
+      product.name,
+      "Althea Systems",
+      "Althea",
+      product.category?.name || "équipement médical",
+      "matériel médical professionnel",
+    ],
     openGraph: {
-      title: product.name,
+      title: `${product.name} — Althea Systems`,
       description,
       images: product.images.length > 0 ? product.images : undefined,
       url: productUrl,
@@ -132,7 +143,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: product.name,
+      title: `${product.name} — Althea Systems`,
       description,
       images: product.images.length > 0 ? product.images : undefined,
       site: "@altheasystems",
@@ -156,7 +167,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const shareUrl = `${BASE_URL}/products/${product.id}`;
+  const shareUrl = `${BASE_URL}/products/${product.slug}`;
 
   return (
     <div className="relative bg-background">
