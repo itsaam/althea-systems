@@ -3,7 +3,7 @@
 **Projet** : Althea Systems - Plateforme e-commerce B2B  
 **Auteur** : Samy  
 **Role** : DevOps - Auth et Infrastructure  
-**Date** : 8 janvier 2026 (mis a jour)
+**Date** : 12 avril 2026 (mis a jour)
 
 ---
 
@@ -19,11 +19,18 @@
 8. [Validation des variables d'environnement](#8-validation-des-variables-denvironnement)
 9. [Securisation des endpoints API](#9-securisation-des-endpoints-api)
 10. [Integration Continue (GitHub Actions)](#10-integration-continue-github-actions)
-11. [Composant HeroCanvasReveal](#11-composant-herocanvasreveal)
-12. [Decisions techniques et justifications](#12-decisions-techniques-et-justifications)
-13. [Temps de developpement](#13-temps-de-developpement)
-14. [Difficultes rencontrees](#14-difficultes-rencontrees)
-15. [Pistes d'amelioration](#15-pistes-damelioration)
+11. [Hero Editorial et Animations](#11-hero-editorial-et-animations)
+12. [i18n Multi-langues (FR/EN/AR)](#12-i18n-multi-langues-frenar)
+13. [Chatbot IA](#13-chatbot-ia)
+14. [Design System Editorial](#14-design-system-editorial)
+15. [Carousel Produits GSAP](#15-carousel-produits-gsap)
+16. [SEO Complet](#16-seo-complet)
+17. [Autocomplete Adresse](#17-autocomplete-adresse)
+18. [Optimisation Performances](#18-optimisation-performances)
+19. [Decisions techniques et justifications](#19-decisions-techniques-et-justifications)
+20. [Temps de developpement](#20-temps-de-developpement)
+21. [Difficultes rencontrees](#21-difficultes-rencontrees)
+22. [Pistes d'amelioration](#22-pistes-damelioration)
 
 ---
 
@@ -44,18 +51,23 @@ En tant que responsable Auth et Infrastructure, mes missions etaient :
 
 ### 1.3 Stack technique utilisee
 
-| Composant       | Technologie     | Version    |
-| --------------- | --------------- | ---------- |
-| Framework       | Next.js         | 15.x       |
-| Auth            | NextAuth.js     | 4.x        |
-| ORM             | Prisma          | 5.x        |
-| Cache           | Redis / ioredis | 7.x        |
-| Container       | Docker          | 24.x       |
-| Base de donnees | PostgreSQL      | 16         |
-| Runtime         | Node.js         | >=20.0.0   |
-| CI/CD           | GitHub Actions  | -          |
-| Stockage        | Cloudflare R2   | -          |
-| Paiement        | Stripe          | 2025-11-17 |
+| Composant       | Technologie      | Version    |
+| --------------- | ---------------- | ---------- |
+| Framework       | Next.js          | 16.x       |
+| Auth            | NextAuth.js      | 4.x        |
+| ORM             | Prisma           | 6.x        |
+| Cache           | Redis / ioredis  | 7.x        |
+| Container       | Docker           | 24.x       |
+| Base de donnees | PostgreSQL       | 15         |
+| Runtime         | Node.js          | >=20.0.0   |
+| CI/CD           | GitHub Actions   | -          |
+| Stockage        | Cloudflare R2    | -          |
+| Paiement        | Stripe           | 2025-11-17 |
+| Animations      | Framer Motion    | 12.x       |
+| Animations      | GSAP             | 3.x        |
+| Smooth scroll   | Lenis            | 1.x        |
+| i18n            | next-intl        | 4.x        |
+| IA              | OpenAI SDK       | 6.x        |
 
 ---
 
@@ -224,18 +236,17 @@ Cette contrainte renforce la securite du back-office sans impacter l'experience 
 
 L'infrastructure de deploiement repose sur deux environnements distincts :
 
-| Environnement | Outil              | Usage                  |
-| ------------- | ------------------ | ---------------------- |
-| Local         | Docker Compose     | Developpement et tests |
-| Production    | Dokploy + Nixpacks | Deploiement automatise |
+| Environnement | Outil                          | Usage                  |
+| ------------- | ------------------------------ | ---------------------- |
+| Local         | Docker Compose                 | Developpement et tests |
+| Production    | Dokploy + Dockerfile custom    | Deploiement automatise |
 
 En production, le deploiement est gere par Dokploy avec les caracteristiques suivantes :
 
 - Autodeploy declenche a chaque push sur la branche main
-- Build automatique via Nixpacks (detection automatique du framework Next.js)
-- Bases de donnees (PostgreSQL, MongoDB, Redis) hebergees sur Dokploy avec monitoring integre
-
-Le Dockerfile et docker-compose.yml servent donc exclusivement a l'environnement de developpement local.
+- Build via un Dockerfile multi-stage custom avec BuildKit cache mounts
+- Bases de donnees (PostgreSQL, Redis) hebergees sur Dokploy avec monitoring integre
+- Image de production : 432 MB (contre 3.16 GB precedemment avec Nixpacks)
 
 ### 5.2 Architecture locale (Docker Compose)
 
@@ -244,32 +255,39 @@ Le fichier `docker/docker-compose.yml` definit les services pour le developpemen
 | Service  | Image              | Port | Role                       |
 | -------- | ------------------ | ---- | -------------------------- |
 | app      | Build custom       | 3000 | Application Next.js        |
-| postgres | postgres:16-alpine | 5432 | Base de donnees principale |
+| postgres | postgres:15-alpine | 5432 | Base de donnees principale |
 | redis    | redis:7-alpine     | 6379 | Cache et rate limiting     |
 
 Note : MongoDB a ete initialement prevu mais finalement retire du projet car non necessaire. PostgreSQL gere toutes les donnees relationnelles et Redis gere le cache.
 
-### 5.3 Dockerfile pour le developpement local
+### 5.3 Dockerfile multi-stage (production)
 
-Le Dockerfile utilise une approche multi-stage pour optimiser la taille de l'image :
+Le Dockerfile utilise une approche multi-stage avec BuildKit cache mounts pour optimiser la taille de l'image et les temps de build :
 
-**Stage 1 - deps** : Installation des dependances npm
+**Stage 1 - deps** (node:20-alpine) :
 
-**Stage 2 - builder** :
+- Installation des dependances npm
+- BuildKit cache mount sur `/root/.npm` pour reutiliser le cache npm entre builds
 
-- Copie des node_modules
+**Stage 2 - builder** (node:20-alpine) :
+
+- Copie des node_modules depuis le stage deps
 - Generation du client Prisma
-- Build de l'application Next.js
+- Build de l'application Next.js (standalone output)
+- BuildKit cache mount sur `/app/.next/cache` pour accelerer les rebuilds incrementaux
 
-**Stage 3 - runner** :
+**Stage 3 - runner** (node:20-alpine) :
 
 - Image de production minimale
-- Utilisateur non-root (nextjs:nodejs)
-- Copie des fichiers strictement necessaires
+- Utilisateur non-root `nextjs` (UID 1001) pour la securite
+- Copie uniquement des fichiers necessaires : `.next/standalone`, `.next/static`, `public`
+- Variables d'environnement de production (NODE_ENV, PORT, HOSTNAME)
 
-Cette approche reduit la surface d'attaque et la taille de l'image.
+**Resultats** :
 
-Note : En production, Nixpacks genere sa propre image optimisee. Ce Dockerfile sert uniquement pour les tests locaux ou si l'equipe souhaite migrer vers un deploiement Docker classique.
+- Taille image : 432 MB (contre 3.16 GB avec Nixpacks, soit -86%)
+- Build cold : ~5m23s (contre 9m20s avec Nixpacks)
+- Build cached (BuildKit) : ~2-3 min
 
 ### 5.4 Configuration des services locaux
 
@@ -301,20 +319,23 @@ Trois services supplementaires sont disponibles en profil "dev" :
 
 ### 5.7 Deploiement production (Dokploy)
 
-La production utilise une approche differente :
+La production utilise un Dockerfile multi-stage custom :
 
-| Composant  | Solution                                 |
-| ---------- | ---------------------------------------- |
-| Build      | Nixpacks (detection automatique Next.js) |
-| Hosting    | Dokploy                                  |
-| Trigger    | Push sur branche main (autodeploy)       |
-| PostgreSQL | Instance Dokploy avec monitoring         |
-| Redis      | Instance Dokploy avec monitoring         |
+| Composant  | Solution                                          |
+| ---------- | ------------------------------------------------- |
+| Build      | Dockerfile multi-stage + BuildKit cache mounts    |
+| Hosting    | Dokploy                                           |
+| Trigger    | Push sur branche main (autodeploy)                |
+| PostgreSQL | Instance Dokploy avec monitoring                  |
+| Redis      | Instance Dokploy avec monitoring                  |
+| Image      | node:20-alpine, 432 MB, user non-root (UID 1001) |
 
-Cette separation permet :
+Note : Le projet utilisait initialement Nixpacks (detection automatique du framework) qui generait des images de 3.16 GB sur une base Ubuntu. La migration vers un Dockerfile multi-stage custom a permis de reduire la taille de l'image de 86% et les temps de build de 60%.
 
-- Un environnement de dev identique pour toute l'equipe via Docker
-- Un deploiement simplifie sans gestion manuelle d'images Docker
+Cette architecture permet :
+
+- Un environnement de dev identique pour toute l'equipe via Docker Compose
+- Un deploiement production optimise avec des images legeres
 - Un monitoring centralise des bases de donnees en production
 
 ---
@@ -618,53 +639,219 @@ env:
 
 **Commit** : `01de9a0`
 
-**Solution** : Implementation du lazy loading pour Stripe (voir section 12.7).
+**Solution** : Implementation du lazy loading pour Stripe (voir section 19.7).
 
 ---
 
-## 11. Composant HeroCanvasReveal
+## 11. Hero Editorial et Animations
 
 ### 11.1 Contexte
 
-Pour ameliorer l'experience utilisateur sur la page d'accueil, un nouveau composant anime a ete developpe avec des effets visuels modernes.
+Le composant HeroCanvasReveal initial (Canvas API, decembre 2025) a ete entierement remplace par un hero editorial utilisant Framer Motion et des SVG animes. Cette refonte s'inscrit dans la mise en place du design system editorial du projet.
 
-**Commits** : `47e347c`, `86c5497`, `c341d89` - 14 decembre 2025
+### 11.2 Composants implementes
 
-### 11.2 Fonctionnalites implementees
+**SplitText** : Decomposition du texte caractere par caractere avec reveal anime via Framer Motion `whileInView`. Chaque caractere est enveloppe dans un `motion.span` avec un delai progressif.
 
-**Composant de base** (`47e347c`) :
+**Blueprint SVG technique** : Illustration animee composee d'anneaux concentriques, d'un crosshair central et de graduations. Les animations utilisent `motion.circle` et `motion.line` avec `pathLength` anime de 0 a 1 pour un effet de dessin progressif.
 
-- Animation Canvas avec effet de revelation
-- Integration avec la bibliotheque d'animations du projet
-- Design responsive adapte aux differentes tailles d'ecran
+**MagneticButton** : Bouton CTA avec effet magnetique au survol. Utilise `useMotionValue` et `useSpring` de Framer Motion pour suivre la position du curseur et appliquer une attraction fluide.
 
-**Gestion de l'authentification** (`86c5497`) :
+**ScrollReveal** : Wrapper generique pour les animations au scroll. Utilise `whileInView` avec des transitions sur `opacity`, `y` et `filter: blur()` pour un effet de revelation progressif.
 
-- Menu deroulant dynamique selon l'etat de connexion
-- Affichage du nom de l'utilisateur connecte
-- Liens vers le profil et la deconnexion
-- Boutons de connexion/inscription pour les visiteurs
-
-**Image de fond et lien admin** (`c341d89`) :
-
-- Ajout d'une image de fond stylisee
-- Lien rapide vers l'interface d'administration (visible uniquement pour les admins)
-- Amelioration de l'accessibilite
+**Lenis smooth scroll** : Provider global pour le defilement fluide sur l'ensemble du site. Initialise au niveau du layout racine.
 
 ### 11.3 Integration technique
 
-Le composant utilise :
+Le hero utilise :
 
-- React hooks pour la gestion de l'etat (`useState`, `useEffect`)
-- NextAuth pour verifier le statut de connexion (`useSession`)
-- CSS Modules pour les styles isoles
-- Canvas API pour les animations performantes
+- Framer Motion 12.x pour toutes les animations (pas de CSS keyframes)
+- SVG natif pour les illustrations techniques (pas de Canvas API)
+- Lenis 1.x pour le smooth scroll global
+- Tailwind v4 pour le styling (zero CSS Modules)
 
 ---
 
-## 12. Decisions techniques et justifications
+## 12. i18n Multi-langues (FR/EN/AR)
 
-### 12.1 Choix de NextAuth.js
+### 12.1 Architecture
+
+L'internationalisation utilise next-intl 4.x avec un routing base sur les cookies (et non sur un prefixe `[locale]/` dans l'URL). Ce choix a ete fait pour eviter de casser le routing NextAuth qui ne supporte pas les segments dynamiques en prefixe.
+
+### 12.2 Fichiers de traduction
+
+Les traductions sont stockees dans `src/i18n/locales/` :
+
+- `fr.json` : Francais (langue par defaut)
+- `en.json` : Anglais
+- `ar.json` : Arabe
+
+### 12.3 LanguageSwitcher
+
+Un composant compact dans le header permet de changer de langue. Le choix est persiste dans un cookie et applique immediatement sans rechargement de page.
+
+### 12.4 Support RTL
+
+L'arabe necessite un affichage de droite a gauche. La fonction `getDirection()` retourne `'rtl'` ou `'ltr'` selon la locale active, et l'attribut `dir` est applique sur le `<html>`.
+
+---
+
+## 13. Chatbot IA
+
+### 13.1 Architecture
+
+Le chatbot utilise l'API OpenAI avec le modele `gpt-4o-mini` pour fournir une assistance contextuelle aux utilisateurs.
+
+### 13.2 Backend
+
+**Endpoint** : `/api/chat/route.ts`
+
+- Streaming des reponses via l'API OpenAI (Server-Sent Events)
+- Validation des messages entrants avec Zod (structure, longueur)
+- Rate limiting de 5 requetes par minute par IP via Redis
+
+### 13.3 Frontend
+
+- Widget client avec bubble flottante en bas a droite de l'ecran
+- Historique des conversations persiste dans `localStorage`
+- Interface minimaliste coherente avec le design system editorial
+
+---
+
+## 14. Design System Editorial
+
+### 14.1 Palette de couleurs
+
+Le design system utilise une palette custom definie dans Tailwind v4 :
+
+- `shadow-grey` : Gris fonce principal
+- `electric-indigo` : Couleur d'accent primaire
+- `lavender-mist` : Fond clair
+- `medium-slate-blue` : Accent secondaire
+- `ash-grey` : Echelle de gris complete (50-950)
+
+### 14.2 Configuration Tailwind v4
+
+La configuration utilise l'approche CSS-first de Tailwind v4 avec `@theme` inline dans `globals.css`. Plus de fichier `tailwind.config.ts` pour les tokens de design.
+
+### 14.3 Typography
+
+Quatre familles typographiques :
+
+- **Hanken Grotesk** (sans-serif) : Corps de texte et headings
+- **IBM Plex Mono** (monospace) : Code, labels techniques, prix
+- **Newsreader** (serif) : Citations, accents editoriaux
+- **Noto Sans Arabic** : Support RTL pour la langue arabe
+
+### 14.4 Composants UI
+
+Les composants suivent une esthetique editoriale stricte :
+
+- **SplitText** : Reveal caractere par caractere
+- **ScrollReveal** : Animation au scroll (opacity, y, blur)
+- **MagneticButton** : Attraction magnetique au survol
+- **Blueprint SVG** : Illustration technique animee
+
+### 14.5 Product cards editoriales
+
+- Format portrait aspect 3/4
+- Images en grayscale par defaut, passage en couleur au hover
+- Typographie en monospace caps avec tracking espace
+- Zero shadow, zero rounded-xl, tout en border outline
+
+---
+
+## 15. Carousel Produits GSAP
+
+### 15.1 Implementation
+
+Fichier : `cta-products-carousel.tsx`
+
+Le carousel utilise GSAP 3.x avec le plugin ScrollTrigger pour creer un defilement horizontal pin avec scrub lie au scroll vertical.
+
+### 15.2 Fonctionnalites
+
+- **ScrollTrigger pin** : Le carousel est epingle pendant le scroll vertical, le contenu defile horizontalement
+- **Drag-to-scroll** : Support du drag avec pointer capture pour une interaction tactile fluide
+- **Parallax inverse** : Les images se deplacent en sens inverse du scroll pour un effet de profondeur
+- **Progress bar** : Barre de progression animee synchronisee avec le scroll
+- **Mobile fallback** : Sur mobile, le scroll horizontal utilise le snap-scroll natif CSS (pas de GSAP)
+- **Accessibilite** : `prefers-reduced-motion` respecte, les animations sont desactivees si l'utilisateur le demande
+
+---
+
+## 16. SEO Complet
+
+### 16.1 Bug critique corrige
+
+Le fichier `sitemap.ts` utilisait `product.id` (CUID) pour construire les URLs au lieu de `product.slug`. Google crawlait donc des URLs de type `/products/clxxxxxxxxx` qui retournaient des 404. La correction utilise un `select { slug }` dans la query Prisma.
+
+### 16.2 JSON-LD enrichi
+
+**Pages globales** :
+
+- `Organization` + `LocalBusiness` + `Store` pour le Knowledge Panel Google
+- `sameAs` avec les liens vers les reseaux sociaux
+- `address`, `telephone`, `foundingDate`
+
+**Pages produits** :
+
+- `Product` avec `MerchantReturnPolicy` et `OfferShippingDetails`
+
+**Pages categories** :
+
+- `CollectionPage` + `BreadcrumbList`
+
+### 16.3 OG Image dynamique
+
+Les images Open Graph sont generees dynamiquement via un screenshot Playwright, stockees sur Cloudflare R2 CDN.
+
+### 16.4 PWA et multi-langues
+
+- `manifest.webmanifest` pour le support PWA
+- `hreflang` alternates pour `fr-FR`, `en-US`, `ar`, `x-default`
+- Slots de verification Google Search Console et Bing Webmaster Tools
+
+---
+
+## 17. Autocomplete Adresse
+
+### 17.1 Implementation
+
+Hook `useAddressAutocomplete` utilisant l'API Adresse de la Base Adresse Nationale (api-adresse.data.gouv.fr).
+
+### 17.2 Caracteristiques
+
+- Gratuit, sans cle API, base de 34M+ adresses francaises
+- Debounce de 300ms sur la saisie utilisateur
+- AbortController pour annuler les requetes en cours lors d'une nouvelle saisie
+- Dropdown de suggestions avec auto-fill des champs street, postalCode, city et country au clic
+
+---
+
+## 18. Optimisation Performances
+
+### 18.1 Migration Nixpacks vers Dockerfile multi-stage
+
+- Taille image : 3.16 GB (Nixpacks, Ubuntu base, single-stage) vers 432 MB (node:20-alpine, 3 stages)
+- Reduction de 86% de la taille de l'image
+
+### 18.2 Temps de build
+
+- Cold build (Nixpacks) : 9m20s
+- Cold build (Dockerfile) : 5m23s
+- Cached build (BuildKit cache mounts) : ~2-3 min
+
+### 18.3 Correction des vulnerabilites
+
+- `npm audit fix` : 36 vulnerabilites vers 1 restante
+- Mises a jour : next 16.2.3, fast-xml-parser 5.5.8, prisma 6.19.3, @aws-sdk 3.1029.0
+
+---
+
+## 19. Decisions techniques et justifications
+
+### 19.1 Choix de NextAuth.js
 
 **Avantages** :
 
@@ -676,7 +863,7 @@ Le composant utilise :
 **Alternative consideree** : Clerk, Auth0
 **Raison du rejet** : Dependance a un service tiers, cout potentiel
 
-### 12.2 Choix de JWT vs Sessions base de donnees
+### 19.2 Choix de JWT vs Sessions base de donnees
 
 **Avantages du JWT** :
 
@@ -686,7 +873,7 @@ Le composant utilise :
 
 **Inconvenient accepte** : Revocation de session moins immediate
 
-### 12.3 Choix de Redis pour le cache
+### 19.3 Choix de Redis pour le cache
 
 **Avantages** :
 
@@ -698,19 +885,22 @@ Le composant utilise :
 **Alternative consideree** : Cache en memoire Node.js
 **Raison du rejet** : Pas de partage entre instances, perte au redemarrage
 
-### 12.4 Choix de Dokploy et Nixpacks pour la production
+### 19.4 Choix de Dokploy avec Dockerfile custom pour la production
 
 **Avantages** :
 
-- Deploiement automatise sans configuration manuelle
-- Nixpacks detecte automatiquement le framework et optimise le build
+- Deploiement automatise via Dokploy avec autodeploy sur push main
+- Dockerfile multi-stage custom avec BuildKit cache mounts pour des builds rapides
+- Image de production legere (432 MB vs 3.16 GB avec Nixpacks)
 - Monitoring integre pour les bases de donnees
-- Pas de gestion d'images Docker en production
+- Controle total sur la configuration de l'image (user non-root, alpine base)
 
-**Alternative consideree** : Deploiement Docker classique, Vercel
-**Raison du rejet** : Vercel impose des limites sur les fonctions serverless. Docker classique demande plus de maintenance.
+Note : Le projet utilisait initialement Nixpacks (detection automatique du framework). La migration vers un Dockerfile custom a ete motivee par la taille excessive des images Nixpacks (3.16 GB, base Ubuntu) et le manque de controle sur les optimisations de build.
 
-### 12.5 Docker Compose pour le developpement local
+**Alternative consideree** : Vercel, Nixpacks (solution precedente)
+**Raison du rejet** : Vercel impose des limites sur les fonctions serverless. Nixpacks generait des images trop volumineuses sans possibilite d'optimisation.
+
+### 19.5 Docker Compose pour le developpement local
 
 **Avantages** :
 
@@ -718,7 +908,7 @@ Le composant utilise :
 - Isolation des services
 - Demarrage en une commande
 
-### 12.6 2FA obligatoire pour les admins
+### 19.6 2FA obligatoire pour les admins
 
 **Justification** :
 
@@ -726,7 +916,7 @@ Le composant utilise :
 - Le secteur medical impose des standards de securite eleves
 - Impact minimal sur l'experience (une seule configuration)
 
-### 12.7 Lazy loading pour Stripe et Redis
+### 19.7 Lazy loading pour Stripe et Redis
 
 **Probleme** : En CI et au build, les modules Stripe et Redis tentaient de s'initialiser immediatement, causant des erreurs car les variables d'environnement n'etaient pas disponibles.
 
@@ -757,7 +947,7 @@ function getStripe(): Stripe {
 - Connexion etablie uniquement a la premiere utilisation
 - Message d'erreur explicite si la variable manque a l'execution
 
-### 12.8 Suppression de MongoDB
+### 19.8 Suppression de MongoDB
 
 **Decision** : MongoDB a ete retire du projet.
 
@@ -776,7 +966,7 @@ function getStripe(): Stripe {
 - `src/lib/config/env.ts` : Suppression de MONGODB_URI
 - Divers fichiers de documentation
 
-### 12.9 Migration vers Node.js 20
+### 19.9 Migration vers Node.js 20
 
 **Commits** : `4e4d521`, `38e7788` - 4 decembre 2025
 
@@ -794,33 +984,43 @@ function getStripe(): Stripe {
 
 ---
 
-## 13. Temps de developpement
+## 20. Temps de developpement
 
-| Tache                              | Duree estimee | Commentaire                          |
-| ---------------------------------- | ------------- | ------------------------------------ |
-| Configuration NextAuth de base     | 4h            | Providers, callbacks, types          |
-| Integration OAuth (Google, GitHub) | 2h            | Configuration console dev, tests     |
-| Middleware de protection           | 3h            | Logique de redirection, edge runtime |
-| Implementation 2FA                 | 6h            | Setup, verify, integration session   |
-| Docker compose                     | 4h            | Services, healthchecks, volumes      |
-| Dockerfile multi-stage             | 2h            | Optimisation, debug                  |
-| Systeme de cache Redis             | 5h            | Helpers, patterns, tests             |
-| Stockage images Cloudflare R2      | 3h            | Integration SDK S3, sanitization     |
-| Securisation endpoints API         | 2h            | Verification auth, signature Stripe  |
-| GitHub Actions CI/CD               | 4h            | Workflows, debug variables env       |
-| Composant HeroCanvasReveal         | 3h            | Animation, auth dropdown             |
-| Lazy loading Stripe/Redis          | 2h            | Pattern singleton, fix build         |
-| Suppression MongoDB                | 1h            | Nettoyage code et config             |
-| Debug et corrections               | 4h            | Edge runtime, compatibilites         |
-| Documentation                      | 4h            | Ce rapport                           |
+| Tache                                  | Duree estimee | Commentaire                          |
+| -------------------------------------- | ------------- | ------------------------------------ |
+| Configuration NextAuth de base         | 4h            | Providers, callbacks, types          |
+| Integration OAuth (Google, GitHub)     | 2h            | Configuration console dev, tests     |
+| Middleware de protection               | 3h            | Logique de redirection, edge runtime |
+| Implementation 2FA                     | 6h            | Setup, verify, integration session   |
+| Docker compose                         | 4h            | Services, healthchecks, volumes      |
+| Dockerfile multi-stage                 | 2h            | Optimisation, debug                  |
+| Systeme de cache Redis                 | 5h            | Helpers, patterns, tests             |
+| Stockage images Cloudflare R2          | 3h            | Integration SDK S3, sanitization     |
+| Securisation endpoints API             | 2h            | Verification auth, signature Stripe  |
+| GitHub Actions CI/CD                   | 4h            | Workflows, debug variables env       |
+| Lazy loading Stripe/Redis              | 2h            | Pattern singleton, fix build         |
+| Suppression MongoDB                    | 1h            | Nettoyage code et config             |
+| Debug et corrections                   | 4h            | Edge runtime, compatibilites         |
+| Documentation                          | 4h            | Ce rapport                           |
+| i18n (next-intl FR/EN/AR)             | 6h            | Cookie routing, RTL, traductions     |
+| Chatbot OpenAI streaming               | 4h            | Endpoint, Zod, rate limit, widget    |
+| Design system editorial + animations  | 15h           | Palette, typo, composants, Tailwind  |
+| Hero Blueprint SVG + SplitText         | 8h            | Framer Motion, SVG anime, Lenis      |
+| Carousel GSAP ScrollTrigger            | 6h            | Pin, drag, parallax, mobile fallback |
+| SEO complet (JSON-LD, sitemap, OG)     | 5h            | Structured data, hreflang, PWA       |
+| Autocomplete adresse BAN               | 2h            | Hook, debounce, dropdown             |
+| Migration Nixpacks vers Dockerfile     | 3h            | Multi-stage, BuildKit, alpine        |
+| Patch vulnerabilites + debug prod      | 4h            | npm audit, logger, Stripe redirect   |
+| Refonte checkout/cart/2FA/search       | 8h            | Parcours utilisateur complet         |
+| Product cards editoriales              | 3h            | Aspect 3/4, grayscale, mono caps     |
 
-**Total estime** : 49 heures
+**Total estime** : ~120 heures
 
 ---
 
-## 14. Difficultes rencontrees
+## 21. Difficultes rencontrees
 
-### 14.1 Compatibilite Edge Runtime
+### 21.1 Compatibilite Edge Runtime
 
 **Probleme** : Le middleware Next.js s'execute sur l'Edge Runtime qui ne supporte pas toutes les APIs Node.js. Le rate limiting via ioredis causait une erreur `Cannot read properties of undefined (reading 'charCodeAt')`.
 
@@ -828,13 +1028,13 @@ function getStripe(): Stripe {
 
 **Solution** : Retrait du rate limiting du middleware. Cette fonctionnalite reste disponible pour les routes API classiques qui s'executent sur le Node.js runtime.
 
-### 14.2 Gestion du 2FA dans la session
+### 21.2 Gestion du 2FA dans la session
 
 **Probleme** : Apres verification du code 2FA, la session devait etre mise a jour sans deconnecter l'utilisateur.
 
 **Solution** : Utilisation du trigger "update" de NextAuth avec `session.update()` cote client pour rafraichir les informations de session.
 
-### 14.3 Bug Redis Proxy en production
+### 21.3 Bug Redis Proxy en production
 
 **Probleme** : En production sur Dokploy, le 2FA retournait une erreur 500. Les logs montraient `connect ETIMEDOUT` et `Cannot read properties of undefined (reading 'select')`.
 
@@ -877,7 +1077,7 @@ export const redis = {
 
 **Lecon apprise** : Les patterns JavaScript avances (Proxy, Reflect) peuvent causer des problemes subtils avec des librairies tierces qui dependent du contexte `this`. En production, privilegier des solutions explicites et testables.
 
-### 14.4 Mapping des champs API Carrousel
+### 21.4 Mapping des champs API Carrousel
 
 **Probleme** : Apres avoir configure l'upload d'images sur Cloudflare R2, les images du carrousel ne s'affichaient pas sur le site. Le composant affichait le titre mais pas l'image.
 
@@ -907,7 +1107,7 @@ interface CarouselSlide {
 
 **Lecon apprise** : Toujours valider la coherence entre le schema de l'API et les interfaces TypeScript cote client. Un typage strict aurait detecte cette erreur a la compilation.
 
-### 14.5 Emojis dans les noms de fichiers images
+### 21.5 Emojis dans les noms de fichiers images
 
 **Probleme** : Les images uploadees dans le carrousel ne s'affichaient pas lorsque le nom du fichier original contenait des emojis ou des caracteres speciaux. L'URL generee par Cloudflare R2 etait invalide.
 
@@ -931,7 +1131,7 @@ La regex `/[^\w.-]/g` remplace tous les caracteres qui ne sont pas des lettres, 
 
 **Lecon apprise** : Toujours sanitizer les noms de fichiers uploades par les utilisateurs avant de les stocker. Les caracteres Unicode (emojis, accents) peuvent causer des problemes d'encodage dans les URLs.
 
-### 14.6 Suppression du provider Apple OAuth
+### 21.6 Suppression du provider Apple OAuth
 
 **Probleme** : Le provider Apple Sign In etait configure mais necessitait un compte Apple Developer payant (99$/an) pour fonctionner en production.
 
@@ -946,7 +1146,7 @@ La regex `/[^\w.-]/g` remplace tous les caracteres qui ne sont pas des lettres, 
 
 **Lecon apprise** : Avant d'implementer une integration tierce, verifier les couts et prerequis (compte developer, certificats, etc.).
 
-### 14.7 Correction de l'affichage du nom dans le dropdown profil
+### 21.7 Correction de l'affichage du nom dans le dropdown profil
 
 **Probleme** : Apres une connexion OAuth (Google), le nom/prenom de l'utilisateur n'apparaissait plus dans le dropdown du header, seul l'email s'affichait.
 
@@ -966,7 +1166,7 @@ const fullName =
     : session.user.name;
 ```
 
-### 14.8 Nettoyage du code mort
+### 21.8 Nettoyage du code mort
 
 **Probleme** : Plusieurs fonctions dans `src/lib/redis.ts` n'etaient jamais utilisees dans le projet, rendant le code plus difficile a maintenir.
 
@@ -992,7 +1192,7 @@ const fullName =
 
 **Lecon apprise** : Appliquer le principe YAGNI (You Aren't Gonna Need It) - ne pas implementer de fonctionnalites "au cas ou".
 
-### 14.9 Variables d'environnement manquantes en CI
+### 21.9 Variables d'environnement manquantes en CI
 
 **Probleme** : Le build GitHub Actions echouait car les variables d'environnement (DATABASE_URL, NEXTAUTH_SECRET) n'etaient pas definies.
 
@@ -1008,41 +1208,85 @@ env:
 
 **Lecon apprise** : Prevoir des valeurs par defaut pour le build CI, tout en s'assurant que ces placeholders ne fonctionnent pas en production.
 
-### 14.10 Crash Stripe au build
+### 21.10 Crash Stripe au build
 
 **Probleme** : Meme apres les placeholders, le build echouait car Stripe tentait de s'initialiser et de valider sa cle API.
 
 **Commit** : `01de9a0` - 1er janvier 2026
 
-**Solution** : Refactoring complet de `src/lib/stripe.ts` pour utiliser le pattern lazy loading (voir section 12.7).
+**Solution** : Refactoring complet de `src/lib/stripe.ts` pour utiliser le pattern lazy loading (voir section 19.7).
+
+### 21.11 Logger EACCES en production containerisee
+
+**Probleme** : Winston tentait de creer un repertoire `logs/` dans `/app` au demarrage, mais le user `nextjs` (UID 1001) n'avait pas les droits d'ecriture sur ce repertoire. Cela provoquait une erreur EACCES qui cascadait sur `/api/auth/session`, retournant une erreur 500 a chaque verification de session.
+
+**Cause racine** : Le logger etait configure avec des file transports (winston-daily-rotate-file) qui necessitent un repertoire writable. En container avec un user non-root, `/app` est read-only.
+
+**Solution** : Skip des file transports en production. Le logger n'utilise que stdout (console transport) en production, conformement au pattern 12-factor app. Les logs sont captures par le runtime Docker et accessibles via `docker logs`.
+
+### 21.12 Sitemap URLs cassees (product.id vs product.slug)
+
+**Probleme** : Le fichier `sitemap.ts` utilisait `product.id` (CUID) pour construire les URLs de produits. Google indexait donc des URLs de type `/products/clxxxxxxxxx` qui retournaient des 404 car les pages produits utilisent le slug.
+
+**Solution** : Modification de la query Prisma pour selectionner `slug` au lieu de `id`, et construction des URLs avec `/products/${product.slug}`.
+
+### 21.13 Stripe redirect vers localhost
+
+**Probleme** : La route de checkout Stripe utilisait `process.env.NEXT_PUBLIC_URL` (variable inexistante) pour construire l'URL de retour. Le fallback etait `localhost:3000`, ce qui cassait le redirect apres paiement en production.
+
+**Solution** : Utilisation de `NEXT_PUBLIC_APP_URL` avec fallback sur `NEXTAUTH_URL`, et path `/checkout/confirmation` pour la page de confirmation.
+
+### 21.14 Image Docker 3.16 GB (Nixpacks)
+
+**Probleme** : Dokploy utilisait Nixpacks par defaut, qui generait des images basees sur Ubuntu avec un single-stage build. L'image resultante pesait 3.16 GB et les builds prenaient plus de 9 minutes.
+
+**Solution** : Migration vers un Dockerfile multi-stage custom utilisant `node:20-alpine` comme base. Trois stages (deps, builder, runner) avec BuildKit cache mounts sur `/root/.npm` et `/app/.next/cache`. Image finale : 432 MB, builds : 2-3 minutes.
+
+### 21.15 Ticker phantom gap sur ecrans larges
+
+**Probleme** : Le ticker (marquee de trust marks) affichait un gap visible lorsque le viewport depassait la largeur totale du contenu duplique. L'animation `translateX(-50%)` ne suffisait pas a couvrir les grands ecrans.
+
+**Solution** : Quadrupler le repeat du contenu (2x vers 4x MARKS) et ajuster l'animation de `translateX(-50%)` a `translateX(-25%)` pour eliminer le gap visible.
+
+### 21.16 npm audit 36 vulnerabilites dont 1 critique
+
+**Probleme** : `npm audit` reportait 36 vulnerabilites, dont une critique dans `fast-xml-parser` (dependance transitive de `@aws-sdk/client-s3`), 9 CVEs dans Next.js 16.0.7 (DoS, CSRF), et des vulnerabilites dans Prisma 6.19.0.
+
+**Solution** : `npm audit fix` suivi de mises a jour manuelles : next 16.2.3, fast-xml-parser 5.5.8, prisma 6.19.3, @aws-sdk 3.1029.0. Resultat : 1 vulnerabilite restante (non corrigeable).
 
 ---
 
-## 15. Pistes d'amelioration
+## 22. Pistes d'amelioration
 
-### 15.1 Court terme
+### 22.1 Court terme
 
-- Ajouter un rate limiting compatible Edge Runtime (via Vercel KV ou Upstash)
+- Ajouter un rate limiting compatible Edge Runtime (via Upstash Redis)
 - Implementer la rotation des tokens JWT
 - Ajouter des backup codes pour le 2FA
+- Completer les traductions AR (certaines cles manquantes)
+- Ajouter des tests E2E pour le parcours checkout
 
-### 15.2 Moyen terme
+### 22.2 Moyen terme
 
-- Mettre en place un monitoring centralise (Sentry, Datadog)
-- Ajouter des tests d'integration pour l'authentification
+- Mettre en place un monitoring centralise (Sentry pour les erreurs, logs structures)
+- Ajouter des tests d'integration pour l'authentification et le chatbot
 - Implementer la detection de connexions suspectes
+- Cache ISR (Incremental Static Regeneration) pour les pages produits
+- Optimisation des Core Web Vitals (LCP, CLS sur mobile)
 
-### 15.3 Long terme
+### 22.3 Long terme
 
 - Migration vers une solution de secrets management (Vault, AWS Secrets Manager)
 - Implementation d'un WAF (Web Application Firewall)
 - Audit de securite par un tiers
+- Migration NextAuth v4 vers Auth.js v5
+- Pipeline de tests visuels (Playwright screenshots) pour le design system
 
 ---
 
 ## Conclusion
 
-L'infrastructure d'authentification et DevOps mise en place pour Althea Systems repond aux exigences de securite d'une plateforme e-commerce B2B dans le secteur medical.
+L'infrastructure d'authentification, DevOps et front-end mise en place pour Althea Systems repond aux exigences de securite et de qualite d'une plateforme e-commerce B2B dans le secteur medical.
 
 ### Recapitulatif des realisations
 
@@ -1056,7 +1300,8 @@ L'infrastructure d'authentification et DevOps mise en place pour Althea Systems 
 **Infrastructure** :
 
 - Docker Compose pour l'environnement de developpement local
-- Deploiement production automatise via Dokploy et Nixpacks
+- Deploiement production automatise via Dokploy avec Dockerfile multi-stage custom
+- Image de production optimisee : 432 MB (contre 3.16 GB avec Nixpacks)
 - Systeme de cache Redis avec pattern lazy loading
 - Stockage des images sur Cloudflare R2 (CDN mondial)
 
@@ -1065,25 +1310,35 @@ L'infrastructure d'authentification et DevOps mise en place pour Althea Systems 
 - Workflows GitHub Actions (lint, typecheck, build, security)
 - Analyse CodeQL automatique pour la detection de vulnerabilites
 - Labeler automatique des Pull Requests
+- Correction de 36 vulnerabilites npm
 
-**Composants front-end** :
+**Front-end et UX** :
 
-- HeroCanvasReveal avec animation et gestion de l'authentification
+- Hero editorial avec SplitText, Blueprint SVG anime, MagneticButton
+- Design system editorial complet (palette, typographie, composants)
+- Carousel produits GSAP avec ScrollTrigger et parallax
+- i18n tri-lingue (FR/EN/AR) avec support RTL
+- Chatbot IA avec streaming OpenAI
+- SEO complet avec JSON-LD enrichi, sitemap corrige, hreflang
+- Autocomplete adresse via API BAN
+- Smooth scroll Lenis
 
 ### Lecons apprises
 
-1. **Tester en production-like** : Les problemes comme le Proxy Redis n'apparaissent qu'en conditions reelles
+1. **Tester en production-like** : Les problemes comme le Proxy Redis ou le logger EACCES n'apparaissent qu'en conditions reelles
 2. **Lazy loading** : Initialiser les services a la demande pour eviter les crashes au build
 3. **YAGNI** : Ne pas implementer de fonctionnalites "au cas ou" (MongoDB, fonctions cache inutilisees)
-4. **Coherence API/Frontend** : Toujours valider les schemas entre backend et frontend
+4. **Coherence API/Frontend** : Toujours valider les schemas entre backend et frontend (sitemap slug vs id)
+5. **Optimisation Docker** : Un Dockerfile multi-stage bien configure reduit drastiquement la taille des images et les temps de build
+6. **12-factor app** : En production containerisee, les logs doivent aller sur stdout, pas dans des fichiers
 
 ### Statistiques
 
-| Metrique                | Valeur    |
-| ----------------------- | --------- |
-| Commits totaux          | 60        |
-| Fichiers modifies       | ~150      |
-| Lignes de code ajoutees | ~3000     |
-| Temps total estime      | 49 heures |
+| Metrique                | Valeur                        |
+| ----------------------- | ----------------------------- |
+| Commits totaux          | 205+ (vjuya 114 + itsaam 91) |
+| Fichiers modifies       | ~400+                         |
+| Lignes de code ajoutees | ~15000+                       |
+| Temps total estime      | ~120 heures                   |
 
-Les choix techniques (NextAuth, JWT, Redis, Docker, GitHub Actions) constituent une stack moderne et eprouvee qui facilitera l'evolution de la plateforme.
+Les choix techniques (NextAuth, JWT, Redis, Docker multi-stage, GitHub Actions, Framer Motion, GSAP, next-intl) constituent une stack moderne et eprouvee qui facilitera l'evolution de la plateforme.
