@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Loader2, MapPin, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  useAddressAutocomplete,
+  type AddressSuggestion,
+} from "@/hooks/use-address-autocomplete";
 import type { CheckoutAddress } from "./types";
 import { EMPTY_ADDRESS } from "./types";
 
@@ -87,6 +91,50 @@ export default function AddressForm({
     initialAddress ?? { ...EMPTY_ADDRESS, email: userEmail ?? "" }
   );
   const [errors, setErrors] = useState<AddressErrors>({});
+
+  // Address autocomplete (API Adresse BAN — gratuit, sans clé)
+  const {
+    suggestions,
+    isLoading: isAutoLoading,
+    search: searchAddress,
+    clear: clearSuggestions,
+  } = useAddressAutocomplete();
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+    setAddress((prev) => ({
+      ...prev,
+      street: suggestion.street,
+      postalCode: suggestion.postalCode,
+      city: suggestion.city,
+      country: "FR",
+    }));
+    setShowSuggestions(false);
+    clearSuggestions();
+    // Clear related errors
+    setErrors((prev) => ({
+      ...prev,
+      street: undefined,
+      postalCode: undefined,
+      city: undefined,
+      country: undefined,
+    }));
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -259,10 +307,66 @@ export default function AddressForm({
             </div>
           </div>
 
-          <div>
-            <label htmlFor="street" className={LABEL}>Adresse *</label>
-            <input id="street" value={address.street} onChange={(e) => handleChange("street", e.target.value)} placeholder="123 rue de la Paix" autoComplete="address-line1" className={cn(INPUT, errors.street && "border-destructive focus:border-destructive")} />
+          <div ref={suggestionsRef} className="relative">
+            <label htmlFor="street" className={LABEL}>
+              Adresse *
+              {isAutoLoading && (
+                <Loader2 className="ml-2 inline h-3 w-3 animate-spin text-foreground/40" />
+              )}
+            </label>
+            <input
+              id="street"
+              value={address.street}
+              onChange={(e) => {
+                handleChange("street", e.target.value);
+                searchAddress(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
+              placeholder="Commencez à taper votre adresse…"
+              autoComplete="off"
+              className={cn(
+                INPUT,
+                errors.street && "border-destructive focus:border-destructive"
+              )}
+            />
             {errors.street && <p className={ERROR}>{errors.street}</p>}
+
+            {/* Autocomplete dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-1 border border-border/60 bg-background shadow-lg">
+                <p className="border-b border-border/40 px-4 py-2 font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/40">
+                  — Suggestions · API Adresse BAN
+                </p>
+                <ul role="listbox" aria-label="Suggestions d'adresse">
+                  {suggestions.map((s, i) => (
+                    <li key={`${s.label}-${i}`}>
+                      <button
+                        type="button"
+                        role="option"
+                        onClick={() => handleSelectSuggestion(s)}
+                        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-foreground/[0.04] focus-visible:bg-foreground/[0.04] focus-visible:outline-none"
+                      >
+                        <MapPin
+                          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/40"
+                          strokeWidth={1.5}
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] text-foreground">
+                            {s.street}
+                          </p>
+                          <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
+                            {s.postalCode} {s.city}
+                          </p>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div>
