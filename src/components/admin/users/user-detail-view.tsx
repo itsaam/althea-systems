@@ -96,20 +96,20 @@ const STATUS_TONE: Record<
 > = {
   ACTIVE: {
     badge:
-      "bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:text-emerald-400",
-    dot: "bg-emerald-500",
+      "border border-foreground/80 bg-background text-foreground",
+    dot: "bg-foreground",
     icon: CheckCircle2,
   },
   PENDING: {
     badge:
-      "bg-amber-500/10 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:text-amber-400",
-    dot: "bg-amber-500",
+      "border border-border/60 bg-background text-foreground/60",
+    dot: "bg-foreground/40",
     icon: Clock,
   },
   INACTIVE: {
     badge:
-      "bg-red-500/10 text-red-700 ring-1 ring-inset ring-red-600/20 dark:text-red-400",
-    dot: "bg-red-500",
+      "border border-destructive/60 bg-background text-destructive",
+    dot: "bg-destructive",
     icon: Ban,
   },
 };
