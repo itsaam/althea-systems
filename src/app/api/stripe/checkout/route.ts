@@ -113,13 +113,13 @@ export async function POST(req: Request) {
       };
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
 
     const checkoutSession = await stripe.instance.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: convertedItems,
       mode: "payment",
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}/checkout/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
       payment_intent_data: {
         setup_future_usage: "off_session",
