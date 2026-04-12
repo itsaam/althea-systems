@@ -194,7 +194,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </div>
           ) : (
             <div className="border-t border-border/60 pt-10">
-              <ProductGrid products={category.products} />
+              <ProductGrid
+                products={category.products}
+                categoryName={category.name}
+              />
             </div>
           )}
         </div>

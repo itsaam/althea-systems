@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Minus, Plus, ArrowUpRight } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -14,18 +13,24 @@ interface AddToCartButtonProps {
   disabled?: boolean;
 }
 
+/**
+ * Action card — style éditorial cohérent avec le reste du site :
+ * - Qty stepper : boutons carrés outline, chiffre mono tabular
+ * - CTA principal : full-width, black-on-white, hover invert
+ * Aucun aplat primary (electric-indigo).
+ */
 export default function AddToCartButton({
   productId,
   productName,
   price,
   image,
-  productId: _productId,
   disabled,
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = () => {
+    if (disabled) return;
     addItem(
       {
         id: productId,
@@ -36,49 +41,62 @@ export default function AddToCartButton({
       quantity
     );
 
-    toast.success(`${quantity} produit${quantity > 1 ? "s" : ""} ajouté${quantity > 1 ? "s" : ""} au panier`);
-    setQuantity(1); // Reset après ajout
+    toast.success(
+      `${quantity} produit${quantity > 1 ? "s" : ""} ajouté${
+        quantity > 1 ? "s" : ""
+      } au panier`
+    );
+    setQuantity(1);
   };
 
-  const handleIncrease = () => {
-    setQuantity((prev) => prev + 1);
-  };
-
-  const handleDecrease = () => {
-    if (quantity > 1) {
-      setQuantity((prev) => prev - 1);
-    }
-    // TODO: Add to cart logic using _productId
-    console.log("Add to cart:", _productId);
-  };
+  const decrease = () => setQuantity((q) => (q > 1 ? q - 1 : q));
+  const increase = () => setQuantity((q) => q + 1);
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Quantity Selector */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleDecrease}
-          disabled={quantity <= 1 || disabled}
-        >
-          <Minus className="h-4 w-4" />
-        </Button>
-        <span className="w-12 text-center font-semibold">{quantity}</span>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleIncrease}
-          disabled={disabled}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+    <div className="flex flex-col gap-4">
+      {/* Qty stepper — mono outline, pas de border radius */}
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/40">
+          Qté
+        </span>
+        <div className="flex items-center">
+          <button
+            type="button"
+            onClick={decrease}
+            disabled={quantity <= 1 || disabled}
+            aria-label="Diminuer la quantité"
+            className="inline-flex h-8 w-8 items-center justify-center border border-border/60 bg-background text-foreground/70 transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+          >
+            <Minus className="h-3 w-3" />
+          </button>
+          <span
+            className="inline-flex h-8 w-10 items-center justify-center border-y border-border/60 bg-background font-mono text-[12px] tabular-nums text-foreground"
+            aria-live="polite"
+          >
+            {quantity}
+          </span>
+          <button
+            type="button"
+            onClick={increase}
+            disabled={disabled}
+            aria-label="Augmenter la quantité"
+            className="inline-flex h-8 w-8 items-center justify-center border border-border/60 bg-background text-foreground/70 transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
+        </div>
       </div>
 
-      {/* Add to Cart Button */}
-      <Button onClick={handleAddToCart} disabled={disabled} className="w-full">
-        Ajouter au panier
-      </Button>
+      {/* CTA primaire — full-width black-on-white éditorial */}
+      <button
+        type="button"
+        onClick={handleAddToCart}
+        disabled={disabled}
+        className="group/cta inline-flex h-10 w-full items-center justify-between gap-3 border border-foreground bg-background px-4 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:border-border/60 disabled:bg-background disabled:text-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
+      >
+        <span>{disabled ? "Indisponible" : "Ajouter au panier"}</span>
+        <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
+      </button>
     </div>
   );
 }
