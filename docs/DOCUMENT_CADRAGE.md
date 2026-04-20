@@ -26,7 +26,7 @@ Ce document présente la réponse de l'équipe projet à l'appel d'offre émis p
 
 Le projet est conduit par une équipe de **quatre étudiants de Bachelor 3 CPI parcours Développement** dans le cadre du projet fil rouge annuel, au titre RNCP34581 *Coordinateur de Projets Informatiques*.
 
-La solution proposée s'appuie sur un **framework web moderne** permettant à la fois la rapidité du rendu côté serveur, une excellente expérience mobile, et une forte maintenabilité. Elle intègre un paiement sécurisé par un prestataire certifié (Stripe), une authentification renforcée par double facteur pour les administrateurs, et une internationalisation complète couvrant le français, l'anglais et l'arabe (y compris l'écriture de droite à gauche).
+La solution repose sur des outils éprouvés, utilisés par des géants du web comme Netflix ou Amazon. Elle offre des pages rapides sur mobile comme sur ordinateur, un paiement encaissé par Stripe (le prestataire bancaire de référence, utilisé par des millions de boutiques), une double sécurité à la connexion pour les administrateurs, et un site disponible en français, anglais et arabe (avec écriture de droite à gauche).
 
 Le calendrier prévisionnel couvre neuf phases réparties de septembre 2025 à juin 2026, avec les jalons certifiants imposés par le cadre pédagogique Sup de Vinci : kick-off, rendez-vous de cadrage, document de cadrage, soutenance et livrables finaux.
 
@@ -199,31 +199,33 @@ Le cahier des charges mentionne explicitement une exigence de **résultats de re
 Au-delà du RGPD et du PCI-DSS, la plateforme doit se prémunir contre les menaces web classiques (le *top 10* de l'OWASP) : injection, cross-site scripting, usurpation de session, mauvaise configuration, dépendances vulnérables. Les mesures adoptées sont décrites dans la section dédiée à l'architecture.
 
 
-# Architecture cible
+# Comment la plateforme est construite
 
 ## Vision générale
 
-Plutôt qu'une architecture éclatée en de multiples services indépendants, complexe à mettre en œuvre pour une équipe de quatre personnes, l'équipe retient une **architecture dite monolithique modulaire**. Cela signifie une application unique, mais organisée en domaines fonctionnels clairement séparés (authentification, catalogue, commande, paiement, administration). Cette approche permet :
+Plutôt que de construire une usine à gaz avec plein de petits programmes qui se parlent entre eux (difficile à gérer à 4 étudiants), on construit **une seule application bien organisée**, avec des compartiments clairs : un pour les comptes, un pour le catalogue, un pour les commandes, un pour l'administration.
 
-- Un déploiement simple, avec un seul environnement à maintenir.
-- Un coût d'infrastructure réduit (environ 30 €/mois en production).
-- Une vitesse de développement soutenue.
-- La possibilité d'extraire des modules en services séparés si la plateforme devait monter en charge.
+Les avantages :
 
-## Principaux composants
+- **Un seul projet à mettre en ligne** (au lieu d'une dizaine) : on gagne du temps et on limite les risques de panne.
+- **Coût d'hébergement réduit** : environ 30 € par mois en production.
+- **Développement plus rapide** pour une équipe de 4.
+- **Prêt à grandir** : si la plateforme devait gérer 100 fois plus de commandes, on pourrait détacher certains compartiments (par exemple le paiement) sans tout refaire.
 
-La plateforme repose sur les briques suivantes :
+## Les principales briques
 
-- **Le site web** (ce que voit l'utilisateur), qui intègre à la fois les pages publiques, l'espace client et le back-office administrateur, avec un rendu optimisé côté serveur pour la rapidité et le référencement.
-- **La base de données** qui stocke les comptes, produits, catégories, commandes, factures, avoirs, adresses et messages.
-- **Un service de cache** pour accélérer les pages les plus consultées et pour protéger la plateforme contre les abus (limitation du nombre de requêtes par minute).
-- **Un service externe de paiement** pour encaisser les commandes en toute sécurité.
-- **Un service externe d'envoi d'emails** pour les confirmations de commande, validations d'inscription, réinitialisations de mot de passe.
-- **Un service externe de stockage d'images** pour héberger les photos produits avec une diffusion mondiale rapide.
+La plateforme s'appuie sur les éléments suivants :
 
-## Parcours d'authentification
+- **Le site lui-même** : ce que voit le visiteur, l'espace client et le back-office administrateur réunis dans un projet unique.
+- **La base de données** : stocke tous les comptes, produits, catégories, commandes, factures, avoirs, adresses et messages.
+- **Un système d'accélération** (Redis) : garde en mémoire les informations les plus consultées pour que les pages s'affichent plus vite, et bloque automatiquement les attaques (trop de tentatives en peu de temps).
+- **Un prestataire de paiement** (Stripe) : s'occupe d'encaisser l'argent et de gérer la sécurité bancaire.
+- **Un prestataire d'emails** (Resend) : envoie les confirmations de commande, les validations d'inscription, les mots de passe oubliés.
+- **Un hébergement cloud pour les photos** (Cloudflare R2) : stocke toutes les images produits et les diffuse rapidement partout dans le monde.
 
-Un utilisateur peut se créer un compte avec son email et un mot de passe, ou se connecter via Google ou GitHub. Une fois authentifié, sa session est maintenue pour une durée confortable. Pour les administrateurs, un **deuxième facteur d'authentification** est exigé : un code à six chiffres généré par une application mobile (Google Authenticator, Authy, 1Password…). Cette double protection rend le back-office inaccessible même en cas de vol du mot de passe.
+## Comment un utilisateur se connecte
+
+L'utilisateur crée un compte avec son email et un mot de passe, ou se connecte avec son compte Google / GitHub (plus rapide, un clic). Pour les administrateurs, on ajoute une deuxième sécurité : un code à 6 chiffres qui change toutes les 30 secondes, généré par une appli mobile (Google Authenticator par exemple). Même si un pirate volait le mot de passe, il ne pourrait pas entrer sans le téléphone du vrai administrateur.
 
 ## Parcours de commande
 
@@ -239,88 +241,106 @@ Un mécanisme de notification automatique en provenance du prestataire de paieme
 
 # Choix des outils
 
-## Démarche
+## Comment on a choisi
 
-Chaque outil retenu a été évalué selon cinq critères :
+Pour chaque brique de la plateforme, on s'est posé la même question : **quel outil permet d'aller plus vite, coûte moins cher, est plus sûr et plus simple à maintenir ?**
 
-- **Adéquation** au besoin exprimé dans le cahier des charges.
-- **Performance** ressentie par l'utilisateur final.
-- **Maturité et sécurité** (âge du projet, gouvernance, historique).
-- **Maintenabilité** (documentation, communauté, ressources disponibles).
-- **Coût total** (licences, infrastructure, courbe d'apprentissage).
+Chaque choix est comparé à une ou deux alternatives, avec une justification concrète. Pas de préférence personnelle : on prend ce qui répond le mieux au cahier des charges.
 
-## Framework principal — Next.js
+## Le site web — Next.js
 
-**Next.js** est un framework de développement web parmi les plus utilisés actuellement. Il permet de construire le site complet, du rendu des pages aux interactions dynamiques, avec un seul et même socle. L'intérêt pour Althea :
+**Ce qu'on a pris** : Next.js.
 
-- Rendu optimisé pour le référencement naturel et la performance perçue.
-- Excellent support du mobile.
-- Écosystème très large, facilitant l'ajout de nouvelles fonctionnalités.
-- Communauté active, ce qui garantit maintenance et évolutions dans la durée.
+**Pourquoi** : c'est l'outil qui permet de construire **tout le site en un seul projet** (l'affichage des pages + les traitements derrière), au lieu d'avoir deux projets séparés à gérer. Résultat : moins de code, moins d'erreurs possibles, développement plus rapide. Les pages s'affichent aussi plus vite car elles sont préparées côté serveur avant d'être envoyées au navigateur.
 
-## Base de données — PostgreSQL
+**C'est utilisé par** : Netflix, TikTok, Nike, Hulu, Notion, OpenAI — des géants du web qui ont besoin de sites rapides et fiables.
 
-**PostgreSQL** est une base de données relationnelle open source, réputée pour sa fiabilité et sa richesse fonctionnelle. Elle est retenue pour :
+**Alternative rejetée** : faire deux projets séparés (un pour l'affichage, un pour les traitements). Plus long à développer pour une équipe de 4 étudiants, plus de bugs au final.
 
-- La cohérence des données commerciales (une commande est toujours liée à un client, à des produits, à une adresse : relations strictes).
-- Sa grande maturité (plus de 25 ans).
-- L'absence de coût de licence.
-- Ses capacités avancées en matière de recherche et de statistiques.
+## La base de données — PostgreSQL
 
-Une base alternative non relationnelle (de type MongoDB) a été écartée : les données d'un e-commerce sont fortement reliées entre elles, et une base relationnelle est mieux adaptée.
+**Ce qu'on a pris** : PostgreSQL.
 
-## Cache et limitation — Redis
+**Pourquoi** : les données d'un site de vente sont **très reliées entre elles** (une commande est liée à un client, qui a une adresse, qui a une carte, qui a des produits dans son panier). PostgreSQL est conçu pour gérer ce genre de liens sans erreur. Il est gratuit, utilisé partout depuis 25 ans, extrêmement fiable.
 
-**Redis** est un outil complémentaire à la base de données principale. Il stocke temporairement les informations les plus consultées (par exemple une fiche produit) pour les restituer instantanément, sans solliciter la base. Il sert également à limiter automatiquement le nombre de requêtes qu'un utilisateur peut effectuer par minute, protégeant la plateforme contre les tentatives d'abus.
+**Alternative rejetée** : MongoDB. Conçue pour des données sans liens entre elles (genre des posts indépendants). Sur un e-commerce, ça créerait des incohérences (commandes sans client, factures sans commande…). Inadapté.
 
-## Authentification — NextAuth
+## Le cache — Redis
 
-**NextAuth** est la solution de référence pour gérer les comptes utilisateurs dans l'écosystème Next.js. Elle prend en charge à la fois l'inscription classique par email et mot de passe, et la connexion via un compte Google ou GitHub. Elle est complétée par une **bibliothèque de double authentification** pour les administrateurs. Des alternatives payantes (Auth0, Clerk) ont été écartées pour leur coût récurrent, incompatible avec un projet étudiant.
+**Ce qu'on a pris** : Redis.
 
-## Paiement — Stripe
+**Pourquoi** : certaines informations sont demandées **des milliers de fois par jour** (le catalogue, les fiches produits). Au lieu d'aller chercher la même info encore et encore dans la base de données, Redis les garde en mémoire rapide. Résultat : pages qui s'affichent **instantanément** au lieu de mettre 1-2 secondes. Redis sert aussi à **empêcher les attaques** (quelqu'un qui essaie de se connecter 1000 fois avec des mots de passe différents) en limitant automatiquement le nombre de requêtes.
 
-**Stripe** est retenu comme prestataire de paiement en ligne. Les raisons :
+## La connexion et les comptes — NextAuth
 
-- Il est **certifié au plus haut niveau de sécurité bancaire** (PCI-DSS niveau 1), ce qui transfère la responsabilité de la conformité sur le prestataire.
-- Il fournit des formulaires sécurisés que l'on intègre directement : la donnée de carte ne transite jamais par la plateforme.
-- Il est internationalement reconnu, bien documenté, largement déployé.
-- Ses frais sont transparents et standards pour un e-commerce B2B.
+**Ce qu'on a pris** : NextAuth.
 
-## Interface utilisateur — Tailwind CSS, shadcn/ui et Tiptap
+**Pourquoi** : gérer les inscriptions, connexions, mots de passe oubliés, c'est long et risqué à développer à la main (risques de failles de sécurité). NextAuth est **gratuit** et permet de tout faire en quelques lignes : connexion par email, connexion avec son compte Google ou GitHub (plus rapide pour l'utilisateur).
 
-**Tailwind CSS** est une bibliothèque qui accélère la mise en forme des pages en offrant des outils prêts à l'emploi. **shadcn/ui** est une collection de composants graphiques (boutons, menus, tableaux) déjà pensés pour être accessibles (compatibles WCAG). Ce duo permet de livrer une interface à la fois moderne, cohérente et conforme aux normes d'accessibilité sans repartir de zéro. **Tiptap** est ajouté pour l'éditeur de texte riche requis par le cahier des charges dans l'administration (carrousel de la page d'accueil), avec prise en charge de la mise en forme (gras, italique, liens, couleurs).
+**Alternative rejetée** : des services payants comme Auth0 ou Clerk. Ils font la même chose mais à partir de 23 $/mois, ce qui est disproportionné pour un projet étudiant.
 
-## Stockage des images — Cloudflare R2
+**Double sécurité pour les admins** : en plus du mot de passe, on demande un code à 6 chiffres généré par une appli mobile type Google Authenticator. Si un hacker vole le mot de passe, il ne peut pas rentrer sans ce code.
 
-**Cloudflare R2** est un service de stockage dans le cloud utilisé pour héberger les photos produits. Il a été retenu pour son tarif particulièrement compétitif (pas de frais de transfert de données) et sa diffusion mondiale rapide via un réseau de distribution de contenu.
+## Le paiement — Stripe
 
-## Envoi d'emails — Resend
+**Ce qu'on a pris** : Stripe.
 
-**Resend** gère l'envoi des emails transactionnels (confirmation de commande, validation d'inscription, réinitialisation de mot de passe). Il a été préféré à d'autres prestataires pour sa simplicité d'intégration et sa tarification accessible.
+**Pourquoi** : traiter des cartes bancaires est **hyper régulé** (normes PCI-DSS). Stripe est le plus haut niveau de certification bancaire au monde. L'utilisateur tape sa carte dans un formulaire Stripe qu'on intègre à notre site, mais **nos serveurs ne voient jamais le numéro de carte**. Résultat : zéro responsabilité juridique pour nous en cas de fuite.
 
-## Hébergement — VPS et Dokploy
+**C'est utilisé par** : Amazon, Google, Shopify, Apple Pay, Airbnb, Uber, Zoom…
 
-L'application est hébergée sur un **serveur virtuel privé** (VPS), piloté par un outil de déploiement nommé Dokploy. Cela offre un bon compromis entre maîtrise de l'infrastructure, coût contenu et simplicité opérationnelle. Le certificat de sécurité HTTPS est généré et renouvelé automatiquement.
+**Alternative rejetée** : PayPal. Très connu aussi mais plus cher en commission, moins bien intégré aux sites modernes.
 
-## Multilingue — next-intl
+## L'apparence du site — Tailwind, shadcn et Tiptap
 
-**next-intl** est l'outil retenu pour gérer les traductions du site. Il supporte nativement l'écriture de droite à gauche, ce qui est essentiel pour l'arabe.
+**Ce qu'on a pris** : Tailwind CSS, shadcn/ui, Tiptap.
+
+**Pourquoi** :
+- **Tailwind** permet de construire le design **deux fois plus vite** qu'en écrivant du CSS classique à la main. On assemble des briques déjà prêtes.
+- **shadcn/ui** fournit des boutons, menus, tableaux **déjà accessibles** aux personnes handicapées (lecteurs d'écran, navigation clavier). Ça nous fait gagner des semaines de travail sur l'accessibilité.
+- **Tiptap** permet aux administrateurs d'écrire du texte avec **gras, italique, liens, couleurs** (comme dans Word) dans le back-office, sans qu'ils aient à connaître le code. Exigé par le cahier des charges pour le carrousel de la page d'accueil.
+
+## Le stockage des photos — Cloudflare R2
+
+**Ce qu'on a pris** : Cloudflare R2.
+
+**Pourquoi** : héberger des milliers de photos produits coûte cher chez les géants classiques (Amazon S3 facture à chaque fois qu'une image est téléchargée). Cloudflare R2 fait la même chose **sans frais de téléchargement**. Économie estimée : des dizaines d'euros par mois quand le catalogue grossit. Les photos sont aussi distribuées sur des serveurs répartis dans le monde entier : un client au Maroc reçoit l'image depuis un serveur proche, pas depuis la France. Pages plus rapides.
+
+## L'envoi des emails — Resend
+
+**Ce qu'on a pris** : Resend.
+
+**Pourquoi** : envoyer des emails (confirmation de commande, mot de passe oublié) depuis son propre serveur c'est presque toujours bloqué par Gmail/Outlook qui les classent en spam. Resend est un **service spécialisé** qui s'occupe de faire passer les emails correctement dans les boîtes de réception. Gratuit jusqu'à 3 000 emails par mois, ce qui couvre largement le démarrage.
+
+## L'hébergement du site — serveur privé + Dokploy
+
+**Ce qu'on a pris** : un serveur privé loué (environ 10 €/mois) avec un outil appelé Dokploy pour le piloter.
+
+**Pourquoi** : on a le contrôle total (sécurité, données RGPD, hébergement européen), le coût est fixe et prévisible, et Dokploy automatise les mises à jour et les sauvegardes. Le certificat de sécurité HTTPS est renouvelé tout seul.
+
+**Alternative rejetée** : hébergement chez Vercel (les créateurs de Next.js). Très pratique mais devient vite cher dès que le trafic augmente (70 $/mois et +), et les données partent aux États-Unis.
+
+## Le multilingue — next-intl
+
+**Ce qu'on a pris** : next-intl.
+
+**Pourquoi** : c'est l'outil qui permet de passer le site en **français, anglais ou arabe** en un clic. Gère aussi automatiquement l'écriture **de droite à gauche** pour l'arabe (caractères inversés, menu à droite, etc.). Indispensable pour la clientèle internationale ciblée par Althea Systems.
 
 ## Récapitulatif
 
-| Besoin | Outil retenu |
-|--------|--------------|
-| Framework site web | Next.js |
-| Base de données | PostgreSQL |
-| Cache et limitation | Redis |
-| Authentification | NextAuth |
-| Double authentification admin | Application mobile type Google Authenticator |
-| Paiement | Stripe |
-| Interface utilisateur | Tailwind CSS + shadcn/ui + Tiptap (éditeur riche admin) |
-| Stockage images | Cloudflare R2 |
-| Envoi d'emails | Resend |
-| Traductions | next-intl |
-| Hébergement | VPS + Dokploy |
+| À quoi ça sert | Outil retenu |
+|----------------|--------------|
+| Construire le site (affichage + traitements) | Next.js |
+| Stocker les données (comptes, commandes, produits) | PostgreSQL |
+| Accélérer les pages et protéger des attaques | Redis |
+| Gérer les inscriptions et connexions | NextAuth |
+| Double sécurité pour les administrateurs | Application mobile (Google Authenticator) |
+| Encaisser les paiements | Stripe |
+| Mettre en forme le site | Tailwind + shadcn + Tiptap |
+| Héberger les photos produits | Cloudflare R2 |
+| Envoyer les emails (confirmation, mot de passe oublié) | Resend |
+| Proposer le site en 3 langues (FR/EN/AR) | next-intl |
+| Héberger le site en production | Serveur privé européen + Dokploy |
 
 
 # Modèle de données
@@ -516,36 +536,38 @@ Tests/Doc                                                            ███�
 
 Conformément au cadre pédagogique, la veille est volontairement **ciblée sur trois axes** et non exhaustive.
 
-## Technologie clé : les frameworks web modernes
+## Une technologie clé : les outils de développement web nouvelle génération
 
-L'évolution récente des frameworks web permet de produire des sites à la fois rapides, bien référencés et confortables à développer, avec un seul outil couvrant à la fois le rendu des pages et l'interaction dynamique. Next.js, retenu pour le projet, est aujourd'hui l'un des plus utilisés dans cette catégorie. Les bénéfices attendus pour Althea :
+Depuis 2020, de nouveaux outils permettent de construire des sites qui s'affichent **beaucoup plus vite**, sont mieux classés sur Google, et se développent en deux fois moins de temps qu'avant. Next.js (qu'on a retenu) est le leader de cette nouvelle génération.
 
-- Pages qui s'affichent rapidement, y compris sur mobile en 4G.
-- Un meilleur référencement naturel, car les pages sont directement compréhensibles par les moteurs de recherche.
-- Une équipe qui travaille avec un seul outil, donc un développement plus rapide et une maintenance simplifiée.
-- Une large communauté et un écosystème riche, gages de pérennité.
+**Ce que ça change concrètement pour Althea** :
 
-## Exemple concurrentiel : Shopify
+- Un client qui ouvre le site sur mobile en 4G voit la page **en moins d'une seconde**, au lieu de 3-4 secondes avec les anciens outils. Un site plus rapide, c'est des taux d'achat plus élevés (étude Google : +7 % de conversions pour chaque seconde gagnée).
+- Le site est **bien mieux référencé sur Google** parce que les pages sont livrées déjà construites, au lieu d'être assemblées par le navigateur au dernier moment.
+- L'équipe travaille avec **un seul outil** au lieu de plusieurs qui doivent se parler, donc moins de bugs et un développement plus rapide.
+- **Utilisé par des géants** : Netflix, TikTok, Nike, Notion, OpenAI. Gage de fiabilité et de pérennité.
 
-**Shopify** est la plateforme e-commerce en location (SaaS) la plus utilisée au monde, avec plus de quatre millions de boutiques actives. Elle couvre la majorité des fonctionnalités demandées par Althea : catalogue, panier, checkout, back-office, paiement sécurisé, multilingue.
+## Un concurrent sérieux : Shopify
 
-La question a donc été posée : faut-il partir sur une solution sur mesure ou sur Shopify ?
+**Shopify** est la solution e-commerce clé en main la plus utilisée au monde (plus de 4 millions de boutiques). Elle propose toutes les fonctions de base demandées par Althea : catalogue, panier, paiement, back-office.
 
-| Critère | Shopify | Solution sur mesure |
-|---------|---------|---------------------|
-| Temps de mise en service | 1 à 2 semaines | 9 mois |
-| Coût mensuel | 29 à 299 $ + commissions de transaction | Environ 30 € d'infrastructure, frais Stripe standards |
-| Personnalisation du design | Limitée aux thèmes disponibles | Totale |
-| Personnalisation métier | Via des modules additionnels (souvent payants) | Totale |
-| Intégration au système d'information existant | Connecteurs limités | API dédiée |
-| Dépendance au prestataire | Forte (données et code hébergés chez Shopify) | Faible (technologies ouvertes) |
-| Conformité RGPD | Correcte, mais données hébergées hors UE | Maîtrise totale, hébergement européen |
+On s'est donc posé la question : **faut-il partir sur Shopify au lieu de tout construire nous-mêmes ?**
 
-Shopify n'a pas été retenu pour trois raisons principales :
+| Comparaison | Shopify | Solution Althea sur mesure |
+|-------------|---------|-----------------------------|
+| Temps pour lancer le site | 1 à 2 semaines | 9 mois |
+| Coût mensuel | 29 à 299 $/mois + commissions sur chaque vente | ~30 € d'hébergement, frais Stripe standards |
+| Apparence | Limitée aux designs préfabriqués | Totalement personnalisable à l'image d'Althea |
+| Fonctions métier spécifiques | Dépendent de modules additionnels payants | Aucune limite, on développe ce qu'on veut |
+| Connexion à d'autres outils | Restreinte | Totale |
+| Où sont stockées les données clients | Aux États-Unis (serveurs Shopify) | En Europe, contrôle total |
+| Dépendance au prestataire | Forte (impossible de partir avec son site) | Faible (code nous appartient) |
 
-- La **personnalisation visuelle** souhaitée par Althea dépasse ce que permettent les thèmes standards.
-- La **souveraineté des données** est importante pour une clientèle internationale incluant des zones sensibles.
-- Le **projet pédagogique** vise à démontrer des compétences de conception et de développement : Shopify les court-circuiterait.
+**Pourquoi on n'a pas pris Shopify** :
+
+- Le rendu visuel demandé par Althea (design distinctif, ambiance premium) **dépasse ce que permettent les designs préfabriqués** Shopify.
+- Les **données clients** d'un business B2B médical sont sensibles : on préfère les garder sur un serveur européen sous notre contrôle plutôt qu'aux États-Unis.
+- Ce projet est un **exercice pédagogique** : partir sur Shopify court-circuiterait l'apprentissage technique attendu du Bachelor.
 
 ## Norme essentielle : le RGPD
 
