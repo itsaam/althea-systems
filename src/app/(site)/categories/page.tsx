@@ -25,7 +25,11 @@ async function getAllCategories(): Promise<CategoryWithProduct[] | null> {
     const categories = await prisma.category.findMany({
       include: {
         _count: {
-          select: { products: true },
+          select: {
+            products: {
+              where: { status: "PUBLISHED" },
+            },
+          },
         },
       },
       orderBy: { createdAt: "desc" },

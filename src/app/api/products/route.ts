@@ -37,7 +37,9 @@ export const GET = withApiLogger(async (req: NextRequest) => {
     const categoryId = searchParams.get("categoryId");
     const featured = searchParams.get("featured");
 
-    const where: Prisma.ProductWhereInput = {};
+    const where: Prisma.ProductWhereInput = {
+      status: "PUBLISHED",
+    };
     if (categoryId) where.categoryId = categoryId;
     if (featured === "true") where.featured = true;
 

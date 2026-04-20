@@ -21,6 +21,7 @@ async function getProduct(identifier: string) {
   try {
     const product = await prisma.product.findFirst({
       where: {
+        status: "PUBLISHED",
         OR: [{ id: identifier }, { slug: identifier }],
       },
       include: {
@@ -53,6 +54,7 @@ async function getSimilarProducts(identifier: string) {
   try {
     const product = await prisma.product.findFirst({
       where: {
+        status: "PUBLISHED",
         OR: [{ id: identifier }, { slug: identifier }],
       },
       select: { id: true, categoryId: true },
