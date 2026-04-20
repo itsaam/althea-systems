@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import SocialLinks from "@/components/shared/social-links";
 
@@ -146,14 +147,15 @@ export default async function Footer() {
           </nav>
         </div>
 
-        {/* ── Massive wordmark ────────────────────────────────── */}
-        <div
-          aria-hidden="true"
-          className="mt-24 flex select-none items-end justify-center overflow-hidden"
-        >
-          <span className="font-display block text-hero font-semibold leading-[0.82] tracking-[-0.045em] text-white/95">
-            althea<span className="text-electric-indigo-400">.</span>
-          </span>
+        {/* ── Logo ────────────────────────────────── */}
+        <div className="mt-24 flex items-center justify-center">
+          <Image
+            src="/images/logos/logo-full.png"
+            alt="Althea Systems"
+            width={471}
+            height={183}
+            className="h-24 w-auto brightness-0 invert md:h-32"
+          />
         </div>
 
         {/* ── Bottom strip ────────────────────────────────────── */}

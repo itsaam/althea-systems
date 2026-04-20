@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
@@ -62,12 +63,17 @@ export default function Header() {
           <div className="flex items-center justify-start">
             <Link
               href="/"
-              className="group inline-flex items-baseline gap-3"
+              className="group inline-flex items-center gap-3"
               aria-label={tCommon("brandHome")}
             >
-              <span className="font-display text-[17px] font-semibold leading-none tracking-[-0.02em] text-foreground">
-                althea<span className="text-primary">.</span>
-              </span>
+              <Image
+                src="/images/logos/logo-full.png"
+                alt="Althea Systems"
+                width={471}
+                height={183}
+                priority
+                className="h-9 w-auto"
+              />
               <span className="hidden font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/45 transition-colors duration-300 group-hover:text-foreground/65 md:inline-block">
                 {tCommon("brandTagline")}
               </span>
