@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
+import PasswordStrengthMeter, {
+  isPasswordValid,
+  PASSWORD_MIN_LENGTH,
+} from "./password-strength-meter";
 
 export default function ResetPasswordForm() {
   const router = useRouter();
@@ -16,14 +20,15 @@ export default function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [password, setPassword] = useState("");
 
   // Si pas de token, afficher un message d'erreur
   if (!token) {
     return (
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
           <svg
-            className="w-8 h-8 text-red-600"
+            className="w-8 h-8 text-destructive"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -55,7 +60,6 @@ export default function ResetPasswordForm() {
     setFormError(null);
 
     const formData = new FormData(e.currentTarget);
-    const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
 
     // Validation
@@ -65,8 +69,10 @@ export default function ResetPasswordForm() {
       return;
     }
 
-    if (password.length < 8) {
-      setFormError("Le mot de passe doit contenir au moins 8 caractères");
+    if (!isPasswordValid(password)) {
+      setFormError(
+        `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères, 1 majuscule, 1 minuscule, 1 chiffre et 1 caractère spécial`
+      );
       setIsLoading(false);
       return;
     }
@@ -99,9 +105,9 @@ export default function ResetPasswordForm() {
   if (isSuccess) {
     return (
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
           <svg
-            className="w-8 h-8 text-green-600"
+            className="w-8 h-8 text-success"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -125,7 +131,7 @@ export default function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {formError && (
-        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+        <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
           {formError}
         </div>
       )}
@@ -138,11 +144,18 @@ export default function ResetPasswordForm() {
           type="password"
           required
           disabled={isLoading}
-          minLength={8}
+          minLength={PASSWORD_MIN_LENGTH}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          aria-describedby="password-hint"
         />
-        <p className="text-xs text-muted-foreground">
-          Minimum 8 caractères avec majuscule, minuscule et chiffre
+        <p id="password-hint" className="text-xs text-muted-foreground">
+          Minimum {PASSWORD_MIN_LENGTH} caractères, 1 majuscule, 1 minuscule,
+          1 chiffre, 1 caractère spécial
         </p>
+        {password.length > 0 && (
+          <PasswordStrengthMeter value={password} className="pt-2" />
+        )}
       </div>
 
       <div className="space-y-2">

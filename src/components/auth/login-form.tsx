@@ -67,7 +67,7 @@ function readRememberedEmail(): string {
 }
 
 const FIELD_WRAPPER =
-  "group relative border-b border-border/80 pb-2 transition-colors focus-within:border-electric-indigo-500";
+  "group relative border-b border-border/80 pb-2 transition-colors focus-within:border-primary";
 const LABEL_CLASS =
   "block font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55";
 const INPUT_CLASS =
@@ -274,7 +274,7 @@ export default function LoginForm() {
 
           <Link
             href="/forgot-password"
-            className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/55 transition-colors hover:text-electric-indigo-500"
+            className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/55 transition-colors hover:text-primary"
           >
             Mot de passe oublié ?
           </Link>

@@ -141,6 +141,29 @@ export default function OrderHistory() {
     });
   }, [orders, search]);
 
+  /**
+   * Groupement par année (exigence cahier des charges §XIV) :
+   * années descendantes, commandes descendantes dans chaque groupe.
+   */
+  const ordersByYear = useMemo(() => {
+    const groups = new Map<number, Order[]>();
+    for (const order of filteredOrders) {
+      const year = new Date(order.createdAt).getFullYear();
+      const bucket = groups.get(year);
+      if (bucket) bucket.push(order);
+      else groups.set(year, [order]);
+    }
+    return Array.from(groups.entries())
+      .map(([year, list]) => ({
+        year,
+        orders: [...list].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+      }))
+      .sort((a, b) => b.year - a.year);
+  }, [filteredOrders]);
+
   const hasActiveFilters = statusFilter !== "all" || search.length > 0;
 
   const resetFilters = () => {
@@ -263,7 +286,7 @@ export default function OrderHistory() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Groupes annuels — Cahier des charges §XIV */}
       {filteredOrders.length === 0 ? (
         <div className="border-t border-border/60 py-16 text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55">
@@ -281,87 +304,129 @@ export default function OrderHistory() {
           </button>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border/60 text-left font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/50">
-                <th className="py-3 pr-4 font-normal">Commande</th>
-                <th className="py-3 pr-4 font-normal">Date</th>
-                <th className="py-3 pr-4 font-normal">Statut</th>
-                <th className="py-3 pr-4 text-right font-normal">Total</th>
-                <th className="py-3 pl-4 text-right font-normal">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order) => {
-                const itemCount = order.items.reduce(
-                  (acc, item) => acc + item.quantity,
-                  0
-                );
-                return (
-                  <tr
-                    key={order.id}
-                    className="border-b border-border/60 text-[13px] text-foreground/80 transition-colors hover:bg-foreground/[0.015]"
-                  >
-                    <td className="py-4 pr-4">
-                      <Link
-                        href={`/orders/${order.id}`}
-                        className="group inline-flex flex-col"
+        <div className="space-y-14">
+          {ordersByYear.map(({ year, orders: yearOrders }) => (
+            <section
+              key={year}
+              aria-labelledby={`orders-year-${year}`}
+              className="space-y-4"
+            >
+              <div className="flex items-baseline justify-between gap-4 border-b border-border/60 pb-3">
+                <h2
+                  id={`orders-year-${year}`}
+                  className="font-display text-[32px] font-semibold leading-none tracking-[-0.02em] text-foreground tabular-nums md:text-[40px]"
+                >
+                  {year}
+                </h2>
+                <span className="font-mono text-[10px] uppercase tracking-[0.22em] tabular-nums text-foreground/50">
+                  {yearOrders.length} commande
+                  {yearOrders.length > 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <caption className="sr-only">
+                    Commandes de l&apos;année {year}
+                  </caption>
+                  <thead>
+                    <tr className="border-b border-border/60 text-left font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/50">
+                      <th scope="col" className="py-3 pr-4 font-normal">
+                        Commande
+                      </th>
+                      <th scope="col" className="py-3 pr-4 font-normal">
+                        Date
+                      </th>
+                      <th scope="col" className="py-3 pr-4 font-normal">
+                        Statut
+                      </th>
+                      <th
+                        scope="col"
+                        className="py-3 pr-4 text-right font-normal"
                       >
-                        <span className="font-mono text-[12px] tabular-nums text-foreground group-hover:underline">
-                          {order.orderNumber}
-                        </span>
-                        <span className="mt-1 text-[11px] text-foreground/50">
-                          {itemCount} article{itemCount > 1 ? "s" : ""}
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="py-4 pr-4 font-mono text-[12px] tabular-nums text-foreground/70">
-                      {formatShortDate(order.createdAt)}
-                    </td>
-                    <td className="py-4 pr-4">
-                      <span
-                        className={cn(
-                          "inline-block border border-border/60 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em]",
-                          order.status === "CANCELLED"
-                            ? "text-destructive"
-                            : order.status === "DELIVERED"
-                              ? "text-foreground"
-                              : "text-foreground/70"
-                        )}
+                        Total
+                      </th>
+                      <th
+                        scope="col"
+                        className="py-3 pl-4 text-right font-normal"
                       >
-                        {STATUS_LABEL[order.status]}
-                      </span>
-                    </td>
-                    <td className="py-4 pr-4 text-right font-mono text-[13px] font-medium tabular-nums text-foreground">
-                      {formatCurrency(order.total)}
-                    </td>
-                    <td className="py-4 pl-4 text-right">
-                      <div className="inline-flex items-center gap-4">
-                        {order.invoice && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDownloadInvoice(order.invoice!.id)
-                            }
-                            className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/55 hover:text-foreground"
-                          >
-                            Facture
-                          </button>
-                        )}
-                        <Link
-                          href={`/orders/${order.id}`}
-                          className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground hover:underline"
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {yearOrders.map((order) => {
+                      const itemCount = order.items.reduce(
+                        (acc, item) => acc + item.quantity,
+                        0
+                      );
+                      return (
+                        <tr
+                          key={order.id}
+                          className="border-b border-border/60 text-[13px] text-foreground/80 transition-colors hover:bg-foreground/[0.015]"
                         >
-                          Voir →
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                          <td className="py-4 pr-4">
+                            <Link
+                              href={`/orders/${order.id}`}
+                              className="group inline-flex flex-col"
+                            >
+                              <span className="font-mono text-[12px] tabular-nums text-foreground group-hover:underline">
+                                {order.orderNumber}
+                              </span>
+                              <span className="mt-1 text-[11px] text-foreground/50">
+                                {itemCount} article{itemCount > 1 ? "s" : ""}
+                              </span>
+                            </Link>
+                          </td>
+                          <td className="py-4 pr-4 font-mono text-[12px] tabular-nums text-foreground/70">
+                            {formatShortDate(order.createdAt)}
+                          </td>
+                          <td className="py-4 pr-4">
+                            <span
+                              className={cn(
+                                "inline-block border border-border/60 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em]",
+                                order.status === "CANCELLED"
+                                  ? "text-destructive"
+                                  : order.status === "DELIVERED"
+                                    ? "text-foreground"
+                                    : "text-foreground/70"
+                              )}
+                            >
+                              {STATUS_LABEL[order.status]}
+                            </span>
+                          </td>
+                          <td className="py-4 pr-4 text-right font-mono text-[13px] font-medium tabular-nums text-foreground">
+                            {formatCurrency(order.total)}
+                          </td>
+                          <td className="py-4 pl-4 text-right">
+                            <div className="inline-flex items-center gap-4">
+                              {order.invoice && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDownloadInvoice(order.invoice!.id)
+                                  }
+                                  className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/55 hover:text-foreground"
+                                >
+                                  Facture
+                                </button>
+                              )}
+                              <Link
+                                href={`/orders/${order.id}`}
+                                className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground hover:underline"
+                              >
+                                Voir →
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ))}
         </div>
       )}
 

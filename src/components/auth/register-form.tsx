@@ -49,7 +49,7 @@ type FieldErrors = Partial<
 >;
 
 const FIELD_WRAPPER =
-  "group relative border-b border-border/80 pb-2 transition-colors focus-within:border-electric-indigo-500";
+  "group relative border-b border-border/80 pb-2 transition-colors focus-within:border-primary";
 const FIELD_WRAPPER_ERROR =
   "group relative border-b border-destructive pb-2 transition-colors";
 const LABEL_CLASS =
@@ -177,14 +177,14 @@ export default function RegisterForm() {
   if (emailSent) {
     return (
       <div role="status" aria-live="polite" className="space-y-10">
-        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-electric-indigo-500">
+        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">
           — Email envoyé
         </p>
 
         <h2 className="font-display text-h3 leading-tight tracking-tight text-foreground">
           Vérifiez votre
           <br />
-          boîte mail<span className="text-electric-indigo-500">.</span>
+          boîte mail<span className="text-primary">.</span>
         </h2>
 
         <div className="space-y-3 border-l-2 border-border/60 pl-6">
@@ -213,7 +213,7 @@ export default function RegisterForm() {
           </button>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 text-foreground/60 transition-colors hover:text-electric-indigo-500"
+            className="inline-flex items-center gap-2 text-foreground/60 transition-colors hover:text-primary"
           >
             <span aria-hidden="true">←</span>
             <span>Retour à la connexion</span>
@@ -435,7 +435,7 @@ export default function RegisterForm() {
           {confirmPassword.length > 0 &&
             confirmPassword === password &&
             !fieldErrors.confirmPassword && (
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-electric-indigo-500">
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
                 ✓ Mots de passe identiques
               </p>
             )}
@@ -465,7 +465,7 @@ export default function RegisterForm() {
               <Link
                 href="/cgu"
                 target="_blank"
-                className="text-foreground underline decoration-border/60 underline-offset-4 transition-colors hover:text-electric-indigo-500 hover:decoration-electric-indigo-500"
+                className="text-foreground underline decoration-border/60 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary"
               >
                 conditions générales de vente
               </Link>{" "}
@@ -473,7 +473,7 @@ export default function RegisterForm() {
               <Link
                 href="/mentions-legales"
                 target="_blank"
-                className="text-foreground underline decoration-border/60 underline-offset-4 transition-colors hover:text-electric-indigo-500 hover:decoration-electric-indigo-500"
+                className="text-foreground underline decoration-border/60 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary"
               >
                 politique de confidentialité
               </Link>{" "}

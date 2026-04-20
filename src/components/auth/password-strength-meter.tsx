@@ -9,11 +9,13 @@ export interface PasswordRule {
   test: (value: string) => boolean;
 }
 
+export const PASSWORD_MIN_LENGTH = 12;
+
 export const PASSWORD_RULES: PasswordRule[] = [
   {
     id: "length",
-    label: "Au moins 8 caractères",
-    test: (v) => v.length >= 8,
+    label: `Au moins ${PASSWORD_MIN_LENGTH} caractères`,
+    test: (v) => v.length >= PASSWORD_MIN_LENGTH,
   },
   {
     id: "uppercase",
@@ -44,8 +46,13 @@ export function evaluatePasswordScore(value: string): number {
   );
 }
 
+/**
+ * Mot de passe valide (aligné serveur — CNIL) :
+ * 12 caractères minimum + majuscule + minuscule + chiffre + caractère spécial.
+ * Les 5 règles doivent être respectées.
+ */
 export function isPasswordValid(value: string): boolean {
-  return evaluatePasswordScore(value) >= 4 && value.length >= 8;
+  return PASSWORD_RULES.every((rule) => rule.test(value));
 }
 
 interface PasswordStrengthMeterProps {
@@ -57,10 +64,10 @@ const STRENGTH_LABELS = ["Très faible", "Faible", "Moyen", "Bon", "Fort", "Exce
 const STRENGTH_COLORS = [
   "bg-destructive",
   "bg-destructive",
-  "bg-orange-500",
-  "bg-yellow-500",
-  "bg-lime-500",
-  "bg-emerald-500",
+  "bg-warning",
+  "bg-warning",
+  "bg-primary",
+  "bg-success",
 ];
 
 export default function PasswordStrengthMeter({
@@ -107,7 +114,7 @@ export default function PasswordStrengthMeter({
               key={rule.id}
               className={cn(
                 "flex items-center gap-1.5",
-                ok ? "text-emerald-600" : "text-muted-foreground"
+                ok ? "text-success" : "text-muted-foreground"
               )}
             >
               {ok ? (
