@@ -105,7 +105,7 @@ export default function SalesChart() {
               className={cn(
                 "font-mono text-[10px] uppercase tracking-[0.18em] transition-colors",
                 period === p
-                  ? "text-electric-indigo-500"
+                  ? "text-primary"
                   : "text-foreground/40 hover:text-foreground/70"
               )}
             >

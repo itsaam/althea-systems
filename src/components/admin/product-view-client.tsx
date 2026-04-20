@@ -187,7 +187,7 @@ export default function ProductViewClient({ product }: ProductViewClientProps) {
           )}
           <div>
             <p className="text-sm text-muted-foreground">Stock</p>
-            <p className={product.stock > 0 ? "text-green-600 font-medium" : "text-destructive font-medium"}>
+            <p className={product.stock > 0 ? "text-success font-medium" : "text-destructive font-medium"}>
               {product.stock} unité{product.stock > 1 ? "s" : ""}
             </p>
           </div>

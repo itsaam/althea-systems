@@ -166,7 +166,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
                 <header className="flex items-center gap-3">
                     <span
                         aria-hidden
-                        className="h-1.5 w-1.5 rounded-full bg-electric-indigo-500"
+                        className="h-1.5 w-1.5 rounded-full bg-primary"
                     />
                     <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/55">
                         01 — Identification
@@ -214,7 +214,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
                 <header className="flex items-center gap-3">
                     <span
                         aria-hidden
-                        className="h-1.5 w-1.5 rounded-full bg-electric-indigo-500"
+                        className="h-1.5 w-1.5 rounded-full bg-primary"
                     />
                     <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/55">
                         02 — Description
@@ -242,7 +242,7 @@ export default function CategoryForm({ categoryId }: CategoryFormProps) {
                 <header className="flex items-center gap-3">
                     <span
                         aria-hidden
-                        className="h-1.5 w-1.5 rounded-full bg-electric-indigo-500"
+                        className="h-1.5 w-1.5 rounded-full bg-primary"
                     />
                     <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/55">
                         03 — Visuel

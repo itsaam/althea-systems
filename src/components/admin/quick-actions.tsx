@@ -40,7 +40,7 @@ export default function QuickActions() {
           </div>
           <span
             aria-hidden
-            className="font-mono text-[14px] text-foreground/30 transition-all duration-200 group-hover:translate-x-1 group-hover:text-electric-indigo-500"
+            className="font-mono text-[14px] text-foreground/30 transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary"
           >
             →
           </span>

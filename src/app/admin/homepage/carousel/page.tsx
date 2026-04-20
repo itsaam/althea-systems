@@ -32,12 +32,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+import DOMPurify from "dompurify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,35 @@ const EMPTY_DRAFT: DraftSlide = {
 };
 
 const MAX_SLIDES = 3;
+
+const RICH_TEXT_ALLOWED_TAGS = [
+  "p",
+  "br",
+  "strong",
+  "em",
+  "u",
+  "s",
+  "a",
+  "span",
+  "b",
+  "i",
+];
+const RICH_TEXT_ALLOWED_ATTR = ["href", "target", "rel", "style", "class"];
+
+function sanitizeRichText(html: string): string {
+  if (!html) return "";
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: RICH_TEXT_ALLOWED_TAGS,
+    ALLOWED_ATTR: RICH_TEXT_ALLOWED_ATTR,
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|\/)/i,
+  });
+}
+
+function stripHtml(html: string): string {
+  if (!html) return "";
+  // Preview plate pour la liste des slides
+  return html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+}
 
 function normalizeLink(value: string): string | null {
   const trimmed = value.trim();
@@ -166,7 +196,7 @@ function SortableSlideCard({
             <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/60">
               <span
                 aria-hidden="true"
-                className={`h-1.5 w-1.5 rounded-full ${slide.active ? "bg-emerald-500" : "bg-foreground/25"}`}
+                className={`h-1.5 w-1.5 rounded-full ${slide.active ? "bg-success" : "bg-foreground/25"}`}
               />
               {slide.active ? "Actif" : "Inactif"}
             </span>
@@ -175,7 +205,9 @@ function SortableSlideCard({
             {slide.title}
           </h3>
           {slide.subtitle && (
-            <p className="truncate text-sm text-foreground/60">{slide.subtitle}</p>
+            <p className="truncate text-sm text-foreground/60">
+              {stripHtml(slide.subtitle)}
+            </p>
           )}
           {slide.link && (
             <p className="truncate font-mono text-[11px] text-foreground/50">
@@ -260,9 +292,13 @@ function SlidePreview({ slide }: { slide: CarouselSlide | DraftSlide | null }) {
           {slide.title || "Titre du slide"}
         </h1>
         {slide.subtitle && (
-          <p className="mt-3 max-w-md text-sm text-white/80 md:text-base">
-            {slide.subtitle}
-          </p>
+          <div
+            className="prose prose-sm prose-invert mt-3 max-w-md text-sm text-white/80 md:text-base [&_a]:underline"
+            // sanitisation stricte côté client avant rendu
+            dangerouslySetInnerHTML={{
+              __html: sanitizeRichText(slide.subtitle),
+            }}
+          />
         )}
         {slide.link && (
           <div className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-white px-6 font-mono text-[11px] uppercase tracking-[0.18em] text-shadow-grey-950">
@@ -699,22 +735,24 @@ export default function AdminCarouselPage() {
               </div>
 
               <div>
-                <Label htmlFor="slide-subtitle" className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55">
+                <Label
+                  htmlFor="slide-subtitle"
+                  className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/55"
+                >
                   Sous-titre
                 </Label>
-                <Textarea
-                  id="slide-subtitle"
-                  value={draft.subtitle}
-                  onChange={(e) =>
-                    setDraft({ ...draft, subtitle: e.target.value })
-                  }
-                  placeholder="Des solutions innovantes pour votre cabinet"
-                  rows={3}
-                  maxLength={500}
-                  className="mt-2 resize-none rounded-none border-border/60 bg-transparent shadow-none focus-visible:border-foreground focus-visible:ring-0"
-                />
-                <p className="mt-1 font-mono text-[10px] tabular-nums text-foreground/40">
-                  {draft.subtitle.length}/500
+                <div id="slide-subtitle" className="mt-2">
+                  <RichTextEditor
+                    minimal
+                    value={draft.subtitle}
+                    onChange={(html) =>
+                      setDraft({ ...draft, subtitle: html })
+                    }
+                    placeholder="Des solutions innovantes pour votre cabinet"
+                  />
+                </div>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
+                  Formatage : gras, italique, souligné, liens, couleurs
                 </p>
               </div>
 

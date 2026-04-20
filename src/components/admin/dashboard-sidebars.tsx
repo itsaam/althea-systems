@@ -40,7 +40,7 @@ export function TopProductsBlock() {
         </p>
         <Link
           href="/admin/products"
-          className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-electric-indigo-500"
+          className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-primary"
         >
           Tout voir
         </Link>
@@ -90,7 +90,7 @@ export function RecentOrdersBlock() {
         </p>
         <Link
           href="/admin/orders"
-          className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-electric-indigo-500"
+          className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50 transition-colors hover:text-primary"
         >
           Tout voir
         </Link>
@@ -116,7 +116,7 @@ export function RecentOrdersBlock() {
                   item.status === "DELIVERED"
                     ? "text-foreground/70"
                     : item.status === "PENDING"
-                      ? "text-electric-indigo-500"
+                      ? "text-primary"
                       : "text-foreground/45"
                 )}
               >

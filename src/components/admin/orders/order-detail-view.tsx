@@ -60,34 +60,34 @@ const STATUS_TONE: Record<
   { badge: string; dot: string; icon: string }
 > = {
   PENDING: {
-    badge: "bg-amber-100 text-amber-900 border-amber-200",
-    dot: "bg-amber-500",
-    icon: "text-amber-600",
+    badge: "bg-warning/15 text-warning border-warning/30",
+    dot: "bg-warning",
+    icon: "text-warning",
   },
   CONFIRMED: {
-    badge: "bg-sky-100 text-sky-900 border-sky-200",
-    dot: "bg-sky-500",
-    icon: "text-sky-600",
+    badge: "bg-primary/10 text-primary border-primary/20",
+    dot: "bg-primary",
+    icon: "text-primary",
   },
   PROCESSING: {
-    badge: "bg-blue-100 text-blue-900 border-blue-200",
-    dot: "bg-blue-500",
-    icon: "text-blue-600",
+    badge: "bg-primary/15 text-primary border-primary/30",
+    dot: "bg-primary",
+    icon: "text-primary",
   },
   SHIPPED: {
-    badge: "bg-indigo-100 text-indigo-900 border-indigo-200",
-    dot: "bg-indigo-500",
-    icon: "text-indigo-600",
+    badge: "bg-foreground/10 text-foreground border-foreground/20",
+    dot: "bg-foreground/70",
+    icon: "text-foreground/80",
   },
   DELIVERED: {
-    badge: "bg-emerald-100 text-emerald-900 border-emerald-200",
-    dot: "bg-emerald-500",
-    icon: "text-emerald-600",
+    badge: "bg-success/10 text-success border-success/20",
+    dot: "bg-success",
+    icon: "text-success",
   },
   CANCELLED: {
-    badge: "bg-red-100 text-red-900 border-red-200",
-    dot: "bg-red-500",
-    icon: "text-red-600",
+    badge: "bg-destructive/10 text-destructive border-destructive/20",
+    dot: "bg-destructive",
+    icon: "text-destructive",
   },
 };
 

@@ -64,13 +64,13 @@ export function StockAlertBadge() {
   return (
     <Link
       href="/admin/products"
-      className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-electric-indigo-500"
+      className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/70 transition-colors hover:text-primary"
     >
       {alerts.outOfStock > 0 && (
         <span className="flex items-center gap-1.5">
           <span
             aria-hidden
-            className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"
+            className="inline-block h-1.5 w-1.5 rounded-full bg-destructive"
           />
           <span className="tabular-nums">{alerts.outOfStock}</span>
           {" "}rupture{alerts.outOfStock > 1 ? "s" : ""}
@@ -80,7 +80,7 @@ export function StockAlertBadge() {
         <span className="flex items-center gap-1.5">
           <span
             aria-hidden
-            className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"
+            className="inline-block h-1.5 w-1.5 rounded-full bg-warning"
           />
           <span className="tabular-nums">{alerts.lowStock}</span>
           {" "}stock faible

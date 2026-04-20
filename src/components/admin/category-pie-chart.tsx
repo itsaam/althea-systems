@@ -67,7 +67,7 @@ export default function CategoryPieChart() {
               className={cn(
                 "font-mono text-[10px] uppercase tracking-[0.18em] transition-colors",
                 period === p
-                  ? "text-electric-indigo-500"
+                  ? "text-primary"
                   : "text-foreground/40 hover:text-foreground/70"
               )}
             >
@@ -119,7 +119,7 @@ export default function CategoryPieChart() {
                 <div
                   className={cn(
                     "h-full transition-all duration-700 ease-out",
-                    idx === 0 ? "bg-electric-indigo-500" : "bg-foreground/40"
+                    idx === 0 ? "bg-primary" : "bg-foreground/40"
                   )}
                   style={{
                     width: `${total > 0 ? (item.value / total) * 100 : 0}%`,

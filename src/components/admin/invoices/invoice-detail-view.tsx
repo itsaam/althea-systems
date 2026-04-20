@@ -82,20 +82,20 @@ const INVOICE_STATUS_TONE: Record<
 > = {
   PAID: {
     badge:
-      "bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:text-emerald-400",
-    dot: "bg-emerald-500",
+      "bg-success/10 text-success ring-1 ring-inset ring-success/20",
+    dot: "bg-success",
     icon: CheckCircle2,
   },
   PENDING: {
     badge:
-      "bg-amber-500/10 text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:text-amber-400",
-    dot: "bg-amber-500",
+      "bg-warning/10 text-warning ring-1 ring-inset ring-warning/20",
+    dot: "bg-warning",
     icon: Clock,
   },
   CANCELLED: {
     badge:
-      "bg-red-500/10 text-red-700 ring-1 ring-inset ring-red-600/20 dark:text-red-400",
-    dot: "bg-red-500",
+      "bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/20",
+    dot: "bg-destructive",
     icon: XCircle,
   },
 };
@@ -277,7 +277,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#003d5c] to-[#00a8b5] text-white shadow-sm"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-700 to-teal-500 text-white shadow-sm"
                 aria-hidden="true"
               >
                 <ReceiptText className="h-5 w-5" />
@@ -354,7 +354,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                   </p>
                 </div>
                 {invoice.status === "CANCELLED" && (
-                  <div className="flex items-center gap-1.5 rounded-md bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-700 dark:text-red-400">
+                  <div className="flex items-center gap-1.5 rounded-md bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
                     <ShieldX className="h-3.5 w-3.5" />
                     Annulée
                   </div>
@@ -421,7 +421,7 @@ export function InvoiceDetailView({ invoiceId }: InvoiceDetailViewProps) {
                       className="flex items-center justify-between gap-4 py-3"
                     >
                       <div className="flex min-w-0 items-start gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
                           <Undo2 className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">

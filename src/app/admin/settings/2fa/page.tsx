@@ -117,7 +117,7 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
     return (
       <div className="p-6">
         <div className="max-w-md mx-auto text-center">
-          <p className="text-red-500">Accès réservé aux administrateurs</p>
+          <p className="text-destructive">Accès réservé aux administrateurs</p>
         </div>
       </div>
     );
@@ -131,7 +131,7 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
         </h1>
 
         {error && (
-          <div className="mb-4 p-3 text-sm text-red-500 bg-red-50 rounded-md">
+          <div className="mb-4 p-3 text-sm text-destructive bg-destructive/10 rounded-md">
             {error}
           </div>
         )}
@@ -149,13 +149,13 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
               </ul>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-blue-800 mb-2">Prérequis</h3>
-              <p className="text-sm text-blue-700">
+            <div className="p-4 bg-primary/10 rounded-lg">
+              <h3 className="font-semibold text-primary mb-2">Prérequis</h3>
+              <p className="text-sm text-foreground/80">
                 Vous aurez besoin d&apos;une application d&apos;authentification
                 comme :
               </p>
-              <ul className="text-sm text-blue-700 mt-2 space-y-1">
+              <ul className="text-sm text-foreground/80 mt-2 space-y-1">
                 <li>• Google Authenticator</li>
                 <li>• Microsoft Authenticator</li>
                 <li>• Authy</li>
@@ -197,12 +197,12 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
                 <h3 className="font-semibold">
                   3. Sauvegardez vos codes de récupération
                 </h3>
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800 font-semibold mb-2">
+                <div className="p-4 bg-warning/10 border border-warning/30 rounded-lg">
+                  <p className="text-sm text-warning font-semibold mb-2">
                     Important : Ces codes ne seront affichés qu&apos;une seule
                     fois.
                   </p>
-                  <p className="text-sm text-yellow-700 mb-3">
+                  <p className="text-sm text-foreground/80 mb-3">
                     Conservez ces codes en lieu sûr. Chaque code peut être
                     utilisé une seule fois si vous perdez l&apos;accès à votre
                     application d&apos;authentification.
@@ -268,9 +268,9 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
 
         {step === "success" && (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
               <svg
-                className="w-8 h-8 text-green-600"
+                className="w-8 h-8 text-success"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -288,9 +288,9 @@ Ces codes peuvent être utilisés pour accéder à votre compte si vous perdez l
               Votre compte est maintenant protégé par l&apos;authentification à
               deux facteurs.
             </p>
-            <div className="p-4 bg-yellow-50 rounded-lg text-left">
-              <h3 className="font-semibold text-yellow-800 mb-2">Important</h3>
-              <p className="text-sm text-yellow-700">
+            <div className="p-4 bg-warning/10 rounded-lg text-left">
+              <h3 className="font-semibold text-warning mb-2">Important</h3>
+              <p className="text-sm text-foreground/80">
                 Conservez votre application d&apos;authentification en lieu sûr.
                 Vous en aurez besoin à chaque connexion au panneau admin.
               </p>

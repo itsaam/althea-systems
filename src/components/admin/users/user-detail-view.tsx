@@ -320,7 +320,7 @@ export function UserDetailView({ userId }: UserDetailViewProps) {
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="flex items-start gap-5">
             <div
-              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#003d5c] to-[#00a8b5] text-lg font-semibold text-white shadow-sm"
+              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-navy-700 to-teal-500 text-lg font-semibold text-white shadow-sm"
               aria-hidden="true"
             >
               {initials}
@@ -341,7 +341,7 @@ export function UserDetailView({ userId }: UserDetailViewProps) {
                   {STATUS_LABELS[currentStatus]}
                 </span>
                 {user.role === "ADMIN" && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#003d5c]/10 px-2.5 py-0.5 text-xs font-medium text-[#003d5c] ring-1 ring-inset ring-[#003d5c]/20 dark:bg-[#00a8b5]/15 dark:text-[#7fd4dc] dark:ring-[#00a8b5]/30">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
                     <ShieldCheck className="h-3 w-3" aria-hidden="true" />
                     Admin
                   </span>
@@ -549,7 +549,7 @@ export function UserDetailView({ userId }: UserDetailViewProps) {
                   </p>
                   <p>
                     {user.emailVerified ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <span className="inline-flex items-center gap-1 text-success">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Oui
                       </span>
@@ -602,7 +602,7 @@ export function UserDetailView({ userId }: UserDetailViewProps) {
                           </p>
                           <p className="text-muted-foreground">{address.country}</p>
                           {address.isDefault && (
-                            <span className="mt-1 inline-block font-mono text-[10px] uppercase tracking-wider text-[#00a8b5]">
+                            <span className="mt-1 inline-block font-mono text-[10px] uppercase tracking-wider text-primary">
                               Par défaut
                             </span>
                           )}

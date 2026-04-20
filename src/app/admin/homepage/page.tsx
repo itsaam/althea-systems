@@ -58,7 +58,7 @@ export default function AdminHomepagePage() {
                 {section.description}
               </p>
             </div>
-            <p className="mt-8 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/55 transition-colors group-hover:text-electric-indigo-500">
+            <p className="mt-8 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/55 transition-colors group-hover:text-primary">
               Gérer
               <span
                 aria-hidden

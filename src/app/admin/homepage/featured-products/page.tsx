@@ -105,7 +105,7 @@ export default function AdminFeaturedProductsPage() {
       {featuredProducts.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+            <Star className="h-5 w-5 text-warning fill-warning" />
             Produits en vedette
           </h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -155,7 +155,7 @@ function ProductCard({
     <Card
       className={
         product.featured
-          ? "border-yellow-500/50 bg-yellow-50/50 dark:bg-yellow-950/10"
+          ? "border-warning/50 bg-warning/5"
           : ""
       }
     >

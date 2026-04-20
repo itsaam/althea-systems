@@ -149,7 +149,7 @@ export default function DashboardCards() {
                 className={cn(
                   "font-mono text-[10px] uppercase tracking-[0.18em] transition-colors",
                   revenuePeriod === p
-                    ? "text-electric-indigo-500"
+                    ? "text-primary"
                     : "text-foreground/40 hover:text-foreground/70"
                 )}
               >

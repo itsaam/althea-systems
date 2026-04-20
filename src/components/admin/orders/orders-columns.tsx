@@ -65,8 +65,8 @@ const paymentStatusVariants: Record<string, "default" | "secondary" | "destructi
 };
 
 function getStatusClassName(status: string): string | undefined {
-  if (status === "PROCESSING") return "bg-blue-500 text-white hover:bg-blue-600";
-  if (status === "DELIVERED") return "bg-green-500 text-white hover:bg-green-600";
+  if (status === "PROCESSING") return "bg-primary text-primary-foreground hover:bg-primary/90";
+  if (status === "DELIVERED") return "bg-success text-success-foreground hover:bg-success/90";
   return undefined;
 }
 

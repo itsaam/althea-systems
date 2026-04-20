@@ -140,7 +140,7 @@ export default function Verify2FAPage() {
               en deux temps
               <span
                 aria-hidden
-                className="ml-1 inline-block h-1.5 w-1.5 translate-y-[-0.25em] rounded-full bg-electric-indigo-500 align-middle"
+                className="ml-1 inline-block h-1.5 w-1.5 translate-y-[-0.25em] rounded-full bg-primary align-middle"
               />
             </h1>
 

@@ -113,7 +113,7 @@ export function AdminSidebar() {
                       {active && (
                         <span
                           aria-hidden
-                          className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 bg-electric-indigo-500"
+                          className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 bg-primary"
                         />
                       )}
                       <span className="truncate">{item.label}</span>

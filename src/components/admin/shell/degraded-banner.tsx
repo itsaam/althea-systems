@@ -19,8 +19,8 @@ export function DegradedBanner() {
   if (!degraded) return null;
 
   return (
-    <div className="border-l-2 border-amber-500 bg-amber-500/5 px-4 py-2.5">
-      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400">
+    <div className="border-l-2 border-warning bg-warning/10 px-4 py-2.5">
+      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-warning">
         <span className="mr-2 opacity-60">—</span>
         Mode dégradé · données de démonstration
       </p>

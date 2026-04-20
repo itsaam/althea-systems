@@ -65,7 +65,7 @@ function SectionHeader({ index, label }: { index: string; label: string }) {
     <header className="flex items-center gap-3">
       <span
         aria-hidden
-        className="h-1.5 w-1.5 rounded-full bg-electric-indigo-500"
+        className="h-1.5 w-1.5 rounded-full bg-primary"
       />
       <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/55">
         {index} — {label}
@@ -692,8 +692,8 @@ export default function ProductForm({ productId }: ProductFormProps) {
 
               <div>
                 {watchedValues.stock > 0 ? (
-                  <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-600">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-success">
+                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
                     En stock · {watchedValues.stock}
                   </span>
                 ) : (

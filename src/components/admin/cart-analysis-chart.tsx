@@ -20,9 +20,9 @@ interface CartAnalysisDataPoint {
 
 type Period = "7days" | "5weeks";
 
-// Palette sobre : foreground + nuances de gris + un accent indigo sur la première catégorie
+// Palette sobre : accent teal (primary) sur la première catégorie, puis navy et nuances
 const BAR_CLASSES = [
-  "text-electric-indigo-500",
+  "text-primary",
   "text-foreground",
   "text-foreground/55",
   "text-foreground/35",
@@ -125,7 +125,7 @@ export default function CartAnalysisChart() {
               className={cn(
                 "font-mono text-[10px] uppercase tracking-[0.18em] transition-colors",
                 period === p
-                  ? "text-electric-indigo-500"
+                  ? "text-primary"
                   : "text-foreground/40 hover:text-foreground/70"
               )}
             >
