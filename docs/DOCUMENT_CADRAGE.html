@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>Cadrage Althea Systems</title>
+<style>
+@page { size: A4; margin: 2.5cm; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Calibri, Arial, sans-serif; font-size: 11.5pt; line-height: 1.55; color: #1a1a1a; max-width: none; }
+section.level1 { break-before: page; page-break-before: always; }
+section.level1:first-of-type { break-before: avoid; page-break-before: avoid; }
+h1 { font-size: 24pt; color: #003d5c; margin: 0 0 0.7em; border-bottom: 3px solid #00a8b5; padding-bottom: 10px; line-height: 1.2; font-weight: 600; }
+h2 { font-size: 16pt; color: #003d5c; margin: 1.3em 0 0.5em; line-height: 1.3; font-weight: 600; }
+h3 { font-size: 12.5pt; color: #003d5c; margin: 1.1em 0 0.4em; font-weight: 600; }
+h4 { font-size: 11.5pt; color: #003d5c; margin: 0.9em 0 0.3em; font-weight: 600; }
+p { margin: 0.55em 0; text-align: justify; }
+table { border-collapse: collapse; margin: 0.8em 0; width: 100%; font-size: 10.5pt; page-break-inside: avoid; }
+th, td { border: 1px solid #d0d0d0; padding: 8px 10px; vertical-align: top; }
+th { background: #d4f4f7; color: #003d5c; font-weight: 600; text-align: left; }
+code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 10pt; background: #f4f4f4; padding: 1px 5px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 9.5pt; background: #f6f8fa; padding: 12px 14px; border-left: 3px solid #00a8b5; white-space: pre-wrap; overflow-wrap: break-word; page-break-inside: avoid; line-height: 1.4; margin: 0.8em 0; }
+pre code { background: transparent; padding: 0; font-size: inherit; }
+blockquote { border-left: 3px solid #00a8b5; padding: 6px 0 6px 18px; margin: 0.8em 0; color: #555; font-style: italic; background: #f7fcfc; }
+a { color: #00a8b5; text-decoration: none; }
+#TOC { page-break-after: always; padding-top: 0.5em; }
+#TOC::before { content: "Table des matières"; display: block; font-size: 22pt; color: #003d5c; margin-bottom: 0.8em; border-bottom: 2px solid #00a8b5; padding-bottom: 8px; font-weight: 600; }
+#TOC > ul { list-style: none; padding: 0; }
+#TOC ul ul { padding-left: 1.5em; list-style: none; margin: 0.1em 0; }
+#TOC a { color: #1a1a1a; text-decoration: none; display: block; padding: 3px 0; }
+#TOC > ul > li > a { font-weight: 600; color: #003d5c; font-size: 12pt; margin-top: 10px; padding: 6px 0 4px; border-bottom: 1px dotted #ccc; }
+#TOC > ul > li > ul > li > a { font-size: 10.5pt; color: #333; }
+#TOC > ul > li > ul > li > ul > li > a { font-size: 10pt; color: #666; padding-left: 8px; }
+ul, ol { margin: 0.4em 0 0.6em 1.4em; padding: 0; }
+li { margin: 0.15em 0; }
+hr { border: 0; border-top: 1px solid #ddd; margin: 1.5em 0; }
+header.title-block { margin-bottom: 2em; padding-bottom: 1em; border-bottom: 1px solid #eee; }
+header.title-block h1.title { font-size: 30pt; margin-bottom: 0.3em; border: none; padding: 0; color: #003d5c; }
+header.title-block p.subtitle { font-size: 16pt; color: #555; font-weight: 400; margin: 0.2em 0 0.8em; }
+header.title-block p.author, header.title-block p.date { color: #666; margin: 0.15em 0; }
+</style></head><body>
+<section id="résumé-exécutif" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Résumé
+exécutif</h1>
+<p>Ce document présente la réponse de l’équipe projet à l’appel d’offre
+émis par <strong>Althea Systems</strong>, entreprise spécialisée dans la
+distribution de matériel médical de pointe pour cabinets médicaux. Le
+client souhaite se doter d’une plateforme e-commerce B2B internationale,
+mobile-first, sécurisée et accompagnée d’un back-office de gestion
+autonome.</p>
+<p>Le projet est conduit par une équipe de <strong>quatre étudiants de
+Bachelor 3 CPI parcours Développement</strong> dans le cadre du projet
+fil rouge annuel, au titre RNCP34581 <em>Coordinateur de Projets
+Informatiques</em>.</p>
+<p>La solution repose sur des outils éprouvés, utilisés par des géants
+du web comme Netflix ou Amazon. Elle offre des pages rapides sur mobile
+comme sur ordinateur, un paiement encaissé par Stripe (le prestataire
+bancaire de référence, utilisé par des millions de boutiques), une
+double sécurité à la connexion pour les administrateurs, et un site
+disponible en français, anglais et arabe (avec écriture de droite à
+gauche).</p>
+<p>Le calendrier prévisionnel couvre neuf phases réparties de septembre
+2025 à juin 2026, avec les jalons certifiants imposés par le cadre
+pédagogique Sup de Vinci : kick-off, rendez-vous de cadrage, document de
+cadrage, soutenance et livrables finaux.</p>
+</section>
+<section id="introduction-et-contexte" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span>
+Introduction et contexte</h1>
+<section id="présentation-du-client" class="level2" data-number="2.1">
+<h2 data-number="2.1"><span class="header-section-number">2.1</span>
+Présentation du client</h2>
+<p><strong>Althea Systems</strong> commercialise du matériel médical
+haut de gamme destiné aux cabinets médicaux. Historiquement, la
+distribution s’effectue par un réseau de commerciaux et de distributeurs
+spécialisés. L’entreprise souhaite aujourd’hui <strong>se transformer
+numériquement</strong> pour :</p>
+<ul>
+<li>Faciliter l’accès à son catalogue pour les praticiens existants, qui
+pourront commander 24 heures sur 24.</li>
+<li>Capter de nouveaux marchés internationaux, notamment dans les zones
+francophones, anglophones et arabophones.</li>
+<li>Moderniser l’image de marque et aligner l’expérience client sur les
+standards actuels du e-commerce B2B.</li>
+<li>Soulager les équipes commerciales des tâches transactionnelles à
+faible valeur ajoutée, pour les recentrer sur le conseil.</li>
+</ul>
+</section>
+<section id="cadre-pédagogique" class="level2" data-number="2.2">
+<h2 data-number="2.2"><span class="header-section-number">2.2</span>
+Cadre pédagogique</h2>
+<p>Ce projet constitue le <strong>projet d’étude fil rouge</strong> de
+la promotion Bachelor 3 CPI parcours Développement 2025-2026 de Sup de
+Vinci. Il permet de valider les trois blocs de compétences du titre
+RNCP34581 :</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 35%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Bloc</th>
+<th>Intitulé</th>
+<th>Validé par</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BC1</td>
+<td>Piloter un projet informatique</td>
+<td>Rendez-vous de cadrage (20 %) + Document de cadrage (80 %)</td>
+</tr>
+<tr>
+<td>BC2</td>
+<td>Coordonner une équipe projet</td>
+<td>Soutenance (80 %) + Analyse de la dynamique projet (20 %)</td>
+</tr>
+<tr>
+<td>BC3</td>
+<td>Superviser la mise en œuvre d’un projet</td>
+<td>Livrables finaux techniques (100 %)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="objet-du-présent-document" class="level2"
+data-number="2.3">
+<h2 data-number="2.3"><span class="header-section-number">2.3</span>
+Objet du présent document</h2>
+<p>Le Document de Cadrage a pour vocation de :</p>
+<ul>
+<li><strong>Reformuler</strong> de manière précise le besoin exprimé par
+le client.</li>
+<li><strong>Structurer</strong> la réponse fonctionnelle et technique à
+l’appel d’offre.</li>
+<li><strong>Justifier</strong> les choix d’outils retenus au regard de
+critères objectifs : performance, sécurité, maintenabilité, évolutivité
+et coût.</li>
+<li><strong>Planifier</strong> les étapes de réalisation avec des jalons
+et des livrables clairs.</li>
+<li><strong>Identifier</strong> les rôles, responsabilités et risques du
+projet.</li>
+</ul>
+<p>Il est rédigé dans une démarche de <strong>recherche et de
+réflexion</strong>, en évitant l’exhaustivité gratuite : chaque choix
+est motivé par le cahier des charges du client.</p>
+</section>
+</section>
+<section id="reformulation-du-besoin-client" class="level1"
+data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span>
+Reformulation du besoin client</h1>
+<section id="expression-du-besoin" class="level2" data-number="3.1">
+<h2 data-number="3.1"><span class="header-section-number">3.1</span>
+Expression du besoin</h2>
+<blockquote>
+<p>« <em>Nous souhaitons développer une plateforme e-commerce innovante
+pour proposer nos produits à une clientèle internationale. Cette
+plateforme permettra à nos clients d’acheter et de commander facilement
+nos produits directement depuis leur interface. Nous voulons offrir une
+expérience d’achat fluide et moderne, en adéquation avec les attentes
+actuelles du marché.</em> »</p>
+<p><em>— Cahier des charges Althea Systems.</em></p>
+</blockquote>
+<p>Reformulé en langage projet, le besoin repose sur <strong>quatre
+piliers</strong> hiérarchisés explicitement par le client :</p>
+<ul>
+<li><strong>Sécurité</strong> — plateforme et paiement sécurisés, avec
+une attention particulière aux données bancaires.</li>
+<li><strong>Expérience utilisateur</strong> — fluide, responsive,
+mobile-first, cohérente entre desktop et mobile.</li>
+<li><strong>Back-office complet</strong> — gestion autonome des
+produits, catégories, commandes, factures et contenus éditoriaux par
+l’équipe interne d’Althea.</li>
+<li><strong>Maintenabilité et évolutivité</strong> — capacité à intégrer
+de nouvelles fonctionnalités à long terme sans remettre en cause les
+fondations.</li>
+</ul>
+</section>
+<section id="parties-prenantes" class="level2" data-number="3.2">
+<h2 data-number="3.2"><span class="header-section-number">3.2</span>
+Parties prenantes</h2>
+<table>
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 13%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Partie prenante</th>
+<th>Rôle</th>
+<th>Intérêt principal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Althea Systems (direction)</td>
+<td>Client / commanditaire</td>
+<td>Retour sur investissement, image de marque, nouveaux marchés</td>
+</tr>
+<tr>
+<td>Équipes commerciales internes</td>
+<td>Utilisateurs du back-office</td>
+<td>Gestion produits, suivi des commandes, relation client</td>
+</tr>
+<tr>
+<td>Praticiens et cabinets médicaux</td>
+<td>Utilisateurs finaux B2B</td>
+<td>Rapidité, fiabilité, disponibilité du service</td>
+</tr>
+<tr>
+<td>Équipe projet (4 étudiants)</td>
+<td>Maîtrise d’œuvre</td>
+<td>Livraison, apprentissage, validation RNCP</td>
+</tr>
+<tr>
+<td>Encadrement Sup de Vinci</td>
+<td>Sponsor académique</td>
+<td>Évaluation et conformité au référentiel</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cibles-utilisateurs" class="level2" data-number="3.3">
+<h2 data-number="3.3"><span class="header-section-number">3.3</span>
+Cibles utilisateurs</h2>
+<p>Deux profils principaux, avec des exigences différenciées :</p>
+<ul>
+<li><strong>Le client B2B</strong> (praticien ou acheteur pour un
+cabinet) : recherche rapide d’un produit, fiche détaillée, processus de
+commande court, accès simple à son historique et à ses factures.</li>
+<li><strong>L’administrateur Althea</strong> (gestionnaire catalogue ou
+service client) : pouvoir créer, modifier, supprimer des produits,
+suivre l’activité commerciale via un tableau de bord, traiter les
+messages des clients.</li>
+</ul>
+</section>
+<section id="objectifs-stratégiques-et-indicateurs-de-succès"
+class="level2" data-number="3.4">
+<h2 data-number="3.4"><span class="header-section-number">3.4</span>
+Objectifs stratégiques et indicateurs de succès</h2>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr>
+<th>Objectif</th>
+<th>Indicateur visé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Disponibilité du service</td>
+<td>Taux de disponibilité supérieur à 99,9 % (environ 8 h d’interruption
+maximum par an)</td>
+</tr>
+<tr>
+<td>Réactivité du site</td>
+<td>Pages rapides, résultats de recherche quasi instantanés</td>
+</tr>
+<tr>
+<td>Confiance</td>
+<td>Zéro incident de sécurité majeur, conformité RGPD</td>
+</tr>
+<tr>
+<td>Ouverture internationale</td>
+<td>Trois langues opérationnelles dès la mise en production</td>
+</tr>
+<tr>
+<td>Inclusion</td>
+<td>Site accessible aux personnes en situation de handicap (norme WCAG
+2.1)</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="analyse-fonctionnelle" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Analyse
+fonctionnelle</h1>
+<section id="périmètre-global" class="level2" data-number="4.1">
+<h2 data-number="4.1"><span class="header-section-number">4.1</span>
+Périmètre global</h2>
+<p>Le cahier des charges décrit un périmètre large, réparti en trois
+grandes familles :</p>
+<ul>
+<li><strong>Frontend public</strong> : page d’accueil, catalogue,
+recherche, fiche produit, panier, checkout, confirmation, contact et
+chatbot.</li>
+<li><strong>Espace client</strong> : inscription, connexion, mot de
+passe oublié, profil, carnet d’adresses, moyens de paiement, historique
+des commandes et des factures.</li>
+<li><strong>Back-office administrateur</strong> : gestion des produits,
+des catégories, des commandes, des utilisateurs, des factures, des
+avoirs, des messages, du contenu éditorial de la page d’accueil, et
+tableaux de bord analytiques.</li>
+</ul>
+</section>
+<section id="priorisation-moscow" class="level2" data-number="4.2">
+<h2 data-number="4.2"><span class="header-section-number">4.2</span>
+Priorisation MoSCoW</h2>
+<p>La méthode MoSCoW (<em>Must, Should, Could, Won’t</em>) permet de
+distinguer l’indispensable du souhaitable. Elle sert de référence à
+l’équipe pour arbitrer en cas de dérive de planning.</p>
+<section id="must-have-indispensable-à-la-mise-en-production"
+class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1"><span class="header-section-number">4.2.1</span>
+Must have — indispensable à la mise en production</h3>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fonction</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Catalogue navigable (catégories, produit, recherche)</td>
+<td>Cœur métier e-commerce</td>
+</tr>
+<tr>
+<td>Panier et checkout avec paiement en ligne</td>
+<td>Sans paiement, pas de revenus</td>
+</tr>
+<tr>
+<td>Authentification sécurisée</td>
+<td>Prérequis à toute commande ou suivi</td>
+</tr>
+<tr>
+<td>Back-office de gestion des produits, catégories et commandes</td>
+<td>Autonomie éditoriale de l’équipe Althea</td>
+</tr>
+<tr>
+<td>Facture téléchargeable</td>
+<td>Obligation comptable pour le client B2B</td>
+</tr>
+<tr>
+<td>Expérience mobile-first</td>
+<td>Contrainte explicite du cahier des charges</td>
+</tr>
+<tr>
+<td>Double authentification pour les administrateurs</td>
+<td>Protection du back-office</td>
+</tr>
+<tr>
+<td>Chatbot avec persistance des conversations en base</td>
+<td>Support utilisateur + traçabilité exigée par le CDC §XV</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="should-have-fortement-attendu" class="level3"
+data-number="4.2.2">
+<h3 data-number="4.2.2"><span class="header-section-number">4.2.2</span>
+Should have — fortement attendu</h3>
+<ul>
+<li>Tableau de bord analytique (ventes par jour, par catégorie, panier
+moyen).</li>
+<li>Gestion des avoirs avec génération PDF.</li>
+<li>Recherche rapide à facettes (titre, description, caractéristiques
+techniques, prix, catégorie, disponibilité).</li>
+<li>Multilingue (français, anglais, arabe).</li>
+<li>Conformité à l’accessibilité WCAG 2.1 niveau AA.</li>
+<li>Export CSV ou Excel depuis l’administration.</li>
+<li>Carrousel d’accueil éditable avec éditeur de texte riche (gras,
+italique, liens, couleurs).</li>
+</ul>
+</section>
+<section id="could-have-nice-to-have" class="level3"
+data-number="4.2.3">
+<h3 data-number="4.2.3"><span class="header-section-number">4.2.3</span>
+Could have — nice to have</h3>
+<ul>
+<li>Notifications par email enrichies.</li>
+<li>Liste de souhaits.</li>
+<li>Codes promotionnels.</li>
+</ul>
+</section>
+<section id="wont-have-hors-périmètre" class="level3"
+data-number="4.2.4">
+<h3 data-number="4.2.4"><span class="header-section-number">4.2.4</span>
+Won’t have — hors périmètre</h3>
+<ul>
+<li>Application mobile native (le site mobile-first couvre le
+besoin).</li>
+<li>Marketplace multi-vendeurs.</li>
+<li>Programme de fidélité à points.</li>
+<li>Paiement en plusieurs fois.</li>
+</ul>
+</section>
+</section>
+</section>
+<section id="contraintes-du-projet" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span>
+Contraintes du projet</h1>
+<section id="contraintes-réglementaires" class="level2"
+data-number="5.1">
+<h2 data-number="5.1"><span class="header-section-number">5.1</span>
+Contraintes réglementaires</h2>
+<p>Le projet traite des <strong>données personnelles</strong> (identité,
+adresses, email, historique d’achat) et des <strong>données de
+paiement</strong>. Deux cadres juridiques et normatifs s’appliquent
+:</p>
+<ul>
+<li><strong>Le RGPD</strong> (Règlement Général sur la Protection des
+Données). Il impose notamment une information préalable des
+utilisateurs, des droits d’accès, de rectification, d’effacement et de
+portabilité, ainsi qu’un niveau de sécurité approprié et une politique
+de conservation des données.</li>
+<li><strong>La norme PCI-DSS</strong> (sécurité des données bancaires).
+Les données de carte bancaire n’étant jamais stockées ni manipulées
+directement par la plateforme — elles sont déléguées à un prestataire
+certifié —, le périmètre de conformité est grandement réduit. C’est un
+choix volontaire et structurant.</li>
+</ul>
+</section>
+<section id="contraintes-daccessibilité" class="level2"
+data-number="5.2">
+<h2 data-number="5.2"><span class="header-section-number">5.2</span>
+Contraintes d’accessibilité</h2>
+<p>Le cahier des charges demande explicitement le respect de la norme
+<strong>WCAG 2.1 niveau AA</strong>. Cela signifie que la plateforme
+doit être utilisable par toute personne, y compris en situation de
+handicap visuel, moteur ou cognitif. Concrètement :</p>
+<ul>
+<li>Navigation possible entièrement au clavier.</li>
+<li>Contrastes de couleurs suffisants.</li>
+<li>Alternatives textuelles aux images.</li>
+<li>Compatibilité avec les lecteurs d’écran.</li>
+<li>Gestion du focus visible.</li>
+</ul>
+<p>Un audit a déjà été engagé sur les pages et composants principaux,
+avec des corrections appliquées.</p>
+</section>
+<section id="contraintes-dexpérience-utilisateur" class="level2"
+data-number="5.3">
+<h2 data-number="5.3"><span class="header-section-number">5.3</span>
+Contraintes d’expérience utilisateur</h2>
+<ul>
+<li><strong>Mobile-first</strong> : le site doit être conçu d’abord pour
+les écrans mobiles, puis adapté au desktop.</li>
+<li><strong>Multilingue</strong> : trois langues cibles, le français,
+l’anglais et l’arabe. L’arabe implique une gestion particulière de
+l’écriture de droite à gauche.</li>
+<li><strong>Cohérence visuelle</strong> : respect de la charte graphique
+fournie par le client (palette teal et navy).</li>
+</ul>
+</section>
+<section id="contraintes-de-performance" class="level2"
+data-number="5.4">
+<h2 data-number="5.4"><span class="header-section-number">5.4</span>
+Contraintes de performance</h2>
+<p>Le cahier des charges mentionne explicitement une exigence de
+<strong>résultats de recherche rapides</strong>. Plus largement, la
+plateforme doit offrir :</p>
+<ul>
+<li>Des pages rapides à s’afficher, y compris sur un mobile en 4G.</li>
+<li>Une recherche fluide, sans latence perceptible.</li>
+<li>Une scalabilité permettant d’absorber une croissance du trafic sans
+refonte.</li>
+</ul>
+</section>
+<section id="contraintes-de-sécurité" class="level2" data-number="5.5">
+<h2 data-number="5.5"><span class="header-section-number">5.5</span>
+Contraintes de sécurité</h2>
+<p>Au-delà du RGPD et du PCI-DSS, la plateforme doit se prémunir contre
+les menaces web classiques (le <em>top 10</em> de l’OWASP) : injection,
+cross-site scripting, usurpation de session, mauvaise configuration,
+dépendances vulnérables. Les mesures adoptées sont décrites dans la
+section dédiée à l’architecture.</p>
+</section>
+</section>
+<section id="comment-la-plateforme-est-construite" class="level1"
+data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Comment
+la plateforme est construite</h1>
+<section id="vision-générale" class="level2" data-number="6.1">
+<h2 data-number="6.1"><span class="header-section-number">6.1</span>
+Vision générale</h2>
+<p>Plutôt que de construire une usine à gaz avec plein de petits
+programmes qui se parlent entre eux (difficile à gérer à 4 étudiants),
+on construit <strong>une seule application bien organisée</strong>, avec
+des compartiments clairs : un pour les comptes, un pour le catalogue, un
+pour les commandes, un pour l’administration.</p>
+<p>Les avantages :</p>
+<ul>
+<li><strong>Un seul projet à mettre en ligne</strong> (au lieu d’une
+dizaine) : on gagne du temps et on limite les risques de panne.</li>
+<li><strong>Coût d’hébergement réduit</strong> : environ 30 € par mois
+en production.</li>
+<li><strong>Développement plus rapide</strong> pour une équipe de
+4.</li>
+<li><strong>Prêt à grandir</strong> : si la plateforme devait gérer 100
+fois plus de commandes, on pourrait détacher certains compartiments (par
+exemple le paiement) sans tout refaire.</li>
+</ul>
+</section>
+<section id="les-principales-briques" class="level2" data-number="6.2">
+<h2 data-number="6.2"><span class="header-section-number">6.2</span> Les
+principales briques</h2>
+<p>La plateforme s’appuie sur les éléments suivants :</p>
+<ul>
+<li><strong>Le site lui-même</strong> : ce que voit le visiteur,
+l’espace client et le back-office administrateur réunis dans un projet
+unique.</li>
+<li><strong>La base de données</strong> : stocke tous les comptes,
+produits, catégories, commandes, factures, avoirs, adresses et
+messages.</li>
+<li><strong>Un système d’accélération</strong> (Redis) : garde en
+mémoire les informations les plus consultées pour que les pages
+s’affichent plus vite, et bloque automatiquement les attaques (trop de
+tentatives en peu de temps).</li>
+<li><strong>Un prestataire de paiement</strong> (Stripe) : s’occupe
+d’encaisser l’argent et de gérer la sécurité bancaire.</li>
+<li><strong>Un prestataire d’emails</strong> (Resend) : envoie les
+confirmations de commande, les validations d’inscription, les mots de
+passe oubliés.</li>
+<li><strong>Un hébergement cloud pour les photos</strong> (Cloudflare
+R2) : stocke toutes les images produits et les diffuse rapidement
+partout dans le monde.</li>
+</ul>
+</section>
+<section id="comment-un-utilisateur-se-connecte" class="level2"
+data-number="6.3">
+<h2 data-number="6.3"><span class="header-section-number">6.3</span>
+Comment un utilisateur se connecte</h2>
+<p>L’utilisateur crée un compte avec son email et un mot de passe, ou se
+connecte avec son compte Google / GitHub (plus rapide, un clic). Pour
+les administrateurs, on ajoute une deuxième sécurité : un code à 6
+chiffres qui change toutes les 30 secondes, généré par une appli mobile
+(Google Authenticator par exemple). Même si un pirate volait le mot de
+passe, il ne pourrait pas entrer sans le téléphone du vrai
+administrateur.</p>
+</section>
+<section id="parcours-de-commande" class="level2" data-number="6.4">
+<h2 data-number="6.4"><span class="header-section-number">6.4</span>
+Parcours de commande</h2>
+<p>Le parcours est organisé en quatre étapes successives :</p>
+<ol type="1">
+<li><strong>Authentification</strong> (ou poursuite en tant
+qu’invité).</li>
+<li><strong>Saisie de l’adresse</strong> de facturation et, si
+nécessaire, de livraison.</li>
+<li><strong>Paiement</strong> : l’utilisateur saisit sa carte dans un
+formulaire dédié du prestataire de paiement, sans que la plateforme ne
+voie jamais le numéro de carte.</li>
+<li><strong>Confirmation</strong> : la commande est enregistrée, la
+facture générée automatiquement au format PDF, un email de confirmation
+est envoyé au client.</li>
+</ol>
+<p>Un mécanisme de notification automatique en provenance du prestataire
+de paiement permet à la plateforme d’être informée en temps réel du
+succès ou de l’échec du paiement, garantissant la cohérence entre ce qui
+a été encaissé et ce qui est enregistré.</p>
+</section>
+</section>
+<section id="choix-des-outils" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Choix
+des outils</h1>
+<section id="comment-on-a-choisi" class="level2" data-number="7.1">
+<h2 data-number="7.1"><span class="header-section-number">7.1</span>
+Comment on a choisi</h2>
+<p>Pour chaque brique de la plateforme, on s’est posé la même question :
+<strong>quel outil permet d’aller plus vite, coûte moins cher, est plus
+sûr et plus simple à maintenir ?</strong></p>
+<p>Chaque choix est comparé à une ou deux alternatives, avec une
+justification concrète. Pas de préférence personnelle : on prend ce qui
+répond le mieux au cahier des charges.</p>
+</section>
+<section id="le-site-web-next.js" class="level2" data-number="7.2">
+<h2 data-number="7.2"><span class="header-section-number">7.2</span> Le
+site web — Next.js</h2>
+<p><strong>Ce qu’on a pris</strong> : Next.js.</p>
+<p><strong>Pourquoi</strong> : c’est l’outil qui permet de construire
+<strong>tout le site en un seul projet</strong> (l’affichage des pages +
+les traitements derrière), au lieu d’avoir deux projets séparés à gérer.
+Résultat : moins de code, moins d’erreurs possibles, développement plus
+rapide. Les pages s’affichent aussi plus vite car elles sont préparées
+côté serveur avant d’être envoyées au navigateur.</p>
+<p><strong>C’est utilisé par</strong> : Netflix, TikTok, Nike, Hulu,
+Notion, OpenAI — des géants du web qui ont besoin de sites rapides et
+fiables.</p>
+<p><strong>Alternative rejetée</strong> : faire deux projets séparés (un
+pour l’affichage, un pour les traitements). Plus long à développer pour
+une équipe de 4 étudiants, plus de bugs au final.</p>
+</section>
+<section id="la-base-de-données-postgresql" class="level2"
+data-number="7.3">
+<h2 data-number="7.3"><span class="header-section-number">7.3</span> La
+base de données — PostgreSQL</h2>
+<p><strong>Ce qu’on a pris</strong> : PostgreSQL.</p>
+<p><strong>Pourquoi</strong> : les données d’un site de vente sont
+<strong>très reliées entre elles</strong> (une commande est liée à un
+client, qui a une adresse, qui a une carte, qui a des produits dans son
+panier). PostgreSQL est conçu pour gérer ce genre de liens sans erreur.
+Il est gratuit, utilisé partout depuis 25 ans, extrêmement fiable.</p>
+<p><strong>Alternative rejetée</strong> : MongoDB. Conçue pour des
+données sans liens entre elles (genre des posts indépendants). Sur un
+e-commerce, ça créerait des incohérences (commandes sans client,
+factures sans commande…). Inadapté.</p>
+</section>
+<section id="le-cache-redis" class="level2" data-number="7.4">
+<h2 data-number="7.4"><span class="header-section-number">7.4</span> Le
+cache — Redis</h2>
+<p><strong>Ce qu’on a pris</strong> : Redis.</p>
+<p><strong>Pourquoi</strong> : certaines informations sont demandées
+<strong>des milliers de fois par jour</strong> (le catalogue, les fiches
+produits). Au lieu d’aller chercher la même info encore et encore dans
+la base de données, Redis les garde en mémoire rapide. Résultat : pages
+qui s’affichent <strong>instantanément</strong> au lieu de mettre 1-2
+secondes. Redis sert aussi à <strong>empêcher les attaques</strong>
+(quelqu’un qui essaie de se connecter 1000 fois avec des mots de passe
+différents) en limitant automatiquement le nombre de requêtes.</p>
+</section>
+<section id="la-connexion-et-les-comptes-nextauth" class="level2"
+data-number="7.5">
+<h2 data-number="7.5"><span class="header-section-number">7.5</span> La
+connexion et les comptes — NextAuth</h2>
+<p><strong>Ce qu’on a pris</strong> : NextAuth.</p>
+<p><strong>Pourquoi</strong> : gérer les inscriptions, connexions, mots
+de passe oubliés, c’est long et risqué à développer à la main (risques
+de failles de sécurité). NextAuth est <strong>gratuit</strong> et permet
+de tout faire en quelques lignes : connexion par email, connexion avec
+son compte Google ou GitHub (plus rapide pour l’utilisateur).</p>
+<p><strong>Alternative rejetée</strong> : des services payants comme
+Auth0 ou Clerk. Ils font la même chose mais à partir de 23 $/mois, ce
+qui est disproportionné pour un projet étudiant.</p>
+<p><strong>Double sécurité pour les admins</strong> : en plus du mot de
+passe, on demande un code à 6 chiffres généré par une appli mobile type
+Google Authenticator. Si un hacker vole le mot de passe, il ne peut pas
+rentrer sans ce code.</p>
+</section>
+<section id="le-paiement-stripe" class="level2" data-number="7.6">
+<h2 data-number="7.6"><span class="header-section-number">7.6</span> Le
+paiement — Stripe</h2>
+<p><strong>Ce qu’on a pris</strong> : Stripe.</p>
+<p><strong>Pourquoi</strong> : traiter des cartes bancaires est
+<strong>hyper régulé</strong> (normes PCI-DSS). Stripe est le plus haut
+niveau de certification bancaire au monde. L’utilisateur tape sa carte
+dans un formulaire Stripe qu’on intègre à notre site, mais <strong>nos
+serveurs ne voient jamais le numéro de carte</strong>. Résultat : zéro
+responsabilité juridique pour nous en cas de fuite.</p>
+<p><strong>C’est utilisé par</strong> : Amazon, Google, Shopify, Apple
+Pay, Airbnb, Uber, Zoom…</p>
+<p><strong>Alternative rejetée</strong> : PayPal. Très connu aussi mais
+plus cher en commission, moins bien intégré aux sites modernes.</p>
+</section>
+<section id="lapparence-du-site-tailwind-shadcn-et-tiptap"
+class="level2" data-number="7.7">
+<h2 data-number="7.7"><span class="header-section-number">7.7</span>
+L’apparence du site — Tailwind, shadcn et Tiptap</h2>
+<p><strong>Ce qu’on a pris</strong> : Tailwind CSS, shadcn/ui,
+Tiptap.</p>
+<p><strong>Pourquoi</strong> : - <strong>Tailwind</strong> permet de
+construire le design <strong>deux fois plus vite</strong> qu’en écrivant
+du CSS classique à la main. On assemble des briques déjà prêtes. -
+<strong>shadcn/ui</strong> fournit des boutons, menus, tableaux
+<strong>déjà accessibles</strong> aux personnes handicapées (lecteurs
+d’écran, navigation clavier). Ça nous fait gagner des semaines de
+travail sur l’accessibilité. - <strong>Tiptap</strong> permet aux
+administrateurs d’écrire du texte avec <strong>gras, italique, liens,
+couleurs</strong> (comme dans Word) dans le back-office, sans qu’ils
+aient à connaître le code. Exigé par le cahier des charges pour le
+carrousel de la page d’accueil.</p>
+</section>
+<section id="le-stockage-des-photos-cloudflare-r2" class="level2"
+data-number="7.8">
+<h2 data-number="7.8"><span class="header-section-number">7.8</span> Le
+stockage des photos — Cloudflare R2</h2>
+<p><strong>Ce qu’on a pris</strong> : Cloudflare R2.</p>
+<p><strong>Pourquoi</strong> : héberger des milliers de photos produits
+coûte cher chez les géants classiques (Amazon S3 facture à chaque fois
+qu’une image est téléchargée). Cloudflare R2 fait la même chose
+<strong>sans frais de téléchargement</strong>. Économie estimée : des
+dizaines d’euros par mois quand le catalogue grossit. Les photos sont
+aussi distribuées sur des serveurs répartis dans le monde entier : un
+client au Maroc reçoit l’image depuis un serveur proche, pas depuis la
+France. Pages plus rapides.</p>
+</section>
+<section id="lenvoi-des-emails-resend" class="level2" data-number="7.9">
+<h2 data-number="7.9"><span class="header-section-number">7.9</span>
+L’envoi des emails — Resend</h2>
+<p><strong>Ce qu’on a pris</strong> : Resend.</p>
+<p><strong>Pourquoi</strong> : envoyer des emails (confirmation de
+commande, mot de passe oublié) depuis son propre serveur c’est presque
+toujours bloqué par Gmail/Outlook qui les classent en spam. Resend est
+un <strong>service spécialisé</strong> qui s’occupe de faire passer les
+emails correctement dans les boîtes de réception. Gratuit jusqu’à 3 000
+emails par mois, ce qui couvre largement le démarrage.</p>
+</section>
+<section id="lhébergement-du-site-serveur-privé-dokploy" class="level2"
+data-number="7.10">
+<h2 data-number="7.10"><span class="header-section-number">7.10</span>
+L’hébergement du site — serveur privé + Dokploy</h2>
+<p><strong>Ce qu’on a pris</strong> : un serveur privé loué (environ 10
+€/mois) avec un outil appelé Dokploy pour le piloter.</p>
+<p><strong>Pourquoi</strong> : on a le contrôle total (sécurité, données
+RGPD, hébergement européen), le coût est fixe et prévisible, et Dokploy
+automatise les mises à jour et les sauvegardes. Le certificat de
+sécurité HTTPS est renouvelé tout seul.</p>
+<p><strong>Alternative rejetée</strong> : hébergement chez Vercel (les
+créateurs de Next.js). Très pratique mais devient vite cher dès que le
+trafic augmente (70 $/mois et +), et les données partent aux
+États-Unis.</p>
+</section>
+<section id="le-multilingue-next-intl" class="level2"
+data-number="7.11">
+<h2 data-number="7.11"><span class="header-section-number">7.11</span>
+Le multilingue — next-intl</h2>
+<p><strong>Ce qu’on a pris</strong> : next-intl.</p>
+<p><strong>Pourquoi</strong> : c’est l’outil qui permet de passer le
+site en <strong>français, anglais ou arabe</strong> en un clic. Gère
+aussi automatiquement l’écriture <strong>de droite à gauche</strong>
+pour l’arabe (caractères inversés, menu à droite, etc.). Indispensable
+pour la clientèle internationale ciblée par Althea Systems.</p>
+</section>
+<section id="récapitulatif" class="level2" data-number="7.12">
+<h2 data-number="7.12"><span class="header-section-number">7.12</span>
+Récapitulatif</h2>
+<table>
+<colgroup>
+<col style="width: 53%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>À quoi ça sert</th>
+<th>Outil retenu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Construire le site (affichage + traitements)</td>
+<td>Next.js</td>
+</tr>
+<tr>
+<td>Stocker les données (comptes, commandes, produits)</td>
+<td>PostgreSQL</td>
+</tr>
+<tr>
+<td>Accélérer les pages et protéger des attaques</td>
+<td>Redis</td>
+</tr>
+<tr>
+<td>Gérer les inscriptions et connexions</td>
+<td>NextAuth</td>
+</tr>
+<tr>
+<td>Double sécurité pour les administrateurs</td>
+<td>Application mobile (Google Authenticator)</td>
+</tr>
+<tr>
+<td>Encaisser les paiements</td>
+<td>Stripe</td>
+</tr>
+<tr>
+<td>Mettre en forme le site</td>
+<td>Tailwind + shadcn + Tiptap</td>
+</tr>
+<tr>
+<td>Héberger les photos produits</td>
+<td>Cloudflare R2</td>
+</tr>
+<tr>
+<td>Envoyer les emails (confirmation, mot de passe oublié)</td>
+<td>Resend</td>
+</tr>
+<tr>
+<td>Proposer le site en 3 langues (FR/EN/AR)</td>
+<td>next-intl</td>
+</tr>
+<tr>
+<td>Héberger le site en production</td>
+<td>Serveur privé européen + Dokploy</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="modèle-de-données" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Modèle
+de données</h1>
+<section id="vue-générale" class="level2" data-number="8.1">
+<h2 data-number="8.1"><span class="header-section-number">8.1</span> Vue
+générale</h2>
+<p>La base de données est structurée autour de <strong>six grands
+domaines</strong>, eux-mêmes composés d’entités reliées entre elles.
+Elle comporte <strong>dix-sept modèles</strong> et sept
+énumérations.</p>
+<ul>
+<li><strong>Identité et authentification</strong> : les comptes
+utilisateurs, les sessions, les tokens de validation d’email, les codes
+de secours pour la double authentification.</li>
+<li><strong>Catalogue</strong> : les catégories (organisables en
+arborescence) et les produits, ainsi que les éléments éditoriaux de la
+page d’accueil (slides du carrousel).</li>
+<li><strong>Commande et facturation</strong> : les commandes, les lignes
+de commande, l’historique des statuts, les factures et les avoirs.</li>
+<li><strong>Carnet d’adresses</strong> : les adresses de facturation et
+de livraison enregistrées par les utilisateurs.</li>
+<li><strong>Relation client</strong> : les messages issus du formulaire
+de contact, ainsi que les conversations du chatbot (deux modèles dédiés
+: une conversation + ses messages) pour assurer la traçabilité et le
+suivi par les administrateurs, conformément au CDC §XV.</li>
+</ul>
+</section>
+<section id="principales-entités" class="level2" data-number="8.2">
+<h2 data-number="8.2"><span class="header-section-number">8.2</span>
+Principales entités</h2>
+<ul>
+<li><strong>Utilisateur</strong> : identifié par son email, avec un rôle
+(client ou administrateur), un statut (actif, suspendu, en attente de
+validation) et des paramètres de sécurité (mot de passe chiffré, double
+authentification).</li>
+<li><strong>Produit</strong> : nom, description, caractéristiques
+techniques, prix, taux de TVA, niveau de stock, statut (disponible,
+rupture, retiré), images associées, catégorie de rattachement,
+éventuelle mise en avant.</li>
+<li><strong>Commande</strong> : client, adresse, liste d’articles
+achetés, montant total, statut (en attente, confirmée, expédiée, livrée,
+annulée), statut de paiement (en attente, payée, échouée, remboursée).
+Une commande conserve un <strong>instantané des prix</strong> au moment
+de l’achat, pour être indépendante des évolutions futures du
+catalogue.</li>
+<li><strong>Facture</strong> et <strong>avoir</strong> : documents PDF
+générés automatiquement, rattachés à une commande, numérotés selon une
+convention interne.</li>
+</ul>
+<p>Le schéma relationnel complet (diagramme entité-relation) est fourni
+en annexe.</p>
+</section>
+</section>
+<section id="méthodologie-projet" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span>
+Méthodologie projet</h1>
+<section id="cadre-retenu-une-approche-agile-adaptée" class="level2"
+data-number="9.1">
+<h2 data-number="9.1"><span class="header-section-number">9.1</span>
+Cadre retenu : une approche agile adaptée</h2>
+<p>L’équipe retient une <strong>démarche agile de type Scrum</strong>,
+simplifiée pour correspondre à la réalité d’une équipe de quatre
+personnes étudiantes :</p>
+<ul>
+<li><strong>Sprints de deux semaines</strong>, avec un périmètre défini
+en début de sprint.</li>
+<li><strong>Revue hebdomadaire</strong> informelle et
+<strong>rétrospective</strong> en fin de sprint.</li>
+<li><strong>Daily asynchrone</strong> sur Discord pour partager
+l’avancement sans bloquer.</li>
+<li><strong>Revue de code obligatoire</strong> par un pair avant tout
+apport au code principal.</li>
+</ul>
+</section>
+<section id="gestion-du-code-et-des-tâches" class="level2"
+data-number="9.2">
+<h2 data-number="9.2"><span class="header-section-number">9.2</span>
+Gestion du code et des tâches</h2>
+<ul>
+<li><strong>Git et GitHub</strong> pour le versionnement du code.</li>
+<li><strong>GitHub Projects</strong> pour le suivi des tâches (tableau
+Kanban : à faire, en cours, en revue, terminé).</li>
+<li><strong>Pull requests</strong> systématiques, avec intégration
+continue qui vérifie la qualité du code (vérification de syntaxe,
+typage, validité de la base de données, construction du projet) avant
+toute fusion.</li>
+</ul>
+</section>
+<section id="outils-de-communication" class="level2" data-number="9.3">
+<h2 data-number="9.3"><span class="header-section-number">9.3</span>
+Outils de communication</h2>
+<ul>
+<li><strong>Discord</strong> pour l’échange quotidien, avec des canaux
+dédiés (général, développement, design, alertes).</li>
+<li><strong>Figma</strong> pour les maquettes et la charte
+graphique.</li>
+<li><strong>Markdown dans le dépôt Git</strong> pour la documentation
+technique.</li>
+</ul>
+</section>
+<section id="définitions-de-prêt-et-terminé" class="level2"
+data-number="9.4">
+<h2 data-number="9.4"><span class="header-section-number">9.4</span>
+Définitions de <em>prêt</em> et <em>terminé</em></h2>
+<p>Une fonctionnalité est considérée comme <strong>prête à être
+développée</strong> lorsque ses critères d’acceptation sont rédigés, que
+la maquette est disponible s’il s’agit d’interface, et que les
+dépendances éventuelles sont levées.</p>
+<p>Une fonctionnalité est considérée comme <strong>terminée</strong>
+lorsqu’elle est fusionnée dans le code principal, testée, relue par un
+pair, documentée si elle modifie l’API, et validée sur l’environnement
+de pré-production.</p>
+</section>
+</section>
+<section id="répartition-des-rôles" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span>
+Répartition des rôles</h1>
+<section id="composition-de-léquipe" class="level2" data-number="10.1">
+<h2 data-number="10.1"><span class="header-section-number">10.1</span>
+Composition de l’équipe</h2>
+<p>L’équipe est composée de quatre étudiants du Bachelor 3 CPI parcours
+Développement. Chacun prend en charge un domaine principal, tout en
+contribuant de manière transverse via les revues de code, les tests
+croisés et les rituels agiles.</p>
+<p><em>Remarque sur la taille d’équipe</em> : le cadre pédagogique
+mentionne une équipe de deux à trois étudiants. Ce projet mobilise
+quatre membres, afin de couvrir la largeur fonctionnelle du cahier des
+charges (site public, back-office, authentification, paiement,
+internationalisation, accessibilité) dans les délais impartis.</p>
+</section>
+<section id="matrice-des-responsabilités" class="level2"
+data-number="10.2">
+<h2 data-number="10.2"><span class="header-section-number">10.2</span>
+Matrice des responsabilités</h2>
+<p>Pour chaque grand domaine, la matrice ci-dessous indique qui est
+<strong>responsable</strong> (pilote et fait), <strong>consulté</strong>
+(donne son avis) ou <strong>informé</strong> (tenu au courant). La
+lettre R désigne le responsable principal de chaque ligne.</p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 15%" />
+<col style="width: 23%" />
+<col style="width: 17%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Domaine</th>
+<th style="text-align: center;">Samy</th>
+<th style="text-align: center;">Tristan</th>
+<th style="text-align: center;">Rayan</th>
+<th style="text-align: center;">Kelvin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentification et double facteur</td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Infrastructure, hébergement, déploiement</td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Intégration continue et sécurité transverse</td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Pages publiques (accueil, catalogue, produit, checkout)</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Design system et charte graphique</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Accessibilité et responsive</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Back-office administrateur (tableaux, dashboard, gestion)</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Carrousel, produits mis en avant, exports CSV</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>API et logique métier</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+</tr>
+<tr>
+<td>Base de données et modélisation</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+</tr>
+<tr>
+<td>Intégration du paiement</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+</tr>
+<tr>
+<td>Génération des factures et avoirs</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+</tr>
+<tr>
+<td>Multilingue</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>R</strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="fiches-de-rôle" class="level2" data-number="10.3">
+<h2 data-number="10.3"><span class="header-section-number">10.3</span>
+Fiches de rôle</h2>
+<section id="samy-abdelmalek-authentification-et-infrastructure"
+class="level3" data-number="10.3.1">
+<h3 data-number="10.3.1"><span
+class="header-section-number">10.3.1</span> Samy Abdelmalek —
+Authentification et infrastructure</h3>
+<ul>
+<li>Mise en place de l’authentification (email / mot de passe, Google,
+GitHub).</li>
+<li>Implémentation de la double authentification pour les
+administrateurs, avec les codes de secours associés.</li>
+<li>Dockerisation de l’application et déploiement sur serveur
+privé.</li>
+<li>Configuration du cache, de la limitation de requêtes et du stockage
+d’images.</li>
+<li>Mise en place de l’intégration continue (pipeline automatique de
+vérification du code à chaque modification).</li>
+<li>Politique de sécurité globale : en-têtes de sécurité, audits de
+dépendances.</li>
+</ul>
+</section>
+<section id="tristan-sanjuan-frontend-public-et-design-system"
+class="level3" data-number="10.3.2">
+<h3 data-number="10.3.2"><span
+class="header-section-number">10.3.2</span> Tristan Sanjuan — Frontend
+public et design system</h3>
+<ul>
+<li>Développement des pages publiques : accueil (carrousel, grille
+catégories, top produits), page catégorie, fiche produit, panier,
+parcours de commande.</li>
+<li>Mise en œuvre de la charte graphique Althea (palette teal et
+navy).</li>
+<li>Conformité responsive sur toutes les tailles d’écran (mobile à
+desktop).</li>
+<li>Conformité accessibilité : navigation clavier, contrastes, libellés
+explicites, gestion du focus.</li>
+<li>Animations et micro-interactions.</li>
+</ul>
+</section>
+<section id="rayan-menkar-back-office-administrateur" class="level3"
+data-number="10.3.3">
+<h3 data-number="10.3.3"><span
+class="header-section-number">10.3.3</span> Rayan Menkar — Back-office
+administrateur</h3>
+<ul>
+<li>Pages d’administration : tableau de bord, gestion des produits,
+catégories, utilisateurs, commandes, factures, avoirs, messages.</li>
+<li>Composants de tableau réutilisables avec tri, pagination et actions
+groupées.</li>
+<li>Exports CSV et Excel des données.</li>
+<li>Éditeur du carrousel d’accueil et gestion des produits
+vedettes.</li>
+<li>Écran de suivi des échanges chatbot.</li>
+</ul>
+</section>
+<section id="kelvin-chauvel-backend-et-intégrations" class="level3"
+data-number="10.3.4">
+<h3 data-number="10.3.4"><span
+class="header-section-number">10.3.4</span> Kelvin Chauvel — Backend et
+intégrations</h3>
+<ul>
+<li>Conception et développement de l’API (points d’entrée exposés par la
+plateforme).</li>
+<li>Modélisation de la base de données et gestion des migrations.</li>
+<li>Intégration du paiement : création des sessions de commande,
+réception des notifications de paiement, mise à jour des commandes.</li>
+<li>Génération automatique des factures et avoirs au format PDF.</li>
+<li>Envoi des emails transactionnels (confirmation,
+réinitialisation).</li>
+<li>Mise en place du multilingue.</li>
+</ul>
+</section>
+</section>
+</section>
+<section id="planning-prévisionnel" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span>
+Planning prévisionnel</h1>
+<section id="vue-densemble" class="level2" data-number="11.1">
+<h2 data-number="11.1"><span class="header-section-number">11.1</span>
+Vue d’ensemble</h2>
+<p>Le projet s’étale sur <strong>neuf mois</strong>, de septembre 2025 à
+juin 2026, en neuf phases successives (certaines peuvent se
+recouvrir).</p>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 20%" />
+<col style="width: 16%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Période</th>
+<th>Durée</th>
+<th>Livrable principal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kick-off et cadrage</td>
+<td>Septembre-octobre 2025</td>
+<td>4 semaines</td>
+<td>Maquettes et backlog initial</td>
+</tr>
+<tr>
+<td>Authentification et sécurité</td>
+<td>Octobre-novembre 2025</td>
+<td>2-3 semaines</td>
+<td>Inscription, connexion, double authentification</td>
+</tr>
+<tr>
+<td>Back-office contenu</td>
+<td>Novembre-décembre 2025</td>
+<td>3 semaines</td>
+<td>Gestion produits et catégories</td>
+</tr>
+<tr>
+<td>Frontend public et recherche</td>
+<td>Décembre 2025-janvier 2026</td>
+<td>4 semaines</td>
+<td>Catalogue, fiche produit, recherche</td>
+</tr>
+<tr>
+<td>Checkout et paiement</td>
+<td>Janvier-février 2026</td>
+<td>3 semaines</td>
+<td>Paiement complet, facture PDF, email</td>
+</tr>
+<tr>
+<td>Back-office avancé</td>
+<td>Février-mars 2026</td>
+<td>3 semaines</td>
+<td>Dashboard, avoirs, exports</td>
+</tr>
+<tr>
+<td>Espace client</td>
+<td>Mars 2026</td>
+<td>1 semaine</td>
+<td>Profil, adresses, historique</td>
+</tr>
+<tr>
+<td>Contact et chatbot</td>
+<td>Mars-avril 2026</td>
+<td>2 semaines</td>
+<td>Formulaire et chatbot</td>
+</tr>
+<tr>
+<td>Multilingue et accessibilité</td>
+<td>Avril 2026</td>
+<td>2 semaines</td>
+<td>Français, anglais, arabe, WCAG</td>
+</tr>
+<tr>
+<td>Tests, documentation, soutenance</td>
+<td>Mai-juin 2026</td>
+<td>4 semaines</td>
+<td>Tests, Swagger, document technique</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="jalons-certifiants" class="level2" data-number="11.2">
+<h2 data-number="11.2"><span class="header-section-number">11.2</span>
+Jalons certifiants</h2>
+<p>Les jalons imposés par le cadre pédagogique sont les suivants :</p>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 34%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Jalon</th>
+<th>Période</th>
+<th>Livrable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kick-off</td>
+<td>Septembre 2025</td>
+<td>Constitution de l’équipe, prise en main du sujet</td>
+</tr>
+<tr>
+<td>Rendez-vous de cadrage</td>
+<td>Kick-off + 2 mois</td>
+<td>Entretien client de 15 à 20 minutes</td>
+</tr>
+<tr>
+<td>Document de cadrage</td>
+<td>Rendez-vous + 3 mois</td>
+<td>Le présent document</td>
+</tr>
+<tr>
+<td>Soutenance et démonstration</td>
+<td>Cadrage + 1 mois</td>
+<td>Présentation orale de 60 minutes</td>
+</tr>
+<tr>
+<td>Livrables finaux techniques</td>
+<td>Soutenance + 2 semaines</td>
+<td>Code source et documentation technique</td>
+</tr>
+<tr>
+<td>Analyse de la dynamique projet</td>
+<td>Livrables + 2 semaines</td>
+<td>Document individuel de 2 à 4 pages</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="dépendances-clés" class="level2" data-number="11.3">
+<h2 data-number="11.3"><span class="header-section-number">11.3</span>
+Dépendances clés</h2>
+<ul>
+<li>La <strong>phase d’authentification bloque tout le reste</strong> :
+sans compte utilisateur fonctionnel, impossible de passer commande ou
+d’accéder à l’administration.</li>
+<li>Le <strong>back-office de contenu précède le frontend
+public</strong> : il faut pouvoir créer des produits pour pouvoir les
+afficher.</li>
+<li>Le <strong>checkout dépend du frontend public</strong> : la
+finalisation de commande s’appuie sur le panier déjà constitué.</li>
+<li>Le <strong>multilingue est volontairement positionné en fin de
+cycle</strong> pour éviter de devoir retraduire des textes modifiés en
+cours de route.</li>
+</ul>
+</section>
+<section id="représentation-graphique-du-planning" class="level2"
+data-number="11.4">
+<h2 data-number="11.4"><span class="header-section-number">11.4</span>
+Représentation graphique du planning</h2>
+<pre><code>                Sept  Oct   Nov   Déc   Jan   Fév   Mars  Avr   Mai   Juin
+Cadrage         ████████
+Auth/Sécurité        ███████
+BO Contenu                █████████
+Frontend/Search                ███████████
+Checkout                                ████████
+BO Avancé                                       ████████
+Espace client                                           ██
+Contact/Chatbot                                           ██████
+Multilingue/a11y                                                █████
+Tests/Doc                                                            █████████</code></pre>
+</section>
+</section>
+<section id="livrables-par-phase" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span>
+Livrables par phase</h1>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 61%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Livrables</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cadrage</td>
+<td>Document de cadrage PDF, maquettes Figma, backlog initial</td>
+</tr>
+<tr>
+<td>Authentification et sécurité</td>
+<td>Pages d’inscription, connexion, mot de passe oublié, double
+authentification admin</td>
+</tr>
+<tr>
+<td>Back-office contenu</td>
+<td>CRUD produits et catégories, upload d’images, actions groupées,
+export CSV</td>
+</tr>
+<tr>
+<td>Frontend public</td>
+<td>Accueil, catalogue, fiche produit, recherche, panier persisté</td>
+</tr>
+<tr>
+<td>Checkout</td>
+<td>Parcours de commande, paiement en ligne, notification automatique,
+facture PDF, email de confirmation</td>
+</tr>
+<tr>
+<td>Back-office avancé</td>
+<td>Tableau de bord, graphiques, gestion des commandes et utilisateurs,
+avoirs PDF</td>
+</tr>
+<tr>
+<td>Espace client</td>
+<td>Profil, adresses, moyens de paiement, historique des commandes</td>
+</tr>
+<tr>
+<td>Contact et chatbot</td>
+<td>Formulaire de contact, chatbot widget, escalade vers support
+humain</td>
+</tr>
+<tr>
+<td>Multilingue et accessibilité</td>
+<td>Trois langues, écriture de droite à gauche, audit accessibilité
+validé</td>
+</tr>
+<tr>
+<td>Tests et documentation</td>
+<td>Tests automatisés, documentation API, document de conception
+technique</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="veille-technologique" class="level1" data-number="13">
+<h1 data-number="13"><span class="header-section-number">13</span>
+Veille technologique</h1>
+<p>Conformément au cadre pédagogique, la veille est volontairement
+<strong>ciblée sur trois axes</strong> et non exhaustive.</p>
+<section
+id="une-technologie-clé-les-outils-de-développement-web-nouvelle-génération"
+class="level2" data-number="13.1">
+<h2 data-number="13.1"><span class="header-section-number">13.1</span>
+Une technologie clé : les outils de développement web nouvelle
+génération</h2>
+<p>Depuis 2020, de nouveaux outils permettent de construire des sites
+qui s’affichent <strong>beaucoup plus vite</strong>, sont mieux classés
+sur Google, et se développent en deux fois moins de temps qu’avant.
+Next.js (qu’on a retenu) est le leader de cette nouvelle génération.</p>
+<p><strong>Ce que ça change concrètement pour Althea</strong> :</p>
+<ul>
+<li>Un client qui ouvre le site sur mobile en 4G voit la page <strong>en
+moins d’une seconde</strong>, au lieu de 3-4 secondes avec les anciens
+outils. Un site plus rapide, c’est des taux d’achat plus élevés (étude
+Google : +7 % de conversions pour chaque seconde gagnée).</li>
+<li>Le site est <strong>bien mieux référencé sur Google</strong> parce
+que les pages sont livrées déjà construites, au lieu d’être assemblées
+par le navigateur au dernier moment.</li>
+<li>L’équipe travaille avec <strong>un seul outil</strong> au lieu de
+plusieurs qui doivent se parler, donc moins de bugs et un développement
+plus rapide.</li>
+<li><strong>Utilisé par des géants</strong> : Netflix, TikTok, Nike,
+Notion, OpenAI. Gage de fiabilité et de pérennité.</li>
+</ul>
+</section>
+<section id="un-concurrent-sérieux-shopify" class="level2"
+data-number="13.2">
+<h2 data-number="13.2"><span class="header-section-number">13.2</span>
+Un concurrent sérieux : Shopify</h2>
+<p><strong>Shopify</strong> est la solution e-commerce clé en main la
+plus utilisée au monde (plus de 4 millions de boutiques). Elle propose
+toutes les fonctions de base demandées par Althea : catalogue, panier,
+paiement, back-office.</p>
+<p>On s’est donc posé la question : <strong>faut-il partir sur Shopify
+au lieu de tout construire nous-mêmes ?</strong></p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 17%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr>
+<th>Comparaison</th>
+<th>Shopify</th>
+<th>Solution Althea sur mesure</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temps pour lancer le site</td>
+<td>1 à 2 semaines</td>
+<td>9 mois</td>
+</tr>
+<tr>
+<td>Coût mensuel</td>
+<td>29 à 299 $/mois + commissions sur chaque vente</td>
+<td>~30 € d’hébergement, frais Stripe standards</td>
+</tr>
+<tr>
+<td>Apparence</td>
+<td>Limitée aux designs préfabriqués</td>
+<td>Totalement personnalisable à l’image d’Althea</td>
+</tr>
+<tr>
+<td>Fonctions métier spécifiques</td>
+<td>Dépendent de modules additionnels payants</td>
+<td>Aucune limite, on développe ce qu’on veut</td>
+</tr>
+<tr>
+<td>Connexion à d’autres outils</td>
+<td>Restreinte</td>
+<td>Totale</td>
+</tr>
+<tr>
+<td>Où sont stockées les données clients</td>
+<td>Aux États-Unis (serveurs Shopify)</td>
+<td>En Europe, contrôle total</td>
+</tr>
+<tr>
+<td>Dépendance au prestataire</td>
+<td>Forte (impossible de partir avec son site)</td>
+<td>Faible (code nous appartient)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi on n’a pas pris Shopify</strong> :</p>
+<ul>
+<li>Le rendu visuel demandé par Althea (design distinctif, ambiance
+premium) <strong>dépasse ce que permettent les designs
+préfabriqués</strong> Shopify.</li>
+<li>Les <strong>données clients</strong> d’un business B2B médical sont
+sensibles : on préfère les garder sur un serveur européen sous notre
+contrôle plutôt qu’aux États-Unis.</li>
+<li>Ce projet est un <strong>exercice pédagogique</strong> : partir sur
+Shopify court-circuiterait l’apprentissage technique attendu du
+Bachelor.</li>
+</ul>
+</section>
+<section id="norme-essentielle-le-rgpd" class="level2"
+data-number="13.3">
+<h2 data-number="13.3"><span class="header-section-number">13.3</span>
+Norme essentielle : le RGPD</h2>
+<p>Le <strong>Règlement Général sur la Protection des Données</strong>
+est entré en application en mai 2018. Il s’applique à toute entité
+traitant les données personnelles de résidents européens. Les sanctions
+peuvent atteindre 4 % du chiffre d’affaires mondial ou 20 millions
+d’euros.</p>
+<p>Pour Althea, cette norme structure directement plusieurs choix de
+conception :</p>
+<ul>
+<li><strong>Information préalable</strong> : une page de politique de
+confidentialité et une bannière de cookies à trois niveaux (essentiels,
+analytiques, marketing).</li>
+<li><strong>Droit d’accès</strong> : l’utilisateur peut exporter toutes
+ses données dans un fichier téléchargeable.</li>
+<li><strong>Droit à l’effacement</strong> : l’utilisateur peut supprimer
+son compte, avec conservation des seules factures (obligation comptable
+de 10 ans).</li>
+<li><strong>Minimisation</strong> : seules les données strictement
+nécessaires sont demandées.</li>
+<li><strong>Sécurité</strong> : chiffrement des communications, mots de
+passe protégés, double authentification pour les administrateurs.</li>
+<li><strong>Sous-traitants</strong> : chaque prestataire externe
+(Stripe, Resend, Cloudflare) fait l’objet d’un contrat spécifique de
+traitement de données.</li>
+</ul>
+<p>Le RGPD n’est pas seulement une contrainte légale : il structure une
+<strong>bonne hygiène sécurité</strong> qui bénéficie à tous les
+utilisateurs.</p>
+</section>
+</section>
+<section id="gestion-des-risques" class="level1" data-number="14">
+<h1 data-number="14"><span class="header-section-number">14</span>
+Gestion des risques</h1>
+<section id="identification-et-évaluation" class="level2"
+data-number="14.1">
+<h2 data-number="14.1"><span class="header-section-number">14.1</span>
+Identification et évaluation</h2>
+<p>La probabilité (<em>Faible</em>, <em>Moyenne</em>, <em>Élevée</em>)
+et l’impact (<em>1</em> mineur à <em>4</em> critique) sont estimés pour
+chaque risque, et une réponse est proposée.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 34%" />
+<col style="width: 21%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Risque</th>
+<th style="text-align: center;">Probabilité</th>
+<th style="text-align: center;">Impact</th>
+<th>Réponse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fuite de données personnelles</td>
+<td style="text-align: center;">Faible</td>
+<td style="text-align: center;">4</td>
+<td>Audits réguliers, chiffrement, double authentification,
+minimisation</td>
+</tr>
+<tr>
+<td>Panne du paiement (notifications non reçues)</td>
+<td style="text-align: center;">Moyenne</td>
+<td style="text-align: center;">3</td>
+<td>Mécanisme de réessai automatique, journalisation, alertes</td>
+</tr>
+<tr>
+<td>Dérive de planning sur une phase critique</td>
+<td style="text-align: center;">Moyenne</td>
+<td style="text-align: center;">3</td>
+<td>Sprints courts, rétrospectives, arbitrage en faveur du <em>must
+have</em></td>
+</tr>
+<tr>
+<td>Indisponibilité d’un membre de l’équipe</td>
+<td style="text-align: center;">Faible</td>
+<td style="text-align: center;">3</td>
+<td>Documentation continue, polyvalence, pair programming ponctuel</td>
+</tr>
+<tr>
+<td>Performance recherche insuffisante</td>
+<td style="text-align: center;">Moyenne</td>
+<td style="text-align: center;">2</td>
+<td>Cache dédié, index de recherche, mesures régulières</td>
+</tr>
+<tr>
+<td>Non-conformité accessibilité détectée tardivement</td>
+<td style="text-align: center;">Moyenne</td>
+<td style="text-align: center;">2</td>
+<td>Audit intermédiaire, tests automatisés</td>
+</tr>
+<tr>
+<td>Bug critique en production</td>
+<td style="text-align: center;">Faible</td>
+<td style="text-align: center;">4</td>
+<td>Procédure de retour en arrière rapide, sauvegarde quotidienne</td>
+</tr>
+<tr>
+<td>Dépendance tierce abandonnée</td>
+<td style="text-align: center;">Moyenne</td>
+<td style="text-align: center;">2</td>
+<td>Veille mensuelle, audits de dépendances</td>
+</tr>
+<tr>
+<td>Coût d’infrastructure imprévu</td>
+<td style="text-align: center;">Faible</td>
+<td style="text-align: center;">2</td>
+<td>Budget fixe connu à l’avance</td>
+</tr>
+<tr>
+<td>Tentative d’attaque (force brute, déni de service)</td>
+<td style="text-align: center;">Moyenne</td>
+<td style="text-align: center;">3</td>
+<td>Limitation de requêtes, protection en amont (Cloudflare)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="plan-de-continuité" class="level2" data-number="14.2">
+<h2 data-number="14.2"><span class="header-section-number">14.2</span>
+Plan de continuité</h2>
+<ul>
+<li><strong>Objectif de reprise après incident</strong> : remise en
+service en moins de 30 minutes.</li>
+<li><strong>Objectif de perte de données maximum</strong> : moins de 24
+heures (sauvegarde automatique quotidienne).</li>
+<li><strong>Retour en arrière</strong> possible en quelques minutes
+grâce à l’outil de déploiement, qui permet de repasser à la version
+précédente.</li>
+<li><strong>Post-mortem</strong> systématique en cas d’incident majeur,
+archivé dans la documentation du projet.</li>
+</ul>
+</section>
+</section>
+<section id="charte-graphique" class="level1" data-number="15">
+<h1 data-number="15"><span class="header-section-number">15</span>
+Charte graphique</h1>
+<section id="palette-de-couleurs-officielle" class="level2"
+data-number="15.1">
+<h2 data-number="15.1"><span class="header-section-number">15.1</span>
+Palette de couleurs officielle</h2>
+<p>La charte transmise par le client repose sur une palette sobre,
+dominée par le teal et le bleu nuit, avec des codes couleurs universels
+pour les statuts (vert, rouge, orange).</p>
+<table>
+<thead>
+<tr>
+<th>Usage</th>
+<th>Couleur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Boutons d’action, liens, badges</td>
+<td>Teal <code>#00a8b5</code></td>
+</tr>
+<tr>
+<td>Survol de boutons et liens</td>
+<td>Teal clair <code>#33bfc9</code></td>
+</tr>
+<tr>
+<td>Fonds doux d’arrière-plan</td>
+<td>Teal très clair <code>#d4f4f7</code></td>
+</tr>
+<tr>
+<td>Titres, navigation, pied de page</td>
+<td>Navy profond <code>#003d5c</code></td>
+</tr>
+<tr>
+<td>Statut « en stock », validation</td>
+<td>Vert <code>#10b981</code></td>
+</tr>
+<tr>
+<td>Statut « rupture », erreurs</td>
+<td>Rouge <code>#ef4444</code></td>
+</tr>
+<tr>
+<td>Statut « stock faible », alertes</td>
+<td>Orange <code>#F59E0B</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="statuts-produits" class="level2" data-number="15.2">
+<h2 data-number="15.2"><span class="header-section-number">15.2</span>
+Statuts produits</h2>
+<p>Quatre badges sont utilisés pour indiquer l’état d’un produit :
+<strong>en stock</strong> (vert), <strong>stock faible</strong>
+(orange), <strong>rupture</strong> (rouge), <strong>nouveau</strong>
+(teal).</p>
+</section>
+<section id="typographie-et-iconographie" class="level2"
+data-number="15.3">
+<h2 data-number="15.3"><span class="header-section-number">15.3</span>
+Typographie et iconographie</h2>
+<ul>
+<li>Typographie sans serif moderne, lisible à toutes les tailles
+d’écran.</li>
+<li>Hiérarchie claire entre titres et corps de texte.</li>
+<li>Iconographie cohérente issue de la bibliothèque Lucide (intégrée à
+shadcn/ui), en ligne fine.</li>
+</ul>
+</section>
+</section>
+<section id="conclusion" class="level1" data-number="16">
+<h1 data-number="16"><span class="header-section-number">16</span>
+Conclusion</h1>
+<p>Ce document de cadrage pose les bases d’un projet e-commerce
+<strong>ambitieux mais maîtrisable</strong>, répondant précisément aux
+exigences du cahier des charges d’Althea Systems, et structuré pour être
+mené à terme par une équipe de quatre étudiants sur neuf mois.</p>
+<p>Les grands choix — architecture simple et robuste, framework web
+moderne, délégation du paiement à un prestataire certifié,
+internationalisation dès la conception, accessibilité intégrée, double
+authentification pour les administrateurs — ont été motivés par des
+critères clairs : valeur pour le client, sécurité, performance,
+maintenabilité, coût.</p>
+<p>Les <strong>neuf phases du projet</strong> sont identifiées, avec des
+livrables précis, une <strong>répartition des rôles</strong> claire, une
+<strong>matrice de risques</strong> accompagnée de plans de réponse, et
+une <strong>veille technologique</strong> ciblée qui valide la
+pertinence de la solution au regard du marché.</p>
+<p>L’équipe reste à disposition du client Althea Systems et de
+l’encadrement pédagogique pour tout approfondissement, ajustement du
+périmètre ou arbitrage en cours de réalisation.</p>
+</section>
+<section id="annexes" class="level1" data-number="17">
+<h1 data-number="17"><span class="header-section-number">17</span>
+Annexes</h1>
+<section id="annexe-a-documentation-complémentaire" class="level2"
+data-number="17.1">
+<h2 data-number="17.1"><span class="header-section-number">17.1</span>
+Annexe A — Documentation complémentaire</h2>
+<p>Le dépôt Git du projet contient la documentation suivante, qui
+complète le présent document :</p>
+<table>
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr>
+<th>Document</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Architecture</td>
+<td>Vue d’ensemble technique</td>
+</tr>
+<tr>
+<td>Document de conception technique</td>
+<td>Livrable technique final</td>
+</tr>
+<tr>
+<td>Diagrammes techniques</td>
+<td>Schémas exportables</td>
+</tr>
+<tr>
+<td>Documentation API</td>
+<td>Points d’entrée exposés</td>
+</tr>
+<tr>
+<td>Procédure de déploiement</td>
+<td>Mise en production</td>
+</tr>
+<tr>
+<td>Procédure d’installation</td>
+<td>Développement local</td>
+</tr>
+<tr>
+<td>Politique de maintenance</td>
+<td>Sauvegardes, mises à jour, mise à l’échelle</td>
+</tr>
+<tr>
+<td>Audit accessibilité</td>
+<td>Conformité WCAG 2.1</td>
+</tr>
+<tr>
+<td>Audit responsive</td>
+<td>Tests multi-écrans</td>
+</tr>
+<tr>
+<td>Feuille de route</td>
+<td>Découpage par phases</td>
+</tr>
+<tr>
+<td>Rapport de sécurité</td>
+<td>Vérifications automatisées</td>
+</tr>
+<tr>
+<td>Audit des tickets</td>
+<td>Suivi des issues GitHub</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="annexe-b-glossaire" class="level2" data-number="17.2">
+<h2 data-number="17.2"><span class="header-section-number">17.2</span>
+Annexe B — Glossaire</h2>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr>
+<th>Terme</th>
+<th>Définition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MoSCoW</strong></td>
+<td>Méthode de priorisation des fonctionnalités en quatre catégories :
+indispensable, fortement attendu, souhaité, exclu</td>
+</tr>
+<tr>
+<td><strong>SSR</strong></td>
+<td>Rendu d’une page côté serveur plutôt que côté navigateur, pour un
+affichage plus rapide et un meilleur référencement</td>
+</tr>
+<tr>
+<td><strong>Double authentification</strong></td>
+<td>Mécanisme de sécurité qui ajoute une deuxième preuve d’identité à la
+connexion (code à six chiffres)</td>
+</tr>
+<tr>
+<td><strong>PCI-DSS</strong></td>
+<td>Norme internationale de sécurité pour les paiements par carte
+bancaire</td>
+</tr>
+<tr>
+<td><strong>RGPD</strong></td>
+<td>Règlement européen de protection des données personnelles</td>
+</tr>
+<tr>
+<td><strong>WCAG</strong></td>
+<td>Recommandations internationales d’accessibilité web</td>
+</tr>
+<tr>
+<td><strong>RTL</strong></td>
+<td>Écriture de droite à gauche, utilisée notamment pour l’arabe</td>
+</tr>
+<tr>
+<td><strong>Backlog</strong></td>
+<td>Liste ordonnée des fonctionnalités à développer</td>
+</tr>
+<tr>
+<td><strong>Sprint</strong></td>
+<td>Itération de travail courte (deux semaines ici), avec un périmètre
+défini</td>
+</tr>
+<tr>
+<td><strong>Revue de code</strong></td>
+<td>Relecture d’un apport au code par un pair avant intégration</td>
+</tr>
+<tr>
+<td><strong>Intégration continue</strong></td>
+<td>Vérification automatique de la qualité du code à chaque
+modification</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="annexe-c-liens-utiles" class="level2" data-number="17.3">
+<h2 data-number="17.3"><span class="header-section-number">17.3</span>
+Annexe C — Liens utiles</h2>
+<ul>
+<li>Dépôt Git du projet : https://github.com/itsaam/althea-systems</li>
+<li>Cahier des charges fourni par le client (disponible dans le
+dépôt)</li>
+<li>Cadre pédagogique Sup de Vinci (disponible auprès de
+l’encadrement)</li>
+<li>Référentiel RNCP34581 (France Compétences)</li>
+</ul>
+<hr />
+<p><em>Fin du Document de Cadrage — Althea Systems.</em></p>
+</section>
+</section>
+</body></html>
