@@ -74,7 +74,7 @@ export default function CartItem({
           {name}
         </h3>
         <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] tabular-nums text-foreground/50">
-          Prix unité · {formatPrice(price)}
+          {t("unitPrice")} · {formatPrice(price)}
         </p>
 
         {/* Qty stepper */}
@@ -108,7 +108,7 @@ export default function CartItem({
       <div className="col-span-2 flex items-center justify-between border-t border-border/40 pt-5 sm:col-span-1 sm:flex-col sm:items-end sm:justify-between sm:self-stretch sm:border-0 sm:pt-0">
         <div className="text-right">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/40">
-            Total
+            {t("total")}
           </p>
           <p className="mt-1 font-mono text-[16px] font-medium tabular-nums text-foreground">
             {formatPrice(lineTotal)}

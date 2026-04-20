@@ -1,4 +1,5 @@
 import ScrollReveal from "@/components/ui/scroll-reveal";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import CtaProductsCarousel, {
   type CarouselProduct,
@@ -43,26 +44,28 @@ async function getCarouselProducts(): Promise<CarouselProduct[]> {
 }
 
 export default async function CtaFinal() {
-  const products = await getCarouselProducts();
+  const [products, t] = await Promise.all([
+    getCarouselProducts(),
+    getTranslations("home.ctaFinal"),
+  ]);
 
   return (
     <>
-      {/* ── Pinned horizontal products carousel ─────────────── */}
-      {/* Must NOT be wrapped in a transformed / overflow-hidden parent,       */}
-      {/* otherwise GSAP ScrollTrigger pin breaks. Rendered as a standalone    */}
-      {/* sibling section so the pin anchors cleanly to the viewport.         */}
       {products.length > 0 && (
-        <CtaProductsCarousel products={products} />
+        <CtaProductsCarousel
+          products={products}
+          labels={{
+            sectionLabel: t("signatureProducts"),
+          }}
+        />
       )}
 
-      {/* ── Bottom block : manifesto statement ───────────────── */}
       <section className="relative isolate grain overflow-hidden bg-background py-32 text-foreground md:py-48">
         <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col items-center px-4 text-center sm:px-6 lg:px-10">
           <ScrollReveal>
             <h2 className="font-display text-h1 leading-[1.05] tracking-[-0.02em] text-foreground">
-              Nous équipons ceux qui ne font
-              <br className="hidden sm:block" />
-              {" "}pas de compromis<span className="text-electric-indigo-500">.</span>
+              {t("headline")}
+              <span className="text-primary">.</span>
             </h2>
           </ScrollReveal>
         </div>

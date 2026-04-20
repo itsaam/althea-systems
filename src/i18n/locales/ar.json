@@ -33,7 +33,21 @@
     "administration": "الإدارة",
     "userMenu": "قائمة المستخدم",
     "userMenuNamed": "قائمة المستخدم {name}",
-    "skipToContent": "تخطي إلى المحتوى الرئيسي"
+    "skipToContent": "تخطي إلى المحتوى الرئيسي",
+    "mainNavigation": "التنقل الرئيسي",
+    "mobileNavigation": "التنقل عبر الجوال",
+    "openMainMenu": "فتح القائمة الرئيسية",
+    "mainMenu": "القائمة الرئيسية",
+    "brandHome": "Althea Systems — الرئيسية",
+    "brandTagline": "Systems",
+    "copyLink": "نسخ الرابط",
+    "linkCopied": "تم النسخ",
+    "linkCopiedToast": "تم نسخ الرابط إلى الحافظة",
+    "zoomIn": "تكبير",
+    "zoomOut": "تصغير",
+    "retry": "إعادة المحاولة",
+    "errorGeneric": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "and": "و"
   },
   "nav": {
     "home": "الرئيسية",
@@ -45,12 +59,24 @@
   "home": {
     "hero": {
       "eyebrow": "معدات طبية من الجيل الجديد",
+      "titleLine1": "المعدات",
+      "titleLine2": "الطبية،",
+      "titleLine3": "من جديد.",
       "title": "الدقة في خدمة الرعاية.",
       "titleAccent": "في خدمة الرعاية.",
       "subtitle": "تزود Althea Systems متخصصي الرعاية الصحية بمعدات طبية فاخرة، مختارة لموثوقيتها السريرية وتصميمها المريح.",
+      "lead": "تختار Althea Systems وتعتمد وتُسلّم المعدات المتطورة التي تجهّز متخصصي الرعاية الصحية. بلا ضجيج، بلا تنازلات.",
       "ctaPrimary": "استكشف الكتالوج",
+      "ctaExplore": "استكشاف الكتالوج",
       "ctaSecondary": "تحدث إلى خبير",
-      "badge": "معتمد CE — الفئة IIa"
+      "ctaAdvisor": "تحدث إلى مستشار",
+      "badge": "معتمد CE — الفئة IIa",
+      "specs": {
+        "founded": "تأسست",
+        "practitioners": "ممارسون",
+        "delivery": "التسليم",
+        "certified": "معتمد"
+      }
     },
     "featured": {
       "eyebrow": "مختارات الشهر",
@@ -64,19 +90,87 @@
     "trust": {
       "title": "ثقة المؤسسات الصحية",
       "subtitle": "أكثر من 1200 متخصص يثقون بنا في فرنسا ودولياً."
+    },
+    "ticker": {
+      "ariaLabel": "ضمانات Althea Systems",
+      "items": {
+        "iso": "ISO 13485",
+        "ce": "علامة CE",
+        "delivery48h": "تسليم خلال 48 ساعة",
+        "support7d": "دعم 7/7",
+        "euStock": "مخزون أوروبي",
+        "batchTracking": "تتبّع الدفعات",
+        "warranty": "ضمان 24 شهراً",
+        "sameDayShipping": "شحن في اليوم نفسه قبل الساعة 3 مساءً",
+        "practitionerAdvice": "استشارة الممارسين",
+        "soberPackaging": "تغليف بسيط"
+      }
+    },
+    "ctaFinal": {
+      "headline": "نُجهّز من لا يقبلون التنازلات",
+      "signatureProducts": "منتجات مميزة"
     }
   },
   "product": {
     "addToCart": "أضف إلى السلة",
     "outOfStock": "نفذ من المخزون",
     "inStock": "متوفر",
+    "lowStock": "مخزون منخفض",
     "price": "السعر",
     "quantity": "الكمية",
+    "qtyShort": "الكمية",
     "description": "الوصف",
     "reviews": "التقييمات",
     "relatedProducts": "منتجات مشابهة",
     "newProduct": "جديد",
-    "onSale": "تخفيضات"
+    "onSale": "تخفيضات",
+    "sku": "المرجع",
+    "vatIncluded": "ضريبة القيمة المضافة 20% مشمولة · يُحتسب الشحن عند الدفع",
+    "stockAvailable": "{count, plural, one {# وحدة متوفرة} other {# وحدات متوفرة}}",
+    "talkToAdvisor": "تحدث إلى مستشار Althea",
+    "increaseQuantity": "زيادة الكمية",
+    "decreaseQuantity": "تقليل الكمية",
+    "addedToCart": "{count, plural, one {تمت إضافة # منتج إلى السلة} other {تمت إضافة # منتجات إلى السلة}}",
+    "details": {
+      "fullDescription": "الوصف الكامل",
+      "fallback": "بطاقة المنتج قيد الإعداد — تواصل معنا للحصول على الوثائق المفصّلة.",
+      "specs": "المواصفات التقنية",
+      "specReference": "المرجع",
+      "specCategory": "الفئة",
+      "specAvailability": "التوفر",
+      "specCompliance": "المطابقة",
+      "specTraceability": "إمكانية التتبع",
+      "traceabilityValue": "رقم الدفعة مُقدَّم",
+      "reviewsEyebrow": "قريباً",
+      "reviewsCopy": "نراجع كل تقييم يدوياً لضمان جودته. جهّز نفسك اليوم وشاركنا رأيك عند الاستلام.",
+      "faqLabel": "الأسئلة الشائعة",
+      "faq": {
+        "deliveryQ": "ما هي مدة التسليم؟",
+        "deliveryA": "48 ساعة عمل داخل فرنسا القارية بعد التحقق من الطلب. يُرسل رقم التتبع فور الشحن.",
+        "invoiceQ": "كيف يمكنني الحصول على فاتورة احترافية؟",
+        "invoiceA": "تُصدَر فاتورة مطابقة تلقائياً مع رقم ضريبة القيمة المضافة الأوروبي إذا قُدِّم عند الطلب.",
+        "warrantyQ": "ما هو الضمان على المعدات؟",
+        "warrantyA": "ضمان 24 شهراً على القطع واليد العاملة. تمديدات متاحة عند الطلب."
+      }
+    },
+    "similar": {
+      "eyebrow": "من نفس العائلة",
+      "subtitle": "اختارها خبراؤنا بعناية لجودتها وتكاملها مع هذا المنتج."
+    },
+    "filters": {
+      "categories": "الفئات",
+      "availability": "التوفر"
+    },
+    "sort": {
+      "newest": "الأحدث",
+      "priceAsc": "السعر تصاعدياً",
+      "priceDesc": "السعر تنازلياً"
+    },
+    "trust": {
+      "deliveryDetail": "فرنسا القارية",
+      "qualityDetail": "تتبّع الدفعات",
+      "paymentTitle": "دفع آمن"
+    }
   },
   "cart": {
     "title": "سلة التسوق",
@@ -97,7 +191,10 @@
     "updateQuantity": "تحديث الكمية",
     "increaseQuantity": "زيادة كمية {name}",
     "decreaseQuantity": "تقليل كمية {name}",
-    "itemCount": "{count, plural, =0 {لا توجد منتجات} one {# منتج} other {# منتجات}}"
+    "itemCount": "{count, plural, =0 {لا توجد منتجات} one {# منتج} other {# منتجات}}",
+    "unitPrice": "سعر الوحدة",
+    "securePayment": "دفع آمن · Stripe",
+    "deliveryMetropolitan": "تسليم خلال 48 ساعة في فرنسا القارية"
   },
   "auth": {
     "email": "البريد الإلكتروني",
@@ -118,6 +215,20 @@
     "twoFactorCode": "رمز التحقق",
     "twoFactorSetup": "إعداد التحقق بخطوتين",
     "continueWith": "المتابعة مع",
+    "backToLogin": "العودة إلى تسجيل الدخول",
+    "emailSentTitle": "تم إرسال البريد الإلكتروني!",
+    "createAccountCta": "إنشاء حسابي",
+    "creatingAccount": "جاري إنشاء الحساب…",
+    "resetting": "جاري إعادة التعيين…",
+    "minPasswordHint": "12 حرفًا على الأقل مع حرف كبير وحرف صغير ورقم ورمز خاص",
+    "forgotInstructions": "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.",
+    "forgotSuccess": "تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور.",
+    "checkSpam": "تحقق أيضاً من مجلد الرسائل غير المرغوب فيها.",
+    "passwordResetSuccess": "تمت إعادة تعيين كلمة المرور!",
+    "resetLinkInvalid": "رابط إعادة التعيين غير صالح أو انتهت صلاحيته.",
+    "acceptTerms": "لقد قرأت وأوافق على",
+    "termsLink": "الشروط والأحكام",
+    "privacyLink": "سياسة الخصوصية",
     "loginPage": {
       "eyebrow": "مرحباً بعودتك",
       "title": "تسجيل الدخول إلى حسابك",
@@ -127,6 +238,39 @@
       "eyebrow": "حساب جديد",
       "title": "إنشاء حسابك",
       "subtitle": "انضم إلى Althea Systems واستفد من الوصول الكامل إلى الكتالوج، وأسعار احترافية، وسجل طلبات مفصّل."
+    },
+    "errors": {
+      "oauthAccountNotLinked": "هذا البريد الإلكتروني مسجّل بالفعل بطريقة تسجيل دخول أخرى.",
+      "emailNotVerified": "يرجى التحقق من بريدك الإلكتروني قبل تسجيل الدخول. تحقق من صندوق الوارد.",
+      "oauthProvider": "خطأ في تسجيل الدخول عبر OAuth. تأكد من تكوين مزود الخدمة.",
+      "registerFailed": "فشل التسجيل. يرجى المحاولة مرة أخرى.",
+      "providerError": "خطأ في تسجيل الدخول عبر {provider}. تأكد من تكوين مزود الخدمة.",
+      "firstNameRequired": "الاسم الأول مطلوب",
+      "weakPassword": "كلمة المرور لا تستوفي متطلبات الأمان",
+      "termsRequired": "يجب عليك قبول الشروط والأحكام",
+      "passwordMinLength": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل"
+    },
+    "passwordMeter": {
+      "minChars": "8 أحرف على الأقل",
+      "upper": "حرف كبير واحد على الأقل",
+      "lower": "حرف صغير واحد على الأقل",
+      "digit": "رقم واحد على الأقل",
+      "special": "رمز خاص",
+      "labels": {
+        "veryWeak": "ضعيف جداً",
+        "weak": "ضعيف",
+        "medium": "متوسط",
+        "good": "جيد",
+        "strong": "قوي",
+        "excellent": "ممتاز"
+      }
+    },
+    "registerSuccess": {
+      "eyebrow": "— تم إرسال البريد",
+      "titleCheck": "تحقق من",
+      "titleInbox": "صندوق الوارد",
+      "confirmationSent": "تم إرسال بريد تأكيد إلى",
+      "successToast": "تحقق من بريدك الإلكتروني لتفعيل حسابك!"
     }
   },
   "checkout": {
@@ -134,6 +278,80 @@
       "eyebrow": "دفع آمن",
       "title": "أكمل طلبك",
       "subtitle": "أربع خطوات بسيطة: المصادقة، العنوان، الدفع، والتأكيد."
+    },
+    "steps": {
+      "account": {
+        "label": "الحساب",
+        "description": "تسجيل الدخول أو زائر"
+      },
+      "address": {
+        "label": "العنوان",
+        "description": "الشحن والفوترة"
+      },
+      "payment": {
+        "label": "الدفع",
+        "description": "طريقة آمنة"
+      },
+      "confirmation": {
+        "label": "التأكيد",
+        "description": "الملخص النهائي"
+      },
+      "stepNumber": "الخطوة {id}: {label}",
+      "stepProgress": "الخطوة {current} / {total}"
+    },
+    "summary": {
+      "title": "ملخص الطلب",
+      "label": "— الملخص",
+      "qtyShort": "الكمية"
+    },
+    "toast": {
+      "completeAll": "يرجى إكمال جميع الخطوات",
+      "cannotCreateSession": "تعذّر إنشاء جلسة الدفع",
+      "redirecting": "جارٍ التوجيه إلى الدفع الآمن…",
+      "guestSaved": "تم حفظ طلب الزائر. سيتم التواصل معك عبر البريد الإلكتروني."
+    },
+    "empty": "أضف منتجات قبل المتابعة إلى الدفع.",
+    "confirmation": {
+      "title": "تم تأكيد الطلب!",
+      "orderNumber": "رقم الطلب",
+      "emailSent": "تم إرسال بريد تأكيد إليك."
+    },
+    "auth": {
+      "loggedInAs": "مستخدم مسجّل الدخول",
+      "savedDataAvailable": "عناوينك ووسائل الدفع المحفوظة متاحة في الخطوات التالية.",
+      "haveAccount": "لديّ حساب بالفعل",
+      "loginPerks": "استعد عناوينك وبطاقاتك المحفوظة وسجل طلباتك.",
+      "createAccount": "إنشاء حساب",
+      "createPerks": "تتبّع الطلبات والفواتير ومشتريات أبسط في الزيارات المقبلة.",
+      "continueAsGuest": "المتابعة كزائر",
+      "guestCopy": "اطلب دون إنشاء حساب. يمكنك إنشاء حساب لاحقاً بعد الشراء لتتبّع طلبك.",
+      "orderAsGuest": "الطلب كزائر",
+      "guestBadge": "الطلب كزائر",
+      "guestWarning": "لن تتمكن من تتبّع طلبك دون حساب. سيتم إرسال ملخص عبر البريد الإلكتروني.",
+      "acceptTermsPrefix": "بالمتابعة، فإنك توافق على",
+      "termsLink": "الشروط والأحكام",
+      "andPrivacy": "و",
+      "privacyLink": "سياسة الخصوصية"
+    },
+    "address": {
+      "firstNameRequired": "الاسم الأول مطلوب",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "phoneInvalid": "رقم الهاتف غير صالح",
+      "savedAddresses": "العناوين المحفوظة",
+      "defaultBadge": "· افتراضي",
+      "firstNameLabel": "الاسم الأول *",
+      "phoneLabel": "الهاتف *",
+      "addressPlaceholder": "ابدأ بكتابة عنوانك…",
+      "complementLabel": "معلومات إضافية",
+      "complementPlaceholder": "المبنى، الطابق (اختياري)",
+      "noAddressYet": "لا يوجد عنوان محفوظ"
+    },
+    "payment": {
+      "secureVia": "دفع آمن عبر Stripe. بياناتك لا تمر أبداً عبر خوادمنا.",
+      "securedTitle": "دفع آمن 100%",
+      "securedDesc": "تشفير SSL بقوة 256 بت، متوافق مع PCI-DSS المستوى 1. تتم معالجة بياناتك المصرفية مباشرة بواسطة Stripe، المعتمد من الهيئات المصرفية الأوروبية.",
+      "cardCapturedOnStripe": "يتم إدخال البطاقة على صفحة Stripe الآمنة بعد التأكيد.",
+      "stripeRedirect": "جارٍ التوجيه إلى صفحة Stripe الآمنة لإدخال بطاقتك."
     }
   },
   "contactPage": {
@@ -234,7 +452,7 @@
   "errors": {
     "required": "هذا الحقل مطلوب",
     "invalidEmail": "بريد إلكتروني غير صالح",
-    "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 12 حرفًا على الأقل",
     "passwordMismatch": "كلمات المرور غير متطابقة",
     "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صحيحة",
     "emailExists": "هذا البريد الإلكتروني مستخدم بالفعل",
@@ -251,7 +469,8 @@
     "profileUpdated": "تم تحديث الملف الشخصي",
     "orderPlaced": "تم تقديم الطلب بنجاح",
     "itemAdded": "تمت إضافة العنصر إلى السلة",
-    "itemRemoved": "تمت إزالة العنصر من السلة"
+    "itemRemoved": "تمت إزالة العنصر من السلة",
+    "emailSent": "تم إرسال البريد الإلكتروني!"
   },
   "chatbot": {
     "title": "مساعد Althea",

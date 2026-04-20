@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Minus, Plus, ArrowUpRight } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
@@ -28,6 +29,7 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const t = useTranslations("product");
 
   const handleAddToCart = () => {
     if (disabled) return;
@@ -41,11 +43,7 @@ export default function AddToCartButton({
       quantity
     );
 
-    toast.success(
-      `${quantity} produit${quantity > 1 ? "s" : ""} ajouté${
-        quantity > 1 ? "s" : ""
-      } au panier`
-    );
+    toast.success(t("addedToCart", { count: quantity }));
     setQuantity(1);
   };
 
@@ -57,14 +55,14 @@ export default function AddToCartButton({
       {/* Qty stepper — mono outline, pas de border radius */}
       <div className="flex items-center gap-3">
         <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/40">
-          Qté
+          {t("qtyShort")}
         </span>
         <div className="flex items-center">
           <button
             type="button"
             onClick={decrease}
             disabled={quantity <= 1 || disabled}
-            aria-label="Diminuer la quantité"
+            aria-label={t("decreaseQuantity")}
             className="inline-flex h-8 w-8 items-center justify-center border border-border/60 bg-background text-foreground/70 transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
           >
             <Minus className="h-3 w-3" />
@@ -79,7 +77,7 @@ export default function AddToCartButton({
             type="button"
             onClick={increase}
             disabled={disabled}
-            aria-label="Augmenter la quantité"
+            aria-label={t("increaseQuantity")}
             className="inline-flex h-8 w-8 items-center justify-center border border-border/60 bg-background text-foreground/70 transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
           >
             <Plus className="h-3 w-3" />
@@ -94,7 +92,7 @@ export default function AddToCartButton({
         disabled={disabled}
         className="group/cta inline-flex h-10 w-full items-center justify-between gap-3 border border-foreground bg-background px-4 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground transition-colors duration-300 hover:bg-foreground hover:text-background disabled:cursor-not-allowed disabled:border-border/60 disabled:bg-background disabled:text-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
       >
-        <span>{disabled ? "Indisponible" : "Ajouter au panier"}</span>
+        <span>{disabled ? t("outOfStock") : t("addToCart")}</span>
         <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
       </button>
     </div>

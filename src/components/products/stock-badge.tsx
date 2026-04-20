@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface StockBadgeProps {
@@ -6,10 +9,12 @@ interface StockBadgeProps {
 }
 
 /**
- * Stock chip — style éditorial : bordure outline, typo mono caps,
- * dot de statut coloré. Aucun aplat primaire.
+ * Stock chip — editorial: outline border, mono caps, colored status dot.
+ * Colors align with Althea brand: success green, warning amber, destructive red.
  */
 export default function StockBadge({ stock, className }: StockBadgeProps) {
+  const t = useTranslations("product");
+
   if (stock === 0) {
     return (
       <span
@@ -19,7 +24,7 @@ export default function StockBadge({ stock, className }: StockBadgeProps) {
         )}
       >
         <span aria-hidden className="h-1 w-1 rounded-full bg-destructive" />
-        Rupture
+        {t("outOfStock")}
       </span>
     );
   }
@@ -28,12 +33,12 @@ export default function StockBadge({ stock, className }: StockBadgeProps) {
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-none border border-foreground/60 bg-background/90 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/80 backdrop-blur",
+          "inline-flex items-center gap-1.5 rounded-none border border-warning/70 bg-background/90 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-warning backdrop-blur",
           className
         )}
       >
-        <span aria-hidden className="h-1 w-1 rounded-full bg-foreground/60" />
-        Stock faible
+        <span aria-hidden className="h-1 w-1 rounded-full bg-warning" />
+        {t("lowStock")}
       </span>
     );
   }
@@ -41,12 +46,12 @@ export default function StockBadge({ stock, className }: StockBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-none border border-border/60 bg-background/90 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/70 backdrop-blur",
+        "inline-flex items-center gap-1.5 rounded-none border border-success/40 bg-background/90 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-success backdrop-blur",
         className
       )}
     >
-      <span aria-hidden className="h-1 w-1 rounded-full bg-foreground/40" />
-      En stock
+      <span aria-hidden className="h-1 w-1 rounded-full bg-success" />
+      {t("inStock")}
     </span>
   );
 }

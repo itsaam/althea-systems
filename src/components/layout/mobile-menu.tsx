@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,22 +15,24 @@ import {
 } from "@/components/ui/sheet";
 
 const PUBLIC_LINKS = [
-  { href: "/", label: "Accueil" },
-  { href: "/categories", label: "Catégories" },
-  { href: "/about", label: "À propos" },
-  { href: "/contact", label: "Contact" },
-  { href: "/cart", label: "Panier" },
+  { href: "/", key: "home" as const },
+  { href: "/categories", key: "categories" as const },
+  { href: "/about", key: "about" as const },
+  { href: "/contact", key: "contact" as const },
+  { href: "/cart", key: "cart" as const },
 ];
 
 const ACCOUNT_LINKS = [
-  { href: "/profile", label: "Mon profil" },
-  { href: "/orders", label: "Mes commandes" },
+  { href: "/profile", key: "myProfile" as const },
+  { href: "/orders", key: "myOrders" as const },
 ];
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const tCommon = useTranslations("common");
+  const tFooter = useTranslations("footer");
 
   const isActive = (href: string) =>
     pathname === href ||
@@ -43,17 +46,17 @@ export default function MobileMenu() {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Ouvrir le menu principal"
+          aria-label={tCommon("openMainMenu")}
           aria-expanded={open}
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72">
-        <SheetTitle className="sr-only">Menu principal</SheetTitle>
+        <SheetTitle className="sr-only">{tCommon("mainMenu")}</SheetTitle>
         <nav
           className="mt-8 flex flex-col gap-1"
-          aria-label="Navigation mobile"
+          aria-label={tCommon("mobileNavigation")}
         >
           {PUBLIC_LINKS.map((link) => {
             const active = isActive(link.href);
@@ -65,7 +68,7 @@ export default function MobileMenu() {
                 aria-current={active ? "page" : undefined}
                 className="rounded-md px-3 py-2.5 text-base font-medium transition-colors hover:bg-muted aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                {link.label}
+                {tCommon(link.key)}
               </Link>
             );
           })}
@@ -81,7 +84,7 @@ export default function MobileMenu() {
             <div className="flex flex-col gap-1">
               <div className="px-3 pb-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Compte
+                  {tFooter("account")}
                 </p>
                 {session.user.name && (
                   <p className="mt-1 truncate text-sm font-semibold">
@@ -104,7 +107,7 @@ export default function MobileMenu() {
                     aria-current={active ? "page" : undefined}
                     className="rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    {link.label}
+                    {tCommon(link.key)}
                   </Link>
                 );
               })}
@@ -114,7 +117,7 @@ export default function MobileMenu() {
                   onClick={close}
                   className="rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  Administration
+                  {tCommon("administration")}
                 </Link>
               )}
               <button
@@ -126,19 +129,19 @@ export default function MobileMenu() {
                 className="mt-1 flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
-                Déconnexion
+                {tCommon("logout")}
               </button>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               <Button asChild size="lg">
                 <Link href="/register" onClick={close}>
-                  S&apos;inscrire
+                  {tCommon("register")}
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link href="/login" onClick={close}>
-                  Connexion
+                  {tCommon("login")}
                 </Link>
               </Button>
             </div>

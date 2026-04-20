@@ -63,20 +63,20 @@ export default function Header() {
             <Link
               href="/"
               className="group inline-flex items-baseline gap-3"
-              aria-label="Althea Systems — Accueil"
+              aria-label={tCommon("brandHome")}
             >
               <span className="font-display text-[17px] font-semibold leading-none tracking-[-0.02em] text-foreground">
-                althea<span className="text-electric-indigo-500">.</span>
+                althea<span className="text-primary">.</span>
               </span>
               <span className="hidden font-mono text-[9px] uppercase tracking-[0.22em] text-foreground/45 transition-colors duration-300 group-hover:text-foreground/65 md:inline-block">
-                Medical · Systems
+                {tCommon("brandTagline")}
               </span>
             </Link>
           </div>
 
           <nav
             className="hidden md:flex items-center justify-center gap-8"
-            aria-label="Navigation principale"
+            aria-label={tCommon("mainNavigation")}
           >
             {NAV_LINKS.map((link) => (
               <Link

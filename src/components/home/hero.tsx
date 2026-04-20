@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { motion, type Variants } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import SplitText from "@/components/ui/split-text";
@@ -8,14 +9,14 @@ import ScrollReveal from "@/components/ui/scroll-reveal";
 import MagneticButton from "@/components/ui/magnetic-button";
 
 
-const SPECS = [
-  { value: "2011", label: "Fondé" },
-  { value: "4 800", label: "Praticiens" },
-  { value: "48H", label: "Livraison" },
-  { value: "ISO 13485", label: "Certifié" },
-];
-
 export default function Hero() {
+  const t = useTranslations("home.hero");
+  const SPECS = [
+    { value: "2011", label: t("specs.founded") },
+    { value: "4 800", label: t("specs.practitioners") },
+    { value: "48H", label: t("specs.delivery") },
+    { value: "ISO\u00A013485", label: t("specs.certified") },
+  ];
   return (
     <section className="relative isolate grain overflow-hidden bg-background">
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-3.5rem)] max-w-[1400px] flex-col justify-between px-4 pb-20 pt-24 sm:px-6 lg:px-10 lg:pt-32">
@@ -26,22 +27,22 @@ export default function Hero() {
             <h1 className="font-display text-hero text-foreground">
               <SplitText
                 as="span"
-                text="L'équipement"
+                text={t("titleLine1")}
                 className="block"
                 immediate
               />
               <SplitText
                 as="span"
-                text="médical,"
+                text={t("titleLine2")}
                 delay={0.2}
                 className="block"
                 immediate
               />
               <SplitText
                 as="span"
-                text="repensé."
+                text={t("titleLine3")}
                 delay={0.4}
-                className="block text-electric-indigo-500"
+                className="block text-primary"
                 immediate
               />
             </h1>
@@ -66,7 +67,7 @@ export default function Hero() {
             <div className="grid grid-cols-2 gap-x-6 gap-y-6 border-t border-border/60 pt-6 sm:grid-cols-4">
               {SPECS.map((s) => (
                 <div key={s.label} className="flex flex-col gap-1">
-                  <span className="font-display text-2xl leading-none tabular-nums text-foreground sm:text-3xl">
+                  <span className="font-display text-2xl leading-none tabular-nums whitespace-nowrap text-foreground sm:text-3xl">
                     {s.value}
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">
@@ -81,9 +82,7 @@ export default function Hero() {
           <div className="flex flex-col gap-8 lg:col-span-5 lg:col-start-8">
             <ScrollReveal delay={0.7}>
               <p className="max-w-md text-lead text-foreground/70">
-                Althea Systems sélectionne, certifie et livre le matériel de
-                pointe qui équipe les pros de santé. Pas de bruit, pas de
-                compromis.
+                {t("lead")}
               </p>
             </ScrollReveal>
 
@@ -95,14 +94,14 @@ export default function Hero() {
                 href="/categories"
                 className="group inline-flex items-center gap-3 rounded-full bg-foreground px-8 py-4 font-mono text-[11px] uppercase tracking-[0.18em] text-background transition-colors duration-500 hover:bg-foreground/85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
               >
-                Explorer le catalogue
+                {t("ctaExplore")}
                 <ArrowUpRight className="h-4 w-4 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
               </MagneticButton>
               <Link
                 href="/contact"
                 className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/60 underline-offset-4 transition-colors duration-300 hover:text-foreground hover:underline"
               >
-                Parler à un conseiller
+                {t("ctaAdvisor")}
               </Link>
             </ScrollReveal>
           </div>
@@ -112,7 +111,7 @@ export default function Hero() {
       {/* Hidden fallback link for no-JS parity */}
       <noscript>
         <Link href="/categories" className="sr-only">
-          Explorer le catalogue
+          {t("ctaExplore")}
         </Link>
       </noscript>
     </section>

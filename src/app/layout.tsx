@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import {
-  Hanken_Grotesk,
+  Inter,
+  Poppins,
   IBM_Plex_Mono,
   Newsreader,
   Noto_Sans_Arabic,
@@ -14,17 +15,25 @@ import CookieBanner from "@/components/cookie-banner";
 import { getDirection } from "@/i18n";
 
 // ──────────────────────────────────────────────────────────────
-// Neo-Grotesque Precision typography stack
-// Sans  — Hanken Grotesk (General Sans equivalent, precise & clinical)
-// Mono  — IBM Plex Mono  (eyebrows, metadata, tabular numerics)
-// Serif — Newsreader     (rare editorial italic accent)
-// Arabic — Noto Sans Arabic (RTL parity)
+// Althea typography (conforme charte graphique CDC §IV)
+// Heading — Poppins semibold (titres)
+// Body    — Inter Regular    (corps)
+// Mono    — IBM Plex Mono    (eyebrows, metadata, tabular numerics)
+// Serif   — Newsreader       (rare editorial italic accent)
+// Arabic  — Noto Sans Arabic (RTL parity)
 // ──────────────────────────────────────────────────────────────
 
-const sans = Hanken_Grotesk({
+const sans = Inter({
   variable: "--font-sans-brand",
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const heading = Poppins({
+  variable: "--font-heading-brand",
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 
@@ -156,8 +165,8 @@ export const metadata: Metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f1f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e090c" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#00111a" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -176,7 +185,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir}>
       <body
-        className={`${sans.variable} ${mono.variable} ${serif.variable} ${notoArabic.variable} antialiased`}
+        className={`${sans.variable} ${heading.variable} ${mono.variable} ${serif.variable} ${notoArabic.variable} antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SessionProvider>

@@ -1,22 +1,28 @@
-const MARKS = [
-  "ISO 13485",
-  "Marquage CE",
-  "Livraison 48h",
-  "SAV 7j/7",
-  "Stock européen",
-  "Traçabilité lot",
-  "Garantie 24 mois",
-  "Expédition le jour même avant 15h",
-  "Conseil praticien",
-  "Emballage sobre",
-];
+"use client";
+
+import { useTranslations } from "next-intl";
+
+const TICKER_KEYS = [
+  "iso",
+  "ce",
+  "delivery48h",
+  "support7d",
+  "euStock",
+  "batchTracking",
+  "warranty",
+  "sameDayShipping",
+  "practitionerAdvice",
+  "soberPackaging",
+] as const;
 
 export default function Ticker() {
-  const repeated = [...MARKS, ...MARKS, ...MARKS, ...MARKS];
+  const t = useTranslations("home.ticker");
+  const marks = TICKER_KEYS.map((k) => t(`items.${k}`));
+  const repeated = [...marks, ...marks, ...marks, ...marks];
 
   return (
     <section
-      aria-label="Garanties Althea Systems"
+      aria-label={t("ariaLabel")}
       className="relative w-full overflow-hidden border-y border-border/60 bg-background py-4"
     >
       {/* Edge fades */}

@@ -33,7 +33,21 @@
     "administration": "Administration",
     "userMenu": "User menu",
     "userMenuNamed": "User menu of {name}",
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "mainNavigation": "Main navigation",
+    "mobileNavigation": "Mobile navigation",
+    "openMainMenu": "Open main menu",
+    "mainMenu": "Main menu",
+    "brandHome": "Althea Systems — Home",
+    "brandTagline": "Systems",
+    "copyLink": "Copy link",
+    "linkCopied": "Copied",
+    "linkCopiedToast": "Link copied to clipboard",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "retry": "Retry",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "and": "and"
   },
   "nav": {
     "home": "Home",
@@ -45,12 +59,24 @@
   "home": {
     "hero": {
       "eyebrow": "Next-generation medical equipment",
+      "titleLine1": "Medical",
+      "titleLine2": "equipment,",
+      "titleLine3": "reimagined.",
       "title": "Precision in the service of care.",
       "titleAccent": "In the service of care.",
       "subtitle": "Althea Systems supplies healthcare professionals with premium medical equipment, curated for clinical reliability and ergonomics.",
+      "lead": "Althea Systems selects, certifies and delivers the cutting-edge gear that equips healthcare professionals. No noise, no compromise.",
       "ctaPrimary": "Browse catalog",
+      "ctaExplore": "Browse the catalog",
       "ctaSecondary": "Talk to an expert",
-      "badge": "CE Certified — Class IIa"
+      "ctaAdvisor": "Talk to an advisor",
+      "badge": "CE Certified — Class IIa",
+      "specs": {
+        "founded": "Founded",
+        "practitioners": "Practitioners",
+        "delivery": "Delivery",
+        "certified": "Certified"
+      }
     },
     "featured": {
       "eyebrow": "Featured this month",
@@ -64,19 +90,87 @@
     "trust": {
       "title": "Trusted by healthcare institutions",
       "subtitle": "Over 1,200 professionals trust us in France and internationally."
+    },
+    "ticker": {
+      "ariaLabel": "Althea Systems guarantees",
+      "items": {
+        "iso": "ISO 13485",
+        "ce": "CE marking",
+        "delivery48h": "48h delivery",
+        "support7d": "Support 7/7",
+        "euStock": "European stock",
+        "batchTracking": "Batch traceability",
+        "warranty": "24-month warranty",
+        "sameDayShipping": "Same-day shipping before 3 PM",
+        "practitionerAdvice": "Practitioner advice",
+        "soberPackaging": "Minimal packaging"
+      }
+    },
+    "ctaFinal": {
+      "headline": "We equip those who will not compromise",
+      "signatureProducts": "Signature products"
     }
   },
   "product": {
     "addToCart": "Add to cart",
     "outOfStock": "Out of stock",
     "inStock": "In stock",
+    "lowStock": "Low stock",
     "price": "Price",
     "quantity": "Quantity",
+    "qtyShort": "Qty",
     "description": "Description",
     "reviews": "Reviews",
     "relatedProducts": "Related products",
     "newProduct": "New",
-    "onSale": "On sale"
+    "onSale": "On sale",
+    "sku": "Ref.",
+    "vatIncluded": "20% VAT included · Shipping calculated at checkout",
+    "stockAvailable": "{count, plural, one {# unit available} other {# units available}}",
+    "talkToAdvisor": "Talk to an Althea advisor",
+    "increaseQuantity": "Increase quantity",
+    "decreaseQuantity": "Decrease quantity",
+    "addedToCart": "{count, plural, one {# item added to cart} other {# items added to cart}}",
+    "details": {
+      "fullDescription": "Full description",
+      "fallback": "Product sheet is being drafted — contact us for the detailed documentation.",
+      "specs": "Technical specifications",
+      "specReference": "Reference",
+      "specCategory": "Category",
+      "specAvailability": "Availability",
+      "specCompliance": "Compliance",
+      "specTraceability": "Traceability",
+      "traceabilityValue": "Batch number provided",
+      "reviewsEyebrow": "Coming soon",
+      "reviewsCopy": "We hand-moderate every review to keep them relevant. Equip yourself today and share your feedback on delivery.",
+      "faqLabel": "Frequently asked questions",
+      "faq": {
+        "deliveryQ": "What are the delivery times?",
+        "deliveryA": "48 working hours in mainland France after order validation. A tracking number is sent as soon as the parcel ships.",
+        "invoiceQ": "How can I get a professional invoice?",
+        "invoiceA": "A compliant invoice is generated automatically with the intra-EU VAT number if provided at checkout.",
+        "warrantyQ": "What warranty applies to the equipment?",
+        "warrantyA": "24-month warranty on parts and labor. Extensions available on request."
+      }
+    },
+    "similar": {
+      "eyebrow": "From the same family",
+      "subtitle": "Hand-picked by our experts for their quality and complementarity with this equipment."
+    },
+    "filters": {
+      "categories": "Categories",
+      "availability": "Availability"
+    },
+    "sort": {
+      "newest": "Newest",
+      "priceAsc": "Price ascending",
+      "priceDesc": "Price descending"
+    },
+    "trust": {
+      "deliveryDetail": "Mainland France",
+      "qualityDetail": "batch traceability",
+      "paymentTitle": "Secure payment"
+    }
   },
   "cart": {
     "title": "Your cart",
@@ -97,7 +191,10 @@
     "updateQuantity": "Update quantity",
     "increaseQuantity": "Increase quantity of {name}",
     "decreaseQuantity": "Decrease quantity of {name}",
-    "itemCount": "{count, plural, =0 {no items} one {# item} other {# items}}"
+    "itemCount": "{count, plural, =0 {no items} one {# item} other {# items}}",
+    "unitPrice": "Unit price",
+    "securePayment": "Secure payment · Stripe",
+    "deliveryMetropolitan": "48h delivery in mainland France"
   },
   "auth": {
     "email": "Email",
@@ -118,6 +215,20 @@
     "twoFactorCode": "Verification code",
     "twoFactorSetup": "Set up 2FA",
     "continueWith": "Continue with",
+    "backToLogin": "Back to login",
+    "emailSentTitle": "Email sent!",
+    "createAccountCta": "Create my account",
+    "creatingAccount": "Creating account…",
+    "resetting": "Resetting…",
+    "minPasswordHint": "At least 12 characters with 1 uppercase, 1 lowercase, 1 digit and 1 special character",
+    "forgotInstructions": "Enter your email and we will send you a link to reset your password.",
+    "forgotSuccess": "Check your inbox to reset your password.",
+    "checkSpam": "Also check your spam folder.",
+    "passwordResetSuccess": "Password reset!",
+    "resetLinkInvalid": "This reset link is invalid or has expired.",
+    "acceptTerms": "I have read and accept the",
+    "termsLink": "terms and conditions",
+    "privacyLink": "privacy policy",
     "loginPage": {
       "eyebrow": "Welcome back",
       "title": "Sign in to your account",
@@ -127,6 +238,39 @@
       "eyebrow": "New account",
       "title": "Create your account",
       "subtitle": "Join Althea Systems and enjoy full catalog access, professional pricing and a detailed order history."
+    },
+    "errors": {
+      "oauthAccountNotLinked": "This email is already registered with another sign-in method.",
+      "emailNotVerified": "Please verify your email before signing in. Check your inbox.",
+      "oauthProvider": "OAuth sign-in error. Make sure the provider is configured.",
+      "registerFailed": "Registration failed. Please try again.",
+      "providerError": "Sign-in error with {provider}. Make sure the provider is configured.",
+      "firstNameRequired": "First name is required",
+      "weakPassword": "Your password does not meet the security requirements",
+      "termsRequired": "You must accept the terms and conditions",
+      "passwordMinLength": "Password must be at least 8 characters"
+    },
+    "passwordMeter": {
+      "minChars": "At least 8 characters",
+      "upper": "At least one uppercase",
+      "lower": "At least one lowercase",
+      "digit": "At least one digit",
+      "special": "A special character",
+      "labels": {
+        "veryWeak": "Very weak",
+        "weak": "Weak",
+        "medium": "Medium",
+        "good": "Good",
+        "strong": "Strong",
+        "excellent": "Excellent"
+      }
+    },
+    "registerSuccess": {
+      "eyebrow": "— Email sent",
+      "titleCheck": "Check your",
+      "titleInbox": "inbox",
+      "confirmationSent": "A confirmation email has just been sent to",
+      "successToast": "Check your inbox to activate your account!"
     }
   },
   "checkout": {
@@ -134,6 +278,80 @@
       "eyebrow": "Secure payment",
       "title": "Complete your order",
       "subtitle": "Four simple steps: authentication, address, payment and confirmation."
+    },
+    "steps": {
+      "account": {
+        "label": "Account",
+        "description": "Sign in or guest"
+      },
+      "address": {
+        "label": "Address",
+        "description": "Shipping and billing"
+      },
+      "payment": {
+        "label": "Payment",
+        "description": "Secure method"
+      },
+      "confirmation": {
+        "label": "Confirmation",
+        "description": "Final review"
+      },
+      "stepNumber": "Step {id}: {label}",
+      "stepProgress": "Step {current} / {total}"
+    },
+    "summary": {
+      "title": "Order summary",
+      "label": "— Summary",
+      "qtyShort": "Qty"
+    },
+    "toast": {
+      "completeAll": "Please complete all steps",
+      "cannotCreateSession": "Unable to create payment session",
+      "redirecting": "Redirecting to secure payment…",
+      "guestSaved": "Guest order saved. You will be contacted by email."
+    },
+    "empty": "Add items before proceeding to payment.",
+    "confirmation": {
+      "title": "Order confirmed!",
+      "orderNumber": "Order number",
+      "emailSent": "A confirmation email has been sent to you."
+    },
+    "auth": {
+      "loggedInAs": "Signed-in user",
+      "savedDataAvailable": "Your saved addresses and payment methods are available in the next steps.",
+      "haveAccount": "I already have an account",
+      "loginPerks": "Find your addresses, saved cards and order history.",
+      "createAccount": "Create an account",
+      "createPerks": "Order tracking, invoices and simpler purchases on future visits.",
+      "continueAsGuest": "Continue as guest",
+      "guestCopy": "Order without creating an account. You can still create one after purchase to track your order.",
+      "orderAsGuest": "Order as guest",
+      "guestBadge": "Ordering as guest",
+      "guestWarning": "You will not be able to track your order without an account. A summary will be sent by email.",
+      "acceptTermsPrefix": "By continuing, you accept our",
+      "termsLink": "terms and conditions",
+      "andPrivacy": "and our",
+      "privacyLink": "privacy policy"
+    },
+    "address": {
+      "firstNameRequired": "First name is required",
+      "phoneRequired": "Phone is required",
+      "phoneInvalid": "Invalid phone number",
+      "savedAddresses": "Saved addresses",
+      "defaultBadge": "· Default",
+      "firstNameLabel": "First name *",
+      "phoneLabel": "Phone *",
+      "addressPlaceholder": "Start typing your address…",
+      "complementLabel": "Complement",
+      "complementPlaceholder": "Building, floor (optional)",
+      "noAddressYet": "No saved address"
+    },
+    "payment": {
+      "secureVia": "Secure payment via Stripe. Your data never passes through our servers.",
+      "securedTitle": "100% secure payment",
+      "securedDesc": "256-bit SSL encryption, PCI-DSS level 1 compliance. Your banking details are processed directly by Stripe, certified by European banking authorities.",
+      "cardCapturedOnStripe": "Card entered on Stripe's secure page after confirmation.",
+      "stripeRedirect": "Redirecting to Stripe's secure page to enter your card."
     }
   },
   "contactPage": {
@@ -234,7 +452,7 @@
   "errors": {
     "required": "This field is required",
     "invalidEmail": "Invalid email",
-    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordTooShort": "Password must be at least 12 characters",
     "passwordMismatch": "Passwords do not match",
     "invalidCredentials": "Invalid email or password",
     "emailExists": "This email is already in use",
@@ -251,7 +469,8 @@
     "profileUpdated": "Profile updated",
     "orderPlaced": "Order placed successfully",
     "itemAdded": "Item added to cart",
-    "itemRemoved": "Item removed from cart"
+    "itemRemoved": "Item removed from cart",
+    "emailSent": "Email sent!"
   },
   "chatbot": {
     "title": "Althea Assistant",

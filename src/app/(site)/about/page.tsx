@@ -12,7 +12,7 @@ const STATS = [
   { value: "2011", label: "Fondé à Lyon" },
   { value: "4 800", label: "Praticiens équipés" },
   { value: "48H", label: "Livraison garantie" },
-  { value: "ISO 13485", label: "Certification" },
+  { value: "ISO\u00A013485", label: "Certification" },
 ];
 
 const MILESTONES = [
@@ -121,7 +121,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-2 gap-x-6 gap-y-8 border-t border-border/60 pt-8 sm:grid-cols-4">
             {STATS.map((s) => (
               <div key={s.label} className="flex flex-col gap-1.5">
-                <span className="font-display text-3xl leading-none tabular-nums tracking-[-0.02em] text-foreground sm:text-4xl">
+                <span className="font-display text-3xl leading-none tabular-nums tracking-[-0.02em] whitespace-nowrap text-foreground sm:text-4xl">
                   {s.value}
                 </span>
                 <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40">

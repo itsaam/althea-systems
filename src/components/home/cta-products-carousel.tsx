@@ -26,9 +26,12 @@ function formatPrice(value: number) {
 
 export default function CtaProductsCarousel({
   products,
+  labels,
 }: {
   products: CarouselProduct[];
+  labels?: { sectionLabel?: string };
 }) {
+  const sectionLabel = labels?.sectionLabel ?? "Signature products";
   const sectionRef = useRef<HTMLDivElement | null>(null);
   const pinRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -243,7 +246,7 @@ export default function CtaProductsCarousel({
     <section
       ref={sectionRef}
       className="relative w-full"
-      aria-label="Produits signature"
+      aria-label={sectionLabel}
     >
       <div
         ref={pinRef}
@@ -251,7 +254,7 @@ export default function CtaProductsCarousel({
       >
         {/* Eyebrow row — sits above the horizontal track */}
         <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 pt-10 font-mono text-[10px] uppercase tracking-[0.22em] text-foreground/40 sm:px-6 md:pt-16 lg:px-10">
-          <span>— Produits signature</span>
+          <span>— {sectionLabel}</span>
           <span className="tabular-nums text-foreground/50">
             {String(activeIndex + 1).padStart(2, "0")} /{" "}
             {String(total).padStart(2, "0")}

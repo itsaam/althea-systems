@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import SocialLinks from "@/components/shared/social-links";
 
 const linkClass =
-  "font-mono text-[11px] lowercase tracking-[0.14em] text-white/60 transition-colors duration-300 hover:text-white rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-shadow-grey-950";
+  "font-mono text-[11px] lowercase tracking-[0.14em] text-white/70 transition-colors duration-300 hover:text-white rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-700";
 
 const columnHeadingClass =
   "font-mono text-[10px] uppercase tracking-[0.22em] text-white/40 mb-5";
@@ -16,7 +16,7 @@ export default async function Footer() {
 
   return (
     <footer
-      className="relative isolate overflow-hidden border-t border-white/10 bg-shadow-grey-950 text-white"
+      className="relative isolate overflow-hidden border-t border-white/10 bg-navy-700 text-white"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">

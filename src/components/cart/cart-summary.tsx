@@ -104,11 +104,11 @@ export default function CartSummary({
         <ul className="space-y-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/50">
           <li className="flex items-center gap-3">
             <ShieldCheck className="h-3 w-3 text-foreground/60" />
-            Paiement sécurisé · Stripe
+            {t("securePayment")}
           </li>
           <li className="flex items-center gap-3">
             <Truck className="h-3 w-3 text-foreground/60" />
-            Livraison 48h France métropolitaine
+            {t("deliveryMetropolitan")}
           </li>
         </ul>
       </div>

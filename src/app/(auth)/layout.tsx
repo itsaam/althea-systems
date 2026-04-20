@@ -6,7 +6,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="dark relative min-h-screen bg-[#1a1a1a] text-foreground">
+    <div className="dark relative min-h-screen bg-background text-foreground">
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-4 sm:px-6 lg:px-10">
         {/* ── Top rail ──────────────────────────────────────── */}
         <header className="flex items-center justify-between pt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground/55">
