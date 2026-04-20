@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -100,7 +102,18 @@ export default function SearchClient() {
   const searchParams = useSearchParams();
 
   const urlQuery = searchParams.get("q") ?? "";
-  const urlCategoryId = searchParams.get("categoryId") ?? "";
+  const urlCategoryIdsRaw = searchParams.get("categoryIds") ?? "";
+  const urlCategoryIds = useMemo(
+    () =>
+      urlCategoryIdsRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    [urlCategoryIdsRaw]
+  );
+  const urlDescQ = searchParams.get("descQ") ?? "";
+  const urlSpecsQ = searchParams.get("specsQ") ?? "";
+  const urlInStockOnly = searchParams.get("inStockOnly") === "1";
   const urlMin = parsePriceBound(searchParams.get("minPrice"), PRICE_MIN);
   const urlMax = parsePriceBound(searchParams.get("maxPrice"), PRICE_MAX);
   const urlSort = parseSort(searchParams.get("sort"));
@@ -108,6 +121,11 @@ export default function SearchClient() {
   const urlPage = parsePositiveInt(searchParams.get("page"), 1);
 
   const [inputValue, setInputValue] = useState(urlQuery);
+  const [descInput, setDescInput] = useState(urlDescQ);
+  const [specsInput, setSpecsInput] = useState(urlSpecsQ);
+  const [advancedOpen, setAdvancedOpen] = useState(
+    Boolean(urlDescQ || urlSpecsQ)
+  );
   const [priceRange, setPriceRange] = useState<[number, number]>([
     urlMin,
     urlMax,
@@ -121,6 +139,14 @@ export default function SearchClient() {
   useEffect(() => {
     setInputValue(urlQuery);
   }, [urlQuery]);
+
+  useEffect(() => {
+    setDescInput(urlDescQ);
+  }, [urlDescQ]);
+
+  useEffect(() => {
+    setSpecsInput(urlSpecsQ);
+  }, [urlSpecsQ]);
 
   useEffect(() => {
     setPriceRange([urlMin, urlMax]);
@@ -159,8 +185,15 @@ export default function SearchClient() {
     return () => controller.abort();
   }, []);
 
+  const hasAnyQuery =
+    Boolean(urlQuery) ||
+    urlCategoryIds.length > 0 ||
+    Boolean(urlDescQ) ||
+    Boolean(urlSpecsQ) ||
+    urlInStockOnly;
+
   useEffect(() => {
-    if (!urlQuery && !urlCategoryId) {
+    if (!hasAnyQuery) {
       setProducts([]);
       setError(null);
       setLoading(false);
@@ -170,7 +203,16 @@ export default function SearchClient() {
     const controller = new AbortController();
     const params = new URLSearchParams();
     if (urlQuery) params.set("q", urlQuery);
-    if (urlCategoryId) params.set("categoryId", urlCategoryId);
+    if (urlDescQ) params.set("descQ", urlDescQ);
+    if (urlSpecsQ) params.set("specsQ", urlSpecsQ);
+    if (urlCategoryIds.length > 0) {
+      params.set("categoryIds", urlCategoryIds.join(","));
+      // Rétro-compatibilité : si une seule catégorie, on envoie aussi `categoryId`.
+      if (urlCategoryIds.length === 1) {
+        params.set("categoryId", urlCategoryIds[0]);
+      }
+    }
+    if (urlInStockOnly) params.set("inStockOnly", "1");
     params.set("minPrice", urlMin.toString());
     params.set("maxPrice", urlMax.toString());
 
@@ -193,7 +235,16 @@ export default function SearchClient() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [urlQuery, urlCategoryId, urlMin, urlMax]);
+  }, [
+    hasAnyQuery,
+    urlQuery,
+    urlDescQ,
+    urlSpecsQ,
+    urlCategoryIds,
+    urlInStockOnly,
+    urlMin,
+    urlMax,
+  ]);
 
   const handleSubmitQuery = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -207,6 +258,41 @@ export default function SearchClient() {
     }, SEARCH_DEBOUNCE);
     return () => window.clearTimeout(id);
   }, [inputValue, urlQuery, updateParams]);
+
+  useEffect(() => {
+    if (descInput === urlDescQ) return;
+    const id = window.setTimeout(() => {
+      updateParams({ descQ: descInput.trim() || null });
+    }, SEARCH_DEBOUNCE);
+    return () => window.clearTimeout(id);
+  }, [descInput, urlDescQ, updateParams]);
+
+  useEffect(() => {
+    if (specsInput === urlSpecsQ) return;
+    const id = window.setTimeout(() => {
+      updateParams({ specsQ: specsInput.trim() || null });
+    }, SEARCH_DEBOUNCE);
+    return () => window.clearTimeout(id);
+  }, [specsInput, urlSpecsQ, updateParams]);
+
+  const toggleCategory = useCallback(
+    (id: string) => {
+      const next = urlCategoryIds.includes(id)
+        ? urlCategoryIds.filter((c) => c !== id)
+        : [...urlCategoryIds, id];
+      updateParams({
+        categoryIds: next.length ? next.join(",") : null,
+      });
+    },
+    [urlCategoryIds, updateParams]
+  );
+
+  const toggleInStock = useCallback(
+    (checked: boolean) => {
+      updateParams({ inStockOnly: checked ? "1" : null });
+    },
+    [updateParams]
+  );
 
   const sortedProducts = useMemo(() => {
     const copy = [...products];
@@ -228,10 +314,20 @@ export default function SearchClient() {
   const pageStart = (safePage - 1) * PAGE_SIZE;
   const pagedProducts = sortedProducts.slice(pageStart, pageStart + PAGE_SIZE);
 
-  const activeCategory = categories.find((c) => c.id === urlCategoryId);
+  const activeCategories = useMemo(
+    () => categories.filter((c) => urlCategoryIds.includes(c.id)),
+    [categories, urlCategoryIds]
+  );
+  const singleActiveCategory =
+    urlCategoryIds.length === 1 ? activeCategories[0] : undefined;
   const hasPriceFilter = urlMin !== PRICE_MIN || urlMax !== PRICE_MAX;
   const hasAnyFilter =
-    Boolean(urlCategoryId) || hasPriceFilter || Boolean(urlQuery);
+    urlCategoryIds.length > 0 ||
+    hasPriceFilter ||
+    Boolean(urlQuery) ||
+    Boolean(urlDescQ) ||
+    Boolean(urlSpecsQ) ||
+    urlInStockOnly;
 
   const resetFilters = () => {
     router.replace("/search", { scroll: false });
@@ -239,50 +335,74 @@ export default function SearchClient() {
 
   const filtersPanel = (
     <div className="space-y-8">
-      <div>
-        <Label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Catégorie
+      {/* Disponibilité */}
+      <div className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 p-3">
+        <Label
+          htmlFor="filter-stock"
+          className="flex flex-col gap-0.5 text-sm font-medium text-foreground"
+        >
+          Uniquement produits disponibles
+          <span className="text-[11px] font-normal text-muted-foreground">
+            Masquer les articles en rupture
+          </span>
         </Label>
-        <div className="space-y-1.5">
-          <button
-            type="button"
-            onClick={() => updateParams({ categoryId: null })}
-            className={cn(
-              "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors",
-              !urlCategoryId
-                ? "bg-primary/10 font-semibold text-primary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            <span>Toutes</span>
-          </button>
-          {categories.map((cat) => {
-            const active = cat.id === urlCategoryId;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => updateParams({ categoryId: cat.id })}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors",
-                  active
-                    ? "bg-primary/10 font-semibold text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-                aria-pressed={active}
-              >
-                <span className="truncate">{cat.name}</span>
-                {typeof cat._count?.products === "number" && (
-                  <span className="ml-2 text-[11px] font-mono opacity-60">
-                    {cat._count.products}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <Switch
+          id="filter-stock"
+          checked={urlInStockOnly}
+          onCheckedChange={toggleInStock}
+          aria-label="Filtrer uniquement les produits disponibles"
+        />
       </div>
 
+      {/* Catégories multi-select */}
+      <div>
+        <Label
+          id="filter-categories-label"
+          className="mb-3 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
+          Catégories
+        </Label>
+        <ul
+          role="group"
+          aria-labelledby="filter-categories-label"
+          className="space-y-1"
+        >
+          {categories.map((cat) => {
+            const checked = urlCategoryIds.includes(cat.id);
+            const inputId = `cat-${cat.id}`;
+            return (
+              <li key={cat.id}>
+                <label
+                  htmlFor={inputId}
+                  className={cn(
+                    "flex cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    checked
+                      ? "bg-primary/10 font-semibold text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <span className="flex items-center gap-2.5 min-w-0">
+                    <Checkbox
+                      id={inputId}
+                      checked={checked}
+                      onCheckedChange={() => toggleCategory(cat.id)}
+                      aria-label={cat.name}
+                    />
+                    <span className="truncate">{cat.name}</span>
+                  </span>
+                  {typeof cat._count?.products === "number" && (
+                    <span className="ml-2 shrink-0 font-mono text-[11px] opacity-60">
+                      {cat._count.products}
+                    </span>
+                  )}
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Prix */}
       <div>
         <div className="mb-3 flex items-baseline justify-between">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -317,6 +437,61 @@ export default function SearchClient() {
         </div>
       </div>
 
+      {/* Filtres avancés */}
+      <div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          onClick={() => setAdvancedOpen((v) => !v)}
+          aria-expanded={advancedOpen}
+          aria-controls="advanced-filters"
+        >
+          Filtres avancés
+          <span aria-hidden="true">{advancedOpen ? "−" : "+"}</span>
+        </Button>
+
+        {advancedOpen && (
+          <div id="advanced-filters" className="mt-3 space-y-4">
+            <div>
+              <Label
+                htmlFor="filter-desc"
+                className="mb-1.5 block text-xs font-medium text-muted-foreground"
+              >
+                Rechercher dans la description
+              </Label>
+              <Input
+                id="filter-desc"
+                type="search"
+                value={descInput}
+                onChange={(e) => setDescInput(e.target.value)}
+                placeholder="Ex: sans latex, stérile…"
+                className="h-9 text-sm"
+                autoComplete="off"
+              />
+            </div>
+            <div>
+              <Label
+                htmlFor="filter-specs"
+                className="mb-1.5 block text-xs font-medium text-muted-foreground"
+              >
+                Caractéristiques techniques
+              </Label>
+              <Input
+                id="filter-specs"
+                type="search"
+                value={specsInput}
+                onChange={(e) => setSpecsInput(e.target.value)}
+                placeholder="Ex: 12V, 220mm, ISO 13485…"
+                className="h-9 text-sm"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {hasAnyFilter && (
         <Button
           type="button"
@@ -346,8 +521,8 @@ export default function SearchClient() {
                 « {urlQuery} »
               </span>
             </>
-          ) : activeCategory ? (
-            activeCategory.name
+          ) : singleActiveCategory ? (
+            singleActiveCategory.name
           ) : (
             "Recherche produits"
           )}
@@ -395,17 +570,66 @@ export default function SearchClient() {
                 </button>
               </Badge>
             )}
-            {activeCategory && (
+            {activeCategories.map((cat) => (
+              <Badge
+                key={cat.id}
+                variant="secondary"
+                className="gap-1.5 pl-3 pr-1.5 py-1 text-xs"
+              >
+                {cat.name}
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(cat.id)}
+                  className="rounded-full p-0.5 hover:bg-background"
+                  aria-label={`Retirer la catégorie ${cat.name}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {urlInStockOnly && (
               <Badge
                 variant="secondary"
                 className="gap-1.5 pl-3 pr-1.5 py-1 text-xs"
               >
-                {activeCategory.name}
+                Disponibles uniquement
                 <button
                   type="button"
-                  onClick={() => updateParams({ categoryId: null })}
+                  onClick={() => toggleInStock(false)}
                   className="rounded-full p-0.5 hover:bg-background"
-                  aria-label={`Retirer la catégorie ${activeCategory.name}`}
+                  aria-label="Retirer le filtre disponibilité"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {urlDescQ && (
+              <Badge
+                variant="secondary"
+                className="gap-1.5 pl-3 pr-1.5 py-1 text-xs"
+              >
+                Description : {urlDescQ}
+                <button
+                  type="button"
+                  onClick={() => updateParams({ descQ: null })}
+                  className="rounded-full p-0.5 hover:bg-background"
+                  aria-label="Retirer le filtre description"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {urlSpecsQ && (
+              <Badge
+                variant="secondary"
+                className="gap-1.5 pl-3 pr-1.5 py-1 text-xs"
+              >
+                Caractéristiques : {urlSpecsQ}
+                <button
+                  type="button"
+                  onClick={() => updateParams({ specsQ: null })}
+                  className="rounded-full p-0.5 hover:bg-background"
+                  aria-label="Retirer le filtre caractéristiques"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -552,7 +776,7 @@ export default function SearchClient() {
             >
               {error}
             </div>
-          ) : !urlQuery && !urlCategoryId ? (
+          ) : !hasAnyQuery ? (
             <EmptyStart />
           ) : totalCount === 0 ? (
             <EmptyResults query={urlQuery} onReset={resetFilters} />

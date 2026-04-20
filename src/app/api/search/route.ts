@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   getCache,
@@ -14,6 +16,7 @@ interface SearchProduct {
   name: string;
   slug: string | null;
   price: number;
+  stock: number;
   image?: string;
   categoryId?: string | null;
   category?: {
@@ -25,12 +28,42 @@ interface SearchProduct {
 interface SearchResponse {
   query: string;
   count: number;
+  total: number;
+  page: number;
+  limit: number;
   products: SearchProduct[];
 }
 
 const REDIS_TIMEOUT_MS = 500;
-const MAX_RESULTS = 50;
-const SQL_FETCH_LIMIT = 100;
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 100;
+const SQL_FETCH_LIMIT = 200;
+
+/**
+ * Validation des query params. On garde `q` / `categoryId` pour la
+ * rétrocompatibilité, et on ajoute :
+ *   - descQ         : recherche dans la description
+ *   - specsQ        : recherche dans les caractéristiques techniques
+ *                     (`Product.technicalSpecs`, fallback `description`)
+ *   - categoryIds   : multi-catégories, CSV
+ *   - inStockOnly   : "1" | "true" (filtrage stock > 0 + status PUBLISHED)
+ *   - page / limit  : pagination
+ */
+const searchParamsSchema = z.object({
+  q: z.string().trim().max(200).optional().default(""),
+  descQ: z.string().trim().max(200).optional().default(""),
+  specsQ: z.string().trim().max(200).optional().default(""),
+  categoryId: z.string().trim().max(50).optional(),
+  categoryIds: z.string().trim().max(500).optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  inStockOnly: z
+    .string()
+    .optional()
+    .transform((v) => v === "1" || v === "true"),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(MAX_LIMIT).default(DEFAULT_LIMIT),
+});
 
 function normalize(str: string): string {
   return str
@@ -62,41 +95,49 @@ function levenshtein(a: string, b: string, max: number): number {
   return dp[b.length];
 }
 
-function matchScore(query: string, name: string, description: string | null): number {
+/**
+ * Règles de ranking CDC §VIII sur le titre :
+ *   - Correspondance exacte       → 1000
+ *   - 1 caractère de différent    → 500  (Levenshtein <= 1)
+ *   - Commence par                → 100
+ *   - Contient                    → 10
+ *
+ * Bonus internes (non exposés au CDC) : tokens du titre, description, specs.
+ * L'implémentation est faite côté Node après une requête Prisma large
+ * (pas de pg_trgm requis).
+ */
+function nameScore(query: string, name: string): number {
   if (!query) return 0;
   const q = normalize(query);
   const n = normalize(name);
-  const d = description ? normalize(description) : "";
 
-  // Exact match on name (whole or per-token)
   if (n === q) return 1000;
-  const tokens = n.split(/\s+/).filter(Boolean);
-  if (tokens.includes(q)) return 900;
 
-  // Typo (1 char diff) on name or any token
+  const tokens = n.split(/\s+/).filter(Boolean);
+  if (tokens.includes(q)) return 950;
+
   if (q.length >= 3) {
-    if (levenshtein(n, q, 1) <= 1) return 800;
+    if (levenshtein(n, q, 1) <= 1) return 500;
     for (const t of tokens) {
-      if (t.length >= 3 && levenshtein(t, q, 1) <= 1) return 750;
+      if (t.length >= 3 && levenshtein(t, q, 1) <= 1) return 480;
     }
   }
 
-  // Starts with on name
-  if (n.startsWith(q)) return 600;
+  if (n.startsWith(q)) return 100;
   for (const t of tokens) {
-    if (t.startsWith(q)) return 550;
+    if (t.startsWith(q)) return 90;
   }
 
-  // Contains on name
-  if (n.includes(q)) return 400;
-
-  // Contains on description
-  if (d.includes(q)) return 200;
-
+  if (n.includes(q)) return 10;
   return 0;
 }
 
-function hashFilters(filters: Record<string, string | null>): string {
+function containsBonus(query: string, text: string | null | undefined): number {
+  if (!query || !text) return 0;
+  return normalize(text).includes(normalize(query)) ? 1 : 0;
+}
+
+function hashFilters(filters: Record<string, string | number | boolean | null | undefined>): string {
   const normalized = Object.keys(filters)
     .sort()
     .map((k) => `${k}=${filters[k] ?? ""}`)
@@ -113,20 +154,56 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get("q")?.trim() || "";
-    const categoryId = searchParams.get("categoryId");
-    const minPrice = searchParams.get("minPrice");
-    const maxPrice = searchParams.get("maxPrice");
-
-    if (!query && !categoryId) {
+    const parsed = searchParamsSchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams.entries())
+    );
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Veuillez fournir une query ou une catégorie" },
+        { message: "Paramètres invalides", issues: parsed.error.issues },
         { status: 400 }
       );
     }
 
-    const filters = { q: query, categoryId, minPrice, maxPrice };
+    const {
+      q: query,
+      descQ,
+      specsQ,
+      categoryId,
+      categoryIds,
+      minPrice,
+      maxPrice,
+      inStockOnly,
+      page,
+      limit,
+    } = parsed.data;
+
+    // Multi-catégories : on unifie categoryId (single legacy) + categoryIds CSV
+    const catIds = new Set<string>();
+    if (categoryId) catIds.add(categoryId);
+    if (categoryIds) {
+      for (const id of categoryIds.split(",").map((s) => s.trim()).filter(Boolean)) {
+        catIds.add(id);
+      }
+    }
+
+    if (!query && !descQ && !specsQ && catIds.size === 0 && !inStockOnly) {
+      return NextResponse.json(
+        { message: "Veuillez fournir au moins un critère de recherche" },
+        { status: 400 }
+      );
+    }
+
+    const filters = {
+      q: query,
+      descQ,
+      specsQ,
+      cats: [...catIds].sort().join(","),
+      minPrice,
+      maxPrice,
+      inStockOnly,
+      page,
+      limit,
+    };
     const cacheKey = CACHE_KEYS.search(hashFilters(filters));
 
     let cacheStatus: "HIT" | "MISS" | "BYPASS" = "MISS";
@@ -138,9 +215,7 @@ export async function GET(request: NextRequest) {
       );
       if (cached) {
         apiLogger.debug(`search cache HIT ${cacheKey}`);
-        return NextResponse.json(cached, {
-          headers: { "X-Cache": "HIT" },
-        });
+        return NextResponse.json(cached, { headers: { "X-Cache": "HIT" } });
       }
     } catch (err) {
       cacheStatus = "BYPASS";
@@ -151,67 +226,110 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const whereClause: Record<string, unknown> = {
+    const where: Prisma.ProductWhereInput = {
       status: "PUBLISHED",
     };
 
+    const andClauses: Prisma.ProductWhereInput[] = [];
+
     if (query) {
-      whereClause.OR = [
-        { name: { contains: query, mode: "insensitive" } },
-        { description: { contains: query, mode: "insensitive" } },
-      ];
+      // Large match sur le titre (filtrage côté SQL), le ranking précis
+      // est appliqué après récupération.
+      andClauses.push({
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      });
     }
 
-    if (categoryId) {
-      whereClause.categoryId = categoryId;
+    if (descQ) {
+      andClauses.push({
+        description: { contains: descQ, mode: "insensitive" },
+      });
     }
 
-    if (minPrice || maxPrice) {
-      const priceFilter: Record<string, number> = {};
-      if (minPrice) {
-        priceFilter.gte = parseFloat(minPrice);
-      }
-      if (maxPrice) {
-        priceFilter.lte = parseFloat(maxPrice);
-      }
-      whereClause.price = priceFilter;
+    if (specsQ) {
+      andClauses.push({
+        OR: [
+          { technicalSpecs: { contains: specsQ, mode: "insensitive" } },
+          { description: { contains: specsQ, mode: "insensitive" } },
+        ],
+      });
     }
 
-    const products = await prisma.product.findMany({
-      where: whereClause,
-      include: {
-        category: {
-          select: {
-            name: true,
-            slug: true,
-          },
+    if (catIds.size > 0) {
+      andClauses.push({ categoryId: { in: [...catIds] } });
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const priceFilter: Prisma.DecimalFilter = {};
+      if (minPrice !== undefined) priceFilter.gte = minPrice;
+      if (maxPrice !== undefined) priceFilter.lte = maxPrice;
+      andClauses.push({ price: priceFilter });
+    }
+
+    if (inStockOnly) {
+      andClauses.push({ stock: { gt: 0 } });
+    }
+
+    if (andClauses.length > 0) {
+      where.AND = andClauses;
+    }
+
+    // Si pas de query textuelle → pagination SQL directe.
+    // Sinon, on fetch large puis on scorer en mémoire.
+    const hasTextQuery = Boolean(query);
+
+    const [rawProducts, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: { select: { name: true, slug: true } },
         },
-      },
-      take: query ? SQL_FETCH_LIMIT : MAX_RESULTS,
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        take: hasTextQuery ? SQL_FETCH_LIMIT : limit,
+        skip: hasTextQuery ? 0 : (page - 1) * limit,
+        orderBy: hasTextQuery
+          ? [{ priority: "desc" }, { createdAt: "desc" }]
+          : [{ priority: "desc" }, { createdAt: "desc" }],
+      }),
+      prisma.product.count({ where }),
+    ]);
 
-    // Apply matching rules when a text query is provided:
-    // exact > 1-char typo > starts-with > contains.
-    const scored = query
-      ? products
-          .map((p) => ({
-            product: p,
-            score: matchScore(query, p.name, p.description),
-          }))
-          .filter((s) => s.score > 0)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, MAX_RESULTS)
-          .map((s) => s.product)
-      : products;
+    let ordered = rawProducts;
 
-    const formattedProducts: SearchProduct[] = scored.map((p) => ({
+    if (hasTextQuery) {
+      const scored = rawProducts
+        .map((p) => {
+          const score =
+            nameScore(query, p.name) +
+            containsBonus(descQ, p.description) * 2 +
+            containsBonus(specsQ, p.technicalSpecs ?? p.description);
+          return { p, score };
+        })
+        .filter((s) => s.score > 0)
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          if (b.p.priority !== a.p.priority) return b.p.priority - a.p.priority;
+          // Disponibilité : stock > 0 avant stock == 0
+          const aAvail = a.p.stock > 0 ? 1 : 0;
+          const bAvail = b.p.stock > 0 ? 1 : 0;
+          if (bAvail !== aAvail) return bAvail - aAvail;
+          return b.p.createdAt.getTime() - a.p.createdAt.getTime();
+        })
+        .map((s) => s.p);
+
+      // Pagination manuelle après ranking
+      const start = (page - 1) * limit;
+      ordered = scored.slice(start, start + limit);
+    }
+
+    const formattedProducts: SearchProduct[] = ordered.map((p) => ({
       id: p.id,
       name: p.name,
       slug: p.slug,
       price: Number(p.price),
+      stock: p.stock,
       image: p.images?.[0] || undefined,
       categoryId: p.categoryId || undefined,
       category: p.category || undefined,
@@ -220,20 +338,28 @@ export async function GET(request: NextRequest) {
     const payload: SearchResponse = {
       query,
       count: formattedProducts.length,
+      total: hasTextQuery
+        ? // Dans le cas du ranking en mémoire, le total "vrai" est borné par
+          // le fetch (SQL_FETCH_LIMIT). On renvoie min(total, fetch).
+          Math.min(total, SQL_FETCH_LIMIT)
+        : total,
+      page,
+      limit,
       products: formattedProducts,
     };
 
     if (cacheStatus !== "BYPASS") {
       apiLogger.debug(`search cache MISS ${cacheKey}`);
-      withTimeout(setCache(cacheKey, payload, CACHE_TTL.search), REDIS_TIMEOUT_MS).catch(
-        (err) => {
-          apiLogger.warn(
-            `search cache write failed: ${
-              err instanceof Error ? err.message : String(err)
-            }`
-          );
-        }
-      );
+      withTimeout(
+        setCache(cacheKey, payload, CACHE_TTL.search),
+        REDIS_TIMEOUT_MS
+      ).catch((err) => {
+        apiLogger.warn(
+          `search cache write failed: ${
+            err instanceof Error ? err.message : String(err)
+          }`
+        );
+      });
     }
 
     return NextResponse.json(payload, {
