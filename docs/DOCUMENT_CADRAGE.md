@@ -687,13 +687,6 @@ Le dépôt Git du projet contient la documentation suivante, qui complète le pr
 | **Revue de code** | Relecture d'un apport au code par un pair avant intégration |
 | **Intégration continue** | Vérification automatique de la qualité du code à chaque modification |
 
-## Annexe C — Liens utiles
-
-- Dépôt Git du projet : https://github.com/itsaam/althea-systems
-- Cahier des charges fourni par le client (disponible dans le dépôt)
-- Cadre pédagogique Sup de Vinci (disponible auprès de l'encadrement)
-- Référentiel RNCP34581 (France Compétences)
-
 ---
 
 *Fin du Document de Cadrage — Althea Systems.*

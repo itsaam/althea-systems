@@ -3,9 +3,10 @@
 <style>
 @page { size: A4; margin: 2.5cm; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Calibri, Arial, sans-serif; font-size: 11.5pt; line-height: 1.55; color: #1a1a1a; max-width: none; }
-section.level1 { break-before: page; page-break-before: always; }
-section.level1:first-of-type { break-before: avoid; page-break-before: avoid; }
-h1 { font-size: 24pt; color: #003d5c; margin: 0 0 0.7em; border-bottom: 3px solid #00a8b5; padding-bottom: 10px; line-height: 1.2; font-weight: 600; }
+section.level1 { break-before: auto; page-break-before: auto; }
+h1 { font-size: 24pt; color: #003d5c; margin: 1.2em 0 0.7em; border-bottom: 3px solid #00a8b5; padding-bottom: 10px; line-height: 1.2; font-weight: 600; break-after: avoid; page-break-after: avoid; }
+h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+p { orphans: 3; widows: 3; }
 h2 { font-size: 16pt; color: #003d5c; margin: 1.3em 0 0.5em; line-height: 1.3; font-weight: 600; }
 h3 { font-size: 12.5pt; color: #003d5c; margin: 1.1em 0 0.4em; font-weight: 600; }
 h4 { font-size: 11.5pt; color: #003d5c; margin: 0.9em 0 0.3em; font-weight: 600; }
@@ -29,11 +30,253 @@ a { color: #00a8b5; text-decoration: none; }
 ul, ol { margin: 0.4em 0 0.6em 1.4em; padding: 0; }
 li { margin: 0.15em 0; }
 hr { border: 0; border-top: 1px solid #ddd; margin: 1.5em 0; }
+
+/* ── Gantt table ─────────────────────────────────────── */
+table.gantt { font-size: 10pt; border: 1px solid #d0d0d0; }
+table.gantt th { background: #003d5c; color: #fff; text-align: center; padding: 8px 4px; font-size: 9.5pt; font-weight: 600; }
+table.gantt th:first-child { text-align: left; padding-left: 10px; background: #003d5c; }
+table.gantt td { padding: 0; text-align: center; border: 1px solid #e5e5e5; height: 28px; color: transparent; font-size: 0; }
+table.gantt td:first-child { text-align: left; padding: 6px 10px; color: #003d5c; font-weight: 500; font-size: 10pt; background: #fafafa; }
+table.gantt td.g { background: #00a8b5; }
+table.gantt tr:nth-child(even) td:first-child { background: #f4f4f4; }
 header.title-block { margin-bottom: 2em; padding-bottom: 1em; border-bottom: 1px solid #eee; }
 header.title-block h1.title { font-size: 30pt; margin-bottom: 0.3em; border: none; padding: 0; color: #003d5c; }
 header.title-block p.subtitle { font-size: 16pt; color: #555; font-weight: 400; margin: 0.2em 0 0.8em; }
 header.title-block p.author, header.title-block p.date { color: #666; margin: 0.15em 0; }
+
+/* ── Cover page ───────────────────────────────────────── */
+.cover {
+  min-height: 24cm;
+  display: flex;
+  flex-direction: column;
+  page-break-after: always;
+  break-after: page;
+  padding: 0;
+  margin: 0;
+}
+.cover .cover-main { margin-top: 4cm; margin-bottom: auto; }
+.cover .cover-meta { margin-top: 2em; padding-bottom: 1cm; }
+.cover .kicker {
+  font-size: 11pt;
+  color: #00a8b5;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 1.5em;
+  border-left: 4px solid #00a8b5;
+  padding-left: 14px;
+}
+.cover h1.cover-title {
+  font-size: 38pt;
+  color: #003d5c;
+  margin: 0 0 0.3em;
+  line-height: 1.1;
+  font-weight: 700;
+  border: none;
+  padding: 0;
+  page-break-before: avoid;
+  break-before: avoid;
+}
+.cover h1.cover-title::before { content: none !important; }
+.cover .cover-subtitle {
+  font-size: 18pt;
+  color: #555;
+  font-weight: 400;
+  margin: 0 0 2em;
+}
+.cover .cover-team-label {
+  font-size: 10pt;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.5em;
+  margin-top: 2em;
+}
+.cover .cover-team-name {
+  font-size: 20pt;
+  color: #00a8b5;
+  font-weight: 600;
+  font-style: italic;
+  margin: 0 0 1em;
+  letter-spacing: 0.02em;
+}
+.cover .cover-team {
+  font-size: 13pt;
+  color: #003d5c;
+  font-weight: 500;
+  line-height: 1.55;
+  margin: 0 0 2.5em;
+}
+.cover .cover-meta {
+  padding-top: 1.5em;
+  border-top: 1px solid #e0e0e0;
+  font-size: 10pt;
+  color: #777;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.cover .cover-meta span { display: block; }
+.cover .cover-meta strong { color: #003d5c; font-weight: 600; }
+
+/* ── Table of contents (cover-style) ────────────────── */
+nav#toc-cover { page-break-after: always; break-after: page; padding: 1.5cm 0 0; }
+nav#toc-cover::before { content: "Table des matières"; display: block; font-size: 28pt; color: #003d5c; font-weight: 700; margin-bottom: 1.2em; border-bottom: 3px solid #00a8b5; padding-bottom: 10px; }
+nav#toc-cover ul { list-style: none; padding: 0; margin: 0; }
+nav#toc-cover ul ul { padding-left: 1.2em; margin: 0.2em 0 0.5em; }
+nav#toc-cover li.l1 { margin-top: 0.6em; }
+nav#toc-cover li.l1 > a { font-size: 12pt; font-weight: 600; color: #003d5c; text-decoration: none; display: block; padding: 6px 0 4px; border-bottom: 1px dotted #cfcfcf; }
+nav#toc-cover li.l2 > a { font-size: 10.5pt; color: #444; text-decoration: none; display: block; padding: 3px 0 3px 0.6em; }
+nav#toc-cover li.l2 > a:hover, nav#toc-cover li.l1 > a:hover { color: #00a8b5; }
+nav#toc-cover .num { color: #00a8b5; font-family: "SF Mono", Menlo, monospace; font-size: 9.5pt; font-weight: 600; display: inline-block; min-width: 3em; margin-right: 0.6em; }
+nav#toc-cover li.l2 .num { color: #888; font-weight: 500; }
+
 </style></head><body>
+
+<div class="cover">
+  <div class="cover-main">
+    <div class="kicker">Bachelor 3 CPI — Parcours Développement</div>
+    <h1 class="cover-title">Document de Cadrage</h1>
+    <p class="cover-subtitle">Althea Systems — Plateforme e-commerce B2B de matériel médical</p>
+
+    <p class="cover-team-label">Équipe projet — KYSS</p>
+    <p class="cover-team-name">Keep Your System Safe</p>
+    <p class="cover-team">
+      Samy Abdelmalek &nbsp;·&nbsp; Tristan Sanjuan<br>
+      Rayan Menkar &nbsp;·&nbsp; Kelvin Chauvel
+    </p>
+  </div>
+
+  <div class="cover-meta">
+    <span><strong>École</strong><br>Sup de Vinci</span>
+    <span><strong>Année</strong><br>2025 — 2026</span>
+    <span><strong>Promotion</strong><br>Bachelor 3 — CPI Développement</span>
+  </div>
+</div>
+
+
+<nav id="toc-cover">
+<ul>
+  <li class="l1"><a href="#résumé-exécutif"><span class="num">1.</span>Résumé exécutif</a>
+  <ul>
+  </ul>
+  </li>
+  <li class="l1"><a href="#introduction-et-contexte"><span class="num">2.</span>Introduction et contexte</a>
+  <ul>
+    <li class="l2"><a href="#présentation-du-client"><span class="num">2.1</span>Présentation du client</a></li>
+    <li class="l2"><a href="#cadre-pédagogique"><span class="num">2.2</span>Cadre pédagogique</a></li>
+    <li class="l2"><a href="#objet-du-présent-document"><span class="num">2.3</span>Objet du présent document</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#reformulation-du-besoin-client"><span class="num">3.</span>Reformulation du besoin client</a>
+  <ul>
+    <li class="l2"><a href="#expression-du-besoin"><span class="num">3.1</span>Expression du besoin</a></li>
+    <li class="l2"><a href="#parties-prenantes"><span class="num">3.2</span>Parties prenantes</a></li>
+    <li class="l2"><a href="#cibles-utilisateurs"><span class="num">3.3</span>Cibles utilisateurs</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#analyse-fonctionnelle"><span class="num">4.</span>Analyse fonctionnelle</a>
+  <ul>
+    <li class="l2"><a href="#périmètre-global"><span class="num">4.1</span>Périmètre global</a></li>
+    <li class="l2"><a href="#priorisation-moscow"><span class="num">4.2</span>Priorisation MoSCoW</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#contraintes-du-projet"><span class="num">5.</span>Contraintes du projet</a>
+  <ul>
+    <li class="l2"><a href="#contraintes-réglementaires"><span class="num">5.1</span>Contraintes réglementaires</a></li>
+    <li class="l2"><a href="#contraintes-daccessibilité"><span class="num">5.2</span>Contraintes d’accessibilité</a></li>
+    <li class="l2"><a href="#contraintes-dexpérience-utilisateur"><span class="num">5.3</span>Contraintes d’expérience utilisateur</a></li>
+    <li class="l2"><a href="#contraintes-de-performance"><span class="num">5.4</span>Contraintes de performance</a></li>
+    <li class="l2"><a href="#contraintes-de-sécurité"><span class="num">5.5</span>Contraintes de sécurité</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#comment-la-plateforme-est-construite"><span class="num">6.</span>Comment la plateforme est construite</a>
+  <ul>
+    <li class="l2"><a href="#vision-générale"><span class="num">6.1</span>Vision générale</a></li>
+    <li class="l2"><a href="#les-principales-briques"><span class="num">6.2</span>Les principales briques</a></li>
+    <li class="l2"><a href="#comment-un-utilisateur-se-connecte"><span class="num">6.3</span>Comment un utilisateur se connecte</a></li>
+    <li class="l2"><a href="#parcours-de-commande"><span class="num">6.4</span>Parcours de commande</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#choix-des-outils"><span class="num">7.</span>Choix des outils</a>
+  <ul>
+    <li class="l2"><a href="#comment-on-a-choisi"><span class="num">7.1</span>Comment on a choisi</a></li>
+    <li class="l2"><a href="#le-site-web-next.js"><span class="num">7.2</span>Le site web — Next.js</a></li>
+    <li class="l2"><a href="#la-base-de-données-postgresql"><span class="num">7.3</span>La base de données — PostgreSQL</a></li>
+    <li class="l2"><a href="#le-cache-redis"><span class="num">7.4</span>Le cache — Redis</a></li>
+    <li class="l2"><a href="#la-connexion-et-les-comptes-nextauth"><span class="num">7.5</span>La connexion et les comptes — NextAuth</a></li>
+    <li class="l2"><a href="#le-paiement-stripe"><span class="num">7.6</span>Le paiement — Stripe</a></li>
+    <li class="l2"><a href="#le-stockage-des-photos-cloudflare-r2"><span class="num">7.8</span>Le stockage des photos — Cloudflare R2</a></li>
+    <li class="l2"><a href="#lenvoi-des-emails-resend"><span class="num">7.9</span>L’envoi des emails — Resend</a></li>
+    <li class="l2"><a href="#lhébergement-du-site-serveur-privé-dokploy"><span class="num">7.10</span>L’hébergement du site — serveur privé + Dokploy</a></li>
+    <li class="l2"><a href="#le-multilingue-next-intl"><span class="num">7.11</span>Le multilingue — next-intl</a></li>
+    <li class="l2"><a href="#récapitulatif"><span class="num">7.12</span>Récapitulatif</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#modèle-de-données"><span class="num">8.</span>Modèle de données</a>
+  <ul>
+    <li class="l2"><a href="#vue-générale"><span class="num">8.1</span>Vue générale</a></li>
+    <li class="l2"><a href="#principales-entités"><span class="num">8.2</span>Principales entités</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#méthodologie-projet"><span class="num">9.</span>Méthodologie projet</a>
+  <ul>
+    <li class="l2"><a href="#cadre-retenu-une-approche-agile-adaptée"><span class="num">9.1</span>Cadre retenu : une approche agile adaptée</a></li>
+    <li class="l2"><a href="#gestion-du-code-et-des-tâches"><span class="num">9.2</span>Gestion du code et des tâches</a></li>
+    <li class="l2"><a href="#outils-de-communication"><span class="num">9.3</span>Outils de communication</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#répartition-des-rôles"><span class="num">10.</span>Répartition des rôles</a>
+  <ul>
+    <li class="l2"><a href="#composition-de-léquipe"><span class="num">10.1</span>Composition de l’équipe</a></li>
+    <li class="l2"><a href="#matrice-des-responsabilités"><span class="num">10.2</span>Matrice des responsabilités</a></li>
+    <li class="l2"><a href="#fiches-de-rôle"><span class="num">10.3</span>Fiches de rôle</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#planning-prévisionnel"><span class="num">11.</span>Planning prévisionnel</a>
+  <ul>
+    <li class="l2"><a href="#vue-densemble"><span class="num">11.1</span>Vue d’ensemble</a></li>
+    <li class="l2"><a href="#jalons-certifiants"><span class="num">11.2</span>Jalons certifiants</a></li>
+    <li class="l2"><a href="#dépendances-clés"><span class="num">11.3</span>Dépendances clés</a></li>
+    <li class="l2"><a href="#représentation-graphique-du-planning"><span class="num">11.4</span>Représentation graphique du planning</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#livrables-par-phase"><span class="num">12.</span>Livrables par phase</a>
+  <ul>
+  </ul>
+  </li>
+  <li class="l1"><a href="#veille-technologique"><span class="num">13.</span>Veille technologique</a>
+  <ul>
+    <li class="l2"><a href="#un-concurrent-sérieux-remix"><span class="num">13.2</span>Un concurrent sérieux : Remix</a></li>
+    <li class="l2"><a href="#norme-essentielle-le-rgpd"><span class="num">13.3</span>Norme essentielle : le RGPD</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#gestion-des-risques"><span class="num">14.</span>Gestion des risques</a>
+  <ul>
+    <li class="l2"><a href="#identification-et-évaluation"><span class="num">14.1</span>Identification et évaluation</a></li>
+    <li class="l2"><a href="#plan-de-continuité"><span class="num">14.2</span>Plan de continuité</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#charte-graphique"><span class="num">15.</span>Charte graphique</a>
+  <ul>
+    <li class="l2"><a href="#palette-de-couleurs-officielle"><span class="num">15.1</span>Palette de couleurs officielle</a></li>
+    <li class="l2"><a href="#statuts-produits"><span class="num">15.2</span>Statuts produits</a></li>
+    <li class="l2"><a href="#typographie-et-iconographie"><span class="num">15.3</span>Typographie et iconographie</a></li>
+  </ul>
+  </li>
+  <li class="l1"><a href="#conclusion"><span class="num">16.</span>Conclusion</a>
+  <ul>
+  </ul>
+  </li>
+  <li class="l1"><a href="#annexes"><span class="num">17.</span>Annexes</a>
+  <ul>
+    <li class="l2"><a href="#annexe-a-documentation-complémentaire"><span class="num">17.1</span>Annexe A — Documentation complémentaire</a></li>
+    <li class="l2"><a href="#annexe-b-glossaire"><span class="num">17.2</span>Annexe B — Glossaire</a></li>
+    <li class="l2"><a href="#annexe-c-maquettes-figma"><span class="num">17.3</span>Annexe C — Maquettes Figma</a></li>
+  </ul>
+  </li>
+</ul>
+</nav>
 <section id="résumé-exécutif" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Résumé
 exécutif</h1>
@@ -45,8 +288,7 @@ mobile-first, sécurisée et accompagnée d’un back-office de gestion
 autonome.</p>
 <p>Le projet est conduit par une équipe de <strong>quatre étudiants de
 Bachelor 3 CPI parcours Développement</strong> dans le cadre du projet
-fil rouge annuel, au titre RNCP34581 <em>Coordinateur de Projets
-Informatiques</em>.</p>
+d'étude annuel.</p>
 <p>La solution repose sur des outils éprouvés, utilisés par des géants
 du web comme Netflix ou Amazon. Elle offre des pages rapides sur mobile
 comme sur ordinateur, un paiement encaissé par Stripe (le prestataire
@@ -84,10 +326,9 @@ faible valeur ajoutée, pour les recentrer sur le conseil.</li>
 <section id="cadre-pédagogique" class="level2" data-number="2.2">
 <h2 data-number="2.2"><span class="header-section-number">2.2</span>
 Cadre pédagogique</h2>
-<p>Ce projet constitue le <strong>projet d’étude fil rouge</strong> de
+<p>Ce projet constitue le <strong>projet d’étude annuel</strong> de
 la promotion Bachelor 3 CPI parcours Développement 2025-2026 de Sup de
-Vinci. Il permet de valider les trois blocs de compétences du titre
-RNCP34581 :</p>
+Vinci. Il permet de valider les trois blocs de compétences suivants :</p>
 <table>
 <colgroup>
 <col style="width: 21%" />
@@ -1267,17 +1508,30 @@ cours de route.</li>
 data-number="11.4">
 <h2 data-number="11.4"><span class="header-section-number">11.4</span>
 Représentation graphique du planning</h2>
-<pre><code>                Sept  Oct   Nov   Déc   Jan   Fév   Mars  Avr   Mai   Juin
-Cadrage         ████████
-Auth/Sécurité        ███████
-BO Contenu                █████████
-Frontend/Search                ███████████
-Checkout                                ████████
-BO Avancé                                       ████████
-Espace client                                           ██
-Contact/Chatbot                                           ██████
-Multilingue/a11y                                                █████
-Tests/Doc                                                            █████████</code></pre>
+<table class="gantt">
+  <colgroup>
+    <col style="width: 22%" />
+    <col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" /><col style="width: 7.8%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th>Phase</th>
+      <th>Sept</th><th>Oct</th><th>Nov</th><th>Déc</th><th>Jan</th><th>Fév</th><th>Mars</th><th>Avr</th><th>Mai</th><th>Juin</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Cadrage</td><td class="g">•</td><td class="g">•</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Auth &amp; Sécurité</td><td></td><td class="g">•</td><td class="g">•</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Back-office contenu</td><td></td><td></td><td class="g">•</td><td class="g">•</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Frontend &amp; Recherche</td><td></td><td></td><td></td><td class="g">•</td><td class="g">•</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Checkout &amp; Paiement</td><td></td><td></td><td></td><td></td><td class="g">•</td><td class="g">•</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>Back-office avancé</td><td></td><td></td><td></td><td></td><td></td><td class="g">•</td><td class="g">•</td><td></td><td></td><td></td></tr>
+    <tr><td>Espace client</td><td></td><td></td><td></td><td></td><td></td><td></td><td class="g">•</td><td></td><td></td><td></td></tr>
+    <tr><td>Contact &amp; Chatbot</td><td></td><td></td><td></td><td></td><td></td><td></td><td class="g">•</td><td class="g">•</td><td></td><td></td></tr>
+    <tr><td>Multilingue &amp; a11y</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="g">•</td><td></td><td></td></tr>
+    <tr><td>Tests &amp; Documentation</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="g">•</td><td class="g">•</td></tr>
+  </tbody>
+</table>
 </section>
 </section>
 <section id="livrables-par-phase" class="level1" data-number="12">
@@ -1376,79 +1630,90 @@ plus rapide.</li>
 Notion, OpenAI. Gage de fiabilité et de pérennité.</li>
 </ul>
 </section>
-<section id="un-concurrent-sérieux-shopify" class="level2"
+<section id="un-concurrent-sérieux-remix" class="level2"
 data-number="13.2">
 <h2 data-number="13.2"><span class="header-section-number">13.2</span>
-Un concurrent sérieux : Shopify</h2>
-<p><strong>Shopify</strong> est la solution e-commerce clé en main la
-plus utilisée au monde (plus de 4 millions de boutiques). Elle propose
-toutes les fonctions de base demandées par Althea : catalogue, panier,
-paiement, back-office.</p>
-<p>On s’est donc posé la question : <strong>faut-il partir sur Shopify
-au lieu de tout construire nous-mêmes ?</strong></p>
+Un concurrent sérieux : Remix</h2>
+<p>Puisque le cahier des charges impose de construire le site avec un
+outil de développement, on a comparé Next.js à son principal
+concurrent direct : <strong>Remix</strong>. Les deux font la même
+famille de choses (afficher des pages, gérer les traitements, router
+les URL, communiquer avec la base de données), mais avec des choix
+techniques différents.</p>
+<p>Petit détail amusant : Remix est développé par l'équipe de
+<strong>Shopify</strong>, qui l'a racheté en 2022. C'est donc un outil
+robuste, financé par un des géants du e-commerce.</p>
 <table>
 <colgroup>
-<col style="width: 25%" />
-<col style="width: 17%" />
-<col style="width: 56%" />
+<col style="width: 28%" />
+<col style="width: 36%" />
+<col style="width: 36%" />
 </colgroup>
 <thead>
 <tr>
 <th>Comparaison</th>
-<th>Shopify</th>
-<th>Solution Althea sur mesure</th>
+<th>Next.js (retenu)</th>
+<th>Remix</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Temps pour lancer le site</td>
-<td>1 à 2 semaines</td>
-<td>9 mois</td>
+<td>Taille de la communauté</td>
+<td>130 000+ étoiles GitHub, leader incontesté</td>
+<td>30 000+ étoiles, en forte croissance</td>
 </tr>
 <tr>
-<td>Coût mensuel</td>
-<td>29 à 299 $/mois + commissions sur chaque vente</td>
-<td>~30 € d’hébergement, frais Stripe standards</td>
+<td>Entreprises qui l'utilisent</td>
+<td>Netflix, TikTok, Nike, Notion, OpenAI, Hulu</td>
+<td>Shopify, certaines pages de GitHub, quelques startups</td>
 </tr>
 <tr>
-<td>Apparence</td>
-<td>Limitée aux designs préfabriqués</td>
-<td>Totalement personnalisable à l’image d’Althea</td>
+<td>Documentation et tutoriels</td>
+<td>Très abondante (blogs, vidéos, formations)</td>
+<td>Correcte mais moins fournie</td>
 </tr>
 <tr>
-<td>Fonctions métier spécifiques</td>
-<td>Dépendent de modules additionnels payants</td>
-<td>Aucune limite, on développe ce qu’on veut</td>
+<td>Écosystème de modules additionnels</td>
+<td>Énorme (intégrations clé-en-main pour presque tout)</td>
+<td>Plus limité, souvent à coder soi-même</td>
 </tr>
 <tr>
-<td>Connexion à d’autres outils</td>
-<td>Restreinte</td>
-<td>Totale</td>
+<td>Déploiement facile</td>
+<td>Fonctionne partout (Vercel, serveur classique, Docker)</td>
+<td>Fonctionne partout mais moins optimisé hors Cloudflare</td>
 </tr>
 <tr>
-<td>Où sont stockées les données clients</td>
-<td>Aux États-Unis (serveurs Shopify)</td>
-<td>En Europe, contrôle total</td>
+<td>Optimisation automatique des images</td>
+<td>Intégrée et très poussée</td>
+<td>À ajouter à la main</td>
 </tr>
 <tr>
-<td>Dépendance au prestataire</td>
-<td>Forte (impossible de partir avec son site)</td>
-<td>Faible (code nous appartient)</td>
+<td>Rendu côté serveur (pages rapides)</td>
+<td>Oui, plusieurs modes au choix</td>
+<td>Oui, mais un seul mode disponible</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Pourquoi on n’a pas pris Shopify</strong> :</p>
+<p><strong>Pourquoi on n'a pas pris Remix</strong> :</p>
 <ul>
-<li>Le rendu visuel demandé par Althea (design distinctif, ambiance
-premium) <strong>dépasse ce que permettent les designs
-préfabriqués</strong> Shopify.</li>
-<li>Les <strong>données clients</strong> d’un business B2B médical sont
-sensibles : on préfère les garder sur un serveur européen sous notre
-contrôle plutôt qu’aux États-Unis.</li>
-<li>Ce projet est un <strong>exercice pédagogique</strong> : partir sur
-Shopify court-circuiterait l’apprentissage technique attendu du
-Bachelor.</li>
+<li><strong>Plus de ressources pour apprendre</strong> sur Next.js :
+pour une équipe de 4 étudiants, avoir accès à des milliers de tutos et
+d'exemples est un vrai accélérateur. Sur Remix, on aurait souvent dû
+débugger seuls.</li>
+<li><strong>Intégrations toutes faites</strong> : se connecter à Stripe,
+à un système d'envoi d'emails, à une base de données, c'est en 10 lignes
+avec Next.js. Sur Remix, plus de configuration manuelle.</li>
+<li><strong>Optimisations automatiques</strong> : Next.js fait tout seul
+la compression des images, la découpe du code pour charger uniquement
+ce qu'il faut. Sur Remix, il faut s'en occuper soi-même.</li>
+<li><strong>Recrutement</strong> : si Althea Systems reprend le projet
+plus tard, trouver un développeur qui connaît Next.js est beaucoup plus
+facile que trouver un développeur Remix.</li>
 </ul>
+<p>Remix reste un excellent outil, et l'écart entre les deux se réduit
+chaque année. Mais aujourd'hui, pour un projet pédagogique livré en
+9 mois par une équipe junior, Next.js offre un meilleur rapport
+vitesse d'apprentissage / richesse des fonctionnalités.</p>
 </section>
 <section id="norme-essentielle-le-rgpd" class="level2"
 data-number="13.3">
@@ -1822,19 +2087,20 @@ modification</td>
 </tbody>
 </table>
 </section>
-<section id="annexe-c-liens-utiles" class="level2" data-number="17.3">
+<section id="annexe-c-maquettes-figma" class="level2" data-number="17.3">
 <h2 data-number="17.3"><span class="header-section-number">17.3</span>
-Annexe C — Liens utiles</h2>
-<ul>
-<li>Dépôt Git du projet : https://github.com/itsaam/althea-systems</li>
-<li>Cahier des charges fourni par le client (disponible dans le
-dépôt)</li>
-<li>Cadre pédagogique Sup de Vinci (disponible auprès de
-l’encadrement)</li>
-<li>Référentiel RNCP34581 (France Compétences)</li>
-</ul>
+Annexe C — Maquettes Figma</h2>
+<p>Les maquettes haute-fidélité du site public et du back-office
+administrateur sont consultables sur Figma :</p>
+<p><a href="https://www.figma.com/make/82inzmInbln7p0VHPEqZVp/Créer-maquettes-de-pages-web?t=P2rjKfoT21RaILPc-1" target="_blank" rel="noopener">
+https://www.figma.com/make/82inzmInbln7p0VHPEqZVp/Créer-maquettes-de-pages-web
+</a></p>
+<p>Ces maquettes couvrent l'ensemble des parcours utilisateurs décrits
+dans le cahier des charges (accueil, catalogue, fiche produit, panier,
+tunnel de commande, espace client, back-office) et servent de référence
+visuelle pour l'équipe tout au long du développement.</p>
+</section>
 <hr />
 <p><em>Fin du Document de Cadrage — Althea Systems.</em></p>
-</section>
 </section>
 </body></html>
