@@ -31,11 +31,12 @@ model User {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
-  addresses   Address[]
-  orders      Order[]
-  accounts    Account[]
-  sessions    Session[]
-  backupCodes BackupCode[]
+  addresses            Address[]
+  orders               Order[]
+  accounts             Account[]
+  sessions             Session[]
+  backupCodes          BackupCode[]
+  chatbotConversations ChatbotConversation[]
 }
 
 model Account {
@@ -245,6 +246,34 @@ model CreditNote {
   invoice Invoice? @relation(fields: [invoiceId], references: [id])
 }
 
+model ChatbotConversation {
+  id         String           @id @default(cuid())
+  sessionId  String           @unique
+  userId     String?
+  user       User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userEmail  String?
+  status     ChatbotStatus    @default(ACTIVE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  messages   ChatbotMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ChatbotMessage {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   ChatbotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           ChatbotRole
+  content        String              @db.Text
+  createdAt      DateTime            @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
 // ==================== ENUMS ====================
 
 enum Role {
@@ -296,4 +325,16 @@ enum CreditNoteReason {
   CANCELLATION
   REFUND
   ERROR
+}
+
+enum ChatbotRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum ChatbotStatus {
+  ACTIVE
+  ESCALATED
+  CLOSED
 }
