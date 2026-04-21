@@ -1,6 +1,14 @@
 import { mkdirSync } from "fs";
 import { join } from "path";
-import { Document, Page, Text, View, StyleSheet, renderToFile, Link } from "@react-pdf/renderer";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  renderToFile,
+} from "@react-pdf/renderer";
+import React from "react";
 import { prisma } from "@/lib/prisma";
 
 export interface CreditNoteData {
@@ -50,380 +58,382 @@ const REASON_LABELS: Record<string, string> = {
   ERROR: "Erreur de facturation",
 };
 
-const PURPLE = "#7c3aed";
-const PURPLE_LIGHT = "#f3f0ff";
-const PURPLE_BORDER = "#c4b5fd";
-const YELLOW_BG = "#fef3c7";
-const YELLOW_BORDER = "#fcd34d";
-const RED = "#dc2626";
-const GREY_TEXT = "#666";
-const GREY_TEXT_DARK = "#444";
-const GREY_BORDER = "#e0e0e0";
-const GREY_FOOTER_BG = "#f5f5f5";
-const GREY_FOOTER_BORDER = "#e0e0e0";
-const ROW_ALT = "#f9f9f9";
+const COMPANY = {
+  name: process.env.COMPANY_NAME ?? "Althea Systems",
+  address: process.env.COMPANY_ADDRESS ?? "Paris",
+  postalCode: process.env.COMPANY_ZIP ?? "75000",
+  city: process.env.COMPANY_CITY ?? "Paris",
+  country: process.env.COMPANY_COUNTRY ?? "France",
+  email: process.env.COMPANY_EMAIL ?? "contact@althea-systems.com",
+  phone: process.env.COMPANY_PHONE ?? "+33 1 23 45 67 89",
+  siret: process.env.COMPANY_SIRET ?? "000 000 000 00000",
+  vatNumber: process.env.COMPANY_VAT ?? "FR00000000000",
+};
 
-const styles = StyleSheet.create({
+// ── Palette Althea (identique à pdf.tsx) ────────────────
+const COLOR = {
+  fg: "#1d1619",
+  muted: "#6d5c63",
+  border: "#d6cdd1",
+  bgAlt: "#e9e2e5",
+  bgPage: "#f4f1f2",
+  accent: "#5b12ed",
+  white: "#ffffff",
+  green: "#16a34a",
+  red: "#dc2626",
+};
+
+function fmt(n: number) {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(n);
+}
+
+function fmtDate(d: Date) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(d);
+}
+
+const s = StyleSheet.create({
   page: {
+    padding: 48,
+    fontSize: 9,
     fontFamily: "Helvetica",
-    fontSize: 10,
-    color: "#333",
-    paddingBottom: 60,
+    color: COLOR.fg,
+    backgroundColor: COLOR.white,
   },
-  header: {
-    backgroundColor: PURPLE,
-    color: "white",
-    paddingHorizontal: 40,
-    paddingVertical: 24,
+
+  // ── Header ────────────────────────
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-  },
-  headerLeft: { flexDirection: "column" },
-  avoirBadge: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 4,
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    marginBottom: 8,
-    alignSelf: "flex-start",
-    color: "white",
-  },
-  companyName: {
-    fontSize: 20,
-    fontFamily: "Helvetica-Bold",
-    color: "white",
-    marginBottom: 6,
-  },
-  companyInfo: {
-    fontSize: 8,
-    color: "white",
-    opacity: 0.85,
-  },
-  avoirRef: {
-    flexDirection: "column",
-    alignItems: "flex-end",
-  },
-  avoirLabel: {
-    fontSize: 8,
-    color: "white",
-    opacity: 0.8,
-    marginBottom: 4,
-  },
-  avoirNumber: {
-    fontSize: 15,
-    fontFamily: "Helvetica-Bold",
-    color: "white",
-    marginBottom: 4,
-  },
-  avoirDate: {
-    fontSize: 8,
-    color: "white",
-    opacity: 0.8,
-  },
-  content: {
-    paddingHorizontal: 40,
-    paddingVertical: 24,
-  },
-  originInvoice: {
-    backgroundColor: PURPLE_LIGHT,
-    borderWidth: 1,
-    borderColor: PURPLE_BORDER,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 20,
-    borderRadius: 4,
-    fontSize: 9,
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  originInvoiceText: { fontSize: 9, color: "#333" },
-  originInvoiceStrong: { fontSize: 9, color: PURPLE, fontFamily: "Helvetica-Bold" },
-  originInvoiceLink: { fontSize: 9, color: PURPLE, textDecoration: "underline" },
-  reasonBox: {
-    backgroundColor: YELLOW_BG,
-    borderWidth: 1,
-    borderColor: YELLOW_BORDER,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: 20,
-    borderRadius: 4,
-    fontSize: 9,
-  },
-  reasonText: { fontSize: 9, color: "#333" },
-  reasonStrong: { fontSize: 9, fontFamily: "Helvetica-Bold", color: "#333" },
-  boxes: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 28,
-  },
-  box: {
-    borderWidth: 1,
-    borderColor: GREY_BORDER,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    width: "48%",
-  },
-  boxTitle: {
-    fontSize: 7,
-    fontFamily: "Helvetica-Bold",
-    color: GREY_TEXT,
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  boxName: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    marginBottom: 4,
-  },
-  boxLine: {
-    fontSize: 9,
-    marginBottom: 2,
-    color: GREY_TEXT_DARK,
-  },
-  boxEmail: {
-    fontSize: 8,
-    color: GREY_TEXT,
-    marginTop: 4,
-  },
-  boxDetailsValue: {
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    marginBottom: 6,
-  },
-  boxRefund: {
-    fontSize: 9,
-    marginTop: 4,
-    color: PURPLE,
-    fontFamily: "Helvetica-Bold",
-  },
-  table: {
-    width: "100%",
     marginBottom: 24,
   },
-  tableHeader: {
-    backgroundColor: PURPLE,
-    flexDirection: "row",
-  },
-  tableHeaderCell: {
-    paddingHorizontal: 8,
-    paddingVertical: 7,
-    fontSize: 8,
+  brand: {
+    fontSize: 22,
     fontFamily: "Helvetica-Bold",
-    color: "white",
+    color: COLOR.fg,
+    letterSpacing: -0.5,
+  },
+  brandSub: {
+    fontSize: 8,
+    color: COLOR.muted,
+    marginTop: 2,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+  },
+  docTitle: {
+    fontSize: 11,
+    fontFamily: "Helvetica-Bold",
+    color: COLOR.muted,
+    textAlign: "right",
+    letterSpacing: 4,
+    textTransform: "uppercase",
+  },
+  docNumber: {
+    fontSize: 14,
+    fontFamily: "Helvetica-Bold",
+    color: COLOR.fg,
+    textAlign: "right",
+    marginTop: 2,
+  },
+  docMeta: {
+    fontSize: 9,
+    color: COLOR.muted,
+    textAlign: "right",
+    marginTop: 4,
+  },
+  badge: {
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    alignSelf: "flex-end",
+    backgroundColor: COLOR.red,
+  },
+  badgeText: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: COLOR.white,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+
+  accentLine: {
+    borderBottomWidth: 3,
+    borderBottomColor: COLOR.red,
+    width: 32,
+    marginBottom: 24,
+  },
+
+  // ── Reference callout ─────────────
+  reference: {
+    borderLeftWidth: 3,
+    borderLeftColor: COLOR.accent,
+    paddingLeft: 10,
+    marginBottom: 20,
+  },
+  referenceLabel: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: COLOR.muted,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  referenceText: {
+    fontSize: 9,
+    color: COLOR.fg,
+    lineHeight: 1.4,
+  },
+  referenceStrong: {
+    fontFamily: "Helvetica-Bold",
+  },
+
+  // ── Addresses ─────────────────────
+  addressRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 32,
+  },
+  addressBlock: { width: "45%" },
+  addressLabel: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: COLOR.muted,
+    marginBottom: 6,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+  addressName: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10,
+    marginBottom: 2,
+  },
+  addressLine: {
+    color: COLOR.muted,
+    fontSize: 9,
+    marginBottom: 1,
+  },
+
+  // ── Table ─────────────────────────
+  tableHeader: {
+    flexDirection: "row",
+    borderBottomWidth: 2,
+    borderBottomColor: COLOR.fg,
+    paddingBottom: 6,
+  },
+  tableHeaderText: {
+    color: COLOR.fg,
+    fontFamily: "Helvetica-Bold",
+    fontSize: 7,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
   },
   tableRow: {
     flexDirection: "row",
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: COLOR.border,
   },
-  tableCell: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    fontSize: 9,
-    color: RED,
-  },
-  tableCellName: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    fontSize: 9,
-    color: "#333",
-  },
-  colProduct: { flex: 4 },
-  colQty: { flex: 1, textAlign: "right" },
-  colPrice: { flex: 2, textAlign: "right" },
-  colTva: { flex: 1, textAlign: "right" },
-  colTotal: { flex: 2, textAlign: "right" },
-  totals: {
+  colDesc: { flex: 3 },
+  colNum: { flex: 1, textAlign: "right" },
+  colNumNegative: { flex: 1, textAlign: "right", color: COLOR.red },
+
+  // ── Totals ────────────────────────
+  totalsBlock: { marginTop: 16, alignItems: "flex-end" },
+  totalRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
+    marginBottom: 4,
   },
-  totalsBox: {
-    width: 260,
-  },
-  totalLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 4,
+  totalLabel: {
+    width: 140,
+    textAlign: "right",
+    color: COLOR.muted,
     fontSize: 9,
   },
-  totalLabel: { color: GREY_TEXT, fontSize: 9 },
-  totalNegative: { color: RED, fontSize: 9 },
-  totalGrand: {
+  totalValue: {
+    width: 100,
+    textAlign: "right",
+    fontSize: 9,
+    color: COLOR.red,
+  },
+  grandRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     borderTopWidth: 2,
-    borderTopColor: PURPLE,
-    marginTop: 4,
-    paddingTop: 6,
-    fontSize: 11,
+    borderTopColor: COLOR.fg,
+    paddingTop: 8,
+    marginTop: 8,
   },
-  totalGrandText: {
-    fontSize: 11,
+  grandLabel: {
+    width: 140,
+    textAlign: "right",
+    color: COLOR.fg,
     fontFamily: "Helvetica-Bold",
-    color: PURPLE,
+    fontSize: 12,
   },
+  grandValue: {
+    width: 100,
+    textAlign: "right",
+    color: COLOR.red,
+    fontFamily: "Helvetica-Bold",
+    fontSize: 12,
+  },
+
+  // ── Footer ────────────────────────
   footer: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: GREY_FOOTER_BG,
-    paddingHorizontal: 40,
-    paddingVertical: 10,
-    textAlign: "center",
-    fontSize: 7,
-    color: "#888",
+    bottom: 32,
+    left: 48,
+    right: 48,
     borderTopWidth: 1,
-    borderTopColor: GREY_FOOTER_BORDER,
+    borderTopColor: COLOR.border,
+    paddingTop: 10,
+  },
+  footerText: {
+    fontSize: 7,
+    color: COLOR.muted,
+    textAlign: "center",
+    letterSpacing: 0.5,
   },
 });
 
 function CreditNoteDocument({ data }: { data: CreditNoteData }) {
-  const date = new Date(data.createdAt).toLocaleDateString("fr-FR");
-  const now = new Date().toLocaleDateString("fr-FR");
   const reasonLabel = REASON_LABELS[data.reason] ?? data.reason;
+  const now = new Date();
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.header} fixed>
-          <View style={styles.headerLeft}>
-            <Text style={styles.avoirBadge}>AVOIR</Text>
-            <Text style={styles.companyName}>ALTHEA SYSTEMS</Text>
-            <Text style={styles.companyInfo}>123 Rue de la Tech, 75001 Paris</Text>
-            <Text style={styles.companyInfo}>
-              contact@althea-systems.com | +33 1 23 45 67 89
-            </Text>
+      <Page size="A4" style={s.page}>
+        {/* ── Header ──────────────────── */}
+        <View style={s.headerRow}>
+          <View>
+            <Text style={s.brand}>althea.</Text>
+            <Text style={s.brandSub}>Medical · Systems</Text>
           </View>
-          <View style={styles.avoirRef}>
-            <Text style={styles.avoirLabel}>NOTE DE CREDIT</Text>
-            <Text style={styles.avoirNumber}>{data.creditNumber}</Text>
-            <Text style={styles.avoirDate}>{date}</Text>
-          </View>
-        </View>
-
-        <View style={styles.content}>
-          <View style={styles.originInvoice}>
-            <Text style={styles.originInvoiceText}>
-              Avoir etabli en reference a la facture{" "}
-              <Text style={styles.originInvoiceStrong}>{data.invoiceNumber}</Text>
-              {" — Commande "}
-              <Text style={styles.originInvoiceStrong}>{data.orderNumber}</Text>
-              {"   |   "}
-              <Link
-                src={`/api/invoices/${data.orderId}/download`}
-                style={styles.originInvoiceLink}
-              >
-                Voir la facture d&apos;origine
-              </Link>
-            </Text>
-          </View>
-
-          <View style={styles.reasonBox}>
-            <Text style={styles.reasonText}>
-              Motif : <Text style={styles.reasonStrong}>{reasonLabel}</Text>
-            </Text>
-          </View>
-
-          <View style={styles.boxes}>
-            <View style={styles.box}>
-              <Text style={styles.boxTitle}>Client</Text>
-              <Text style={styles.boxName}>
-                {data.address.firstName} {data.address.lastName}
-              </Text>
-              <Text style={styles.boxLine}>{data.address.street}</Text>
-              {data.address.street2 ? (
-                <Text style={styles.boxLine}>{data.address.street2}</Text>
-              ) : null}
-              <Text style={styles.boxLine}>
-                {data.address.postalCode} {data.address.city}
-              </Text>
-              <Text style={styles.boxLine}>{data.address.country}</Text>
-              <Text style={styles.boxEmail}>{data.user.email}</Text>
-            </View>
-            <View style={styles.box}>
-              <Text style={styles.boxTitle}>Details</Text>
-              <Text style={styles.boxLine}>N° commande :</Text>
-              <Text style={styles.boxDetailsValue}>{data.orderNumber}</Text>
-              <Text style={styles.boxLine}>Date avoir : {date}</Text>
-              <Text style={styles.boxRefund}>Remboursement a effectuer</Text>
-            </View>
-          </View>
-
-          <View style={styles.table}>
-            <View style={styles.tableHeader} fixed>
-              <Text style={[styles.tableHeaderCell, styles.colProduct]}>Produit</Text>
-              <Text style={[styles.tableHeaderCell, styles.colQty]}>Qte</Text>
-              <Text style={[styles.tableHeaderCell, styles.colPrice]}>Prix HT</Text>
-              <Text style={[styles.tableHeaderCell, styles.colTva]}>TVA</Text>
-              <Text style={[styles.tableHeaderCell, styles.colTotal]}>Total HT</Text>
-            </View>
-            {data.items.map((item, i) => {
-              const totalHT = item.price * item.quantity;
-              const tvaLabel = TVA_LABELS[item.tva] ?? item.tva;
-              const rowStyle =
-                i % 2 === 0
-                  ? { ...styles.tableRow, backgroundColor: ROW_ALT }
-                  : styles.tableRow;
-              return (
-                <View key={i} style={rowStyle} wrap={false}>
-                  <Text style={[styles.tableCellName, styles.colProduct]}>
-                    {item.name}
-                  </Text>
-                  <Text style={[styles.tableCell, styles.colQty]}>
-                    {item.quantity}
-                  </Text>
-                  <Text style={[styles.tableCell, styles.colPrice]}>
-                    -{item.price.toFixed(2)} EUR
-                  </Text>
-                  <Text style={[styles.tableCell, styles.colTva]}>{tvaLabel}</Text>
-                  <Text style={[styles.tableCell, styles.colTotal]}>
-                    -{totalHT.toFixed(2)} EUR
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-
-          <View style={styles.totals}>
-            <View style={styles.totalsBox}>
-              <View style={styles.totalLine}>
-                <Text style={styles.totalLabel}>Sous-total HT :</Text>
-                <Text style={styles.totalNegative}>
-                  -{data.subtotal.toFixed(2)} EUR
-                </Text>
-              </View>
-              <View style={styles.totalLine}>
-                <Text style={styles.totalLabel}>Frais de livraison :</Text>
-                <Text style={styles.totalNegative}>
-                  -{data.shippingCost.toFixed(2)} EUR
-                </Text>
-              </View>
-              <View style={styles.totalLine}>
-                <Text style={styles.totalLabel}>TVA :</Text>
-                <Text style={styles.totalNegative}>-{data.tax.toFixed(2)} EUR</Text>
-              </View>
-              <View style={styles.totalGrand}>
-                <Text style={styles.totalGrandText}>TOTAL A REMBOURSER :</Text>
-                <Text style={styles.totalGrandText}>
-                  -{data.total.toFixed(2)} EUR
-                </Text>
-              </View>
+          <View>
+            <Text style={s.docTitle}>Avoir</Text>
+            <Text style={s.docNumber}>{data.creditNumber}</Text>
+            <Text style={s.docMeta}>{fmtDate(new Date(data.createdAt))}</Text>
+            <View style={s.badge}>
+              <Text style={s.badgeText}>À rembourser</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.footer} fixed>
-          <Text>
-            Althea Systems SAS - SIRET: 123 456 789 00010 - TVA Intracommunautaire:
-            FR12345678900
+        <View style={s.accentLine} />
+
+        {/* ── Référence facture d'origine ──────────────────── */}
+        <View style={s.reference}>
+          <Text style={s.referenceLabel}>En référence à</Text>
+          <Text style={s.referenceText}>
+            Facture{" "}
+            <Text style={s.referenceStrong}>{data.invoiceNumber}</Text>
+            {"  —  Commande "}
+            <Text style={s.referenceStrong}>{data.orderNumber}</Text>
+            {"\nMotif : "}
+            <Text style={s.referenceStrong}>{reasonLabel}</Text>
           </Text>
-          <Text>
-            Avoir genere le {now} — Ce document annule et remplace la facture{" "}
-            {data.invoiceNumber}
+        </View>
+
+        {/* ── Addresses ───────────────── */}
+        <View style={s.addressRow}>
+          <View style={s.addressBlock}>
+            <Text style={s.addressLabel}>Émetteur</Text>
+            <Text style={s.addressName}>{COMPANY.name}</Text>
+            <Text style={s.addressLine}>{COMPANY.address}</Text>
+            <Text style={s.addressLine}>
+              {COMPANY.postalCode} {COMPANY.city}
+            </Text>
+            <Text style={s.addressLine}>{COMPANY.country}</Text>
+            <Text style={s.addressLine}>{COMPANY.email}</Text>
+            <Text style={s.addressLine}>Tél : {COMPANY.phone}</Text>
+            <Text style={s.addressLine}>SIRET : {COMPANY.siret}</Text>
+            <Text style={s.addressLine}>TVA : {COMPANY.vatNumber}</Text>
+          </View>
+          <View style={s.addressBlock}>
+            <Text style={s.addressLabel}>Rembourser à</Text>
+            <Text style={s.addressName}>
+              {data.address.firstName} {data.address.lastName}
+            </Text>
+            <Text style={s.addressLine}>{data.user.email}</Text>
+            <Text style={s.addressLine}>{data.address.street}</Text>
+            {data.address.street2 ? (
+              <Text style={s.addressLine}>{data.address.street2}</Text>
+            ) : null}
+            <Text style={s.addressLine}>
+              {data.address.postalCode} {data.address.city}
+            </Text>
+            <Text style={s.addressLine}>{data.address.country}</Text>
+          </View>
+        </View>
+
+        {/* ── Table ───────────────────── */}
+        <View style={s.tableHeader}>
+          <Text style={[s.tableHeaderText, s.colDesc]}>Désignation</Text>
+          <Text style={[s.tableHeaderText, s.colNum]}>Qté</Text>
+          <Text style={[s.tableHeaderText, s.colNum]}>P.U. HT</Text>
+          <Text style={[s.tableHeaderText, s.colNum]}>TVA</Text>
+          <Text style={[s.tableHeaderText, s.colNum]}>Total HT</Text>
+        </View>
+
+        {data.items.map((item, i) => {
+          const totalHT = item.price * item.quantity;
+          const tvaLabel = TVA_LABELS[item.tva] ?? item.tva;
+          return (
+            <View key={i} style={s.tableRow} wrap={false}>
+              <Text style={s.colDesc}>{item.name}</Text>
+              <Text style={s.colNum}>{item.quantity}</Text>
+              <Text style={s.colNumNegative}>-{fmt(item.price)}</Text>
+              <Text style={s.colNum}>{tvaLabel}</Text>
+              <Text style={s.colNumNegative}>-{fmt(totalHT)}</Text>
+            </View>
+          );
+        })}
+
+        {data.shippingCost > 0 && (
+          <View style={s.tableRow}>
+            <Text style={s.colDesc}>Frais de livraison</Text>
+            <Text style={s.colNum}>1</Text>
+            <Text style={s.colNumNegative}>
+              -{fmt(data.shippingCost / 1.2)}
+            </Text>
+            <Text style={s.colNum}>20%</Text>
+            <Text style={s.colNumNegative}>-{fmt(data.shippingCost)}</Text>
+          </View>
+        )}
+
+        {/* ── Totals ──────────────────── */}
+        <View style={s.totalsBlock}>
+          <View style={s.totalRow}>
+            <Text style={s.totalLabel}>Sous-total HT</Text>
+            <Text style={s.totalValue}>-{fmt(data.subtotal)}</Text>
+          </View>
+          <View style={s.totalRow}>
+            <Text style={s.totalLabel}>TVA</Text>
+            <Text style={s.totalValue}>-{fmt(data.tax)}</Text>
+          </View>
+          <View style={s.grandRow}>
+            <Text style={s.grandLabel}>Total à rembourser</Text>
+            <Text style={s.grandValue}>-{fmt(data.total)}</Text>
+          </View>
+        </View>
+
+        {/* ── Footer ──────────────────── */}
+        <View style={s.footer}>
+          <Text style={s.footerText}>
+            {COMPANY.name} — SIRET : {COMPANY.siret} — TVA :{" "}
+            {COMPANY.vatNumber}
+          </Text>
+          <Text style={s.footerText}>
+            Avoir généré le {fmtDate(now)} — annule partiellement ou totalement
+            la facture {data.invoiceNumber}
           </Text>
         </View>
       </Page>
@@ -431,7 +441,9 @@ function CreditNoteDocument({ data }: { data: CreditNoteData }) {
   );
 }
 
-export async function generateCreditNotePDF(data: CreditNoteData): Promise<string> {
+export async function generateCreditNotePDF(
+  data: CreditNoteData
+): Promise<string> {
   const uploadsDir = join(process.cwd(), "public", "invoices");
   mkdirSync(uploadsDir, { recursive: true });
 

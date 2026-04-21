@@ -44,194 +44,129 @@ interface SendEmailParams {
 // ==================== BASE TEMPLATE ====================
 
 function baseEmailTemplate(content: string, title: string): string {
-  return `
-<!DOCTYPE html>
+  const year = new Date().getFullYear();
+  return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f1f2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1d1619;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f1f2;">
+    <tr>
+      <td align="center" style="padding:48px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;background-color:#ffffff;border:1px solid #d6cdd1;">
+          <!-- Eyebrow -->
+          <tr>
+            <td style="padding:28px 40px 0 40px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:10px;letter-spacing:0.22em;color:#6d5c63;text-transform:uppercase;">
+              — ${APP_NAME}
+            </td>
+          </tr>
+          <!-- Wordmark -->
+          <tr>
+            <td style="padding:12px 40px 32px 40px;">
+              <div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;color:#1d1619;line-height:1;">althea.</div>
+              <div style="height:3px;width:32px;background-color:#5b12ed;margin-top:20px;"></div>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding:0 40px 40px 40px;font-size:15px;line-height:1.65;color:#1d1619;">
+              ${content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;background-color:#f4f1f2;border-top:1px solid #d6cdd1;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:10px;letter-spacing:0.18em;color:#6d5c63;text-transform:uppercase;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle;">© ${year} · ${APP_NAME}</td>
+                  <td align="right" style="vertical-align:middle;">
+                    <a href="${APP_URL}" style="color:#6d5c63;text-decoration:none;margin-left:16px;">Site</a>
+                    <a href="${APP_URL}/contact" style="color:#6d5c63;text-decoration:none;margin-left:16px;">Contact</a>
+                    <a href="${APP_URL}/mentions-legales" style="color:#6d5c63;text-decoration:none;margin-left:16px;">Mentions</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <div style="margin-top:16px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:9px;letter-spacing:0.22em;color:#6d5c63;text-transform:uppercase;">
+          Medical · Systems
+        </div>
+      </td>
+    </tr>
+  </table>
+
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.7;
-      color: #1a1a1a;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f6f8;
-    }
-    .container {
-      max-width: 580px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
-    .email-wrapper {
-      background-color: #ffffff;
-      border: 1px solid #dfe4ea;
-      border-radius: 6px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 61, 92, 0.06);
-    }
-    .accent-bar {
-      height: 4px;
-      background: linear-gradient(90deg, #003d5c 0%, #00a8b5 100%);
-      font-size: 0;
-      line-height: 0;
-    }
-    .header {
-      padding: 32px 40px;
-      background-color: #003d5c;
-    }
-    .header h1 {
-      color: #ffffff;
-      margin: 0;
-      font-size: 24px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-    }
-    .header .tagline {
-      color: #9fd8df;
-      margin: 4px 0 0 0;
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0.3px;
-    }
-    .content {
-      padding: 40px;
-    }
-    .content h2 {
-      color: #003d5c;
-      margin: 0 0 24px 0;
-      font-size: 20px;
-      font-weight: 600;
-    }
-    .content p {
-      margin: 0 0 16px 0;
-      color: #4a4a4a;
-      font-size: 15px;
-    }
-    .content a {
-      color: #003d5c;
-      text-decoration: underline;
-    }
-    .content a:hover {
-      color: #00a8b5;
-    }
+    h1, h2, h3 { color:#1d1619; font-weight:700; letter-spacing:-0.3px; margin:0 0 16px 0; }
+    h2 { font-size:22px; line-height:1.2; margin-bottom:20px; }
+    h3 { font-size:14px; text-transform:uppercase; letter-spacing:0.16em; color:#6d5c63; margin-top:28px; }
+    p { margin:0 0 14px 0; color:#1d1619; }
+    a { color:#5b12ed; text-decoration:underline; text-underline-offset:2px; }
+    strong { color:#1d1619; font-weight:600; }
+    ul { margin:0 0 16px 0; padding-left:20px; color:#1d1619; }
+    li { margin-bottom:6px; }
     .button {
-      display: inline-block;
-      padding: 14px 28px;
-      background-color: #003d5c;
-      color: #ffffff !important;
-      text-decoration: none !important;
-      font-weight: 500;
-      font-size: 14px;
-      margin: 24px 0;
-      border-radius: 4px;
-      transition: background-color 0.2s;
+      display:inline-block;
+      padding:14px 24px;
+      background-color:#1d1619;
+      color:#ffffff !important;
+      text-decoration:none !important;
+      font-family:'SF Mono',Menlo,Consolas,monospace;
+      font-size:11px;
+      letter-spacing:0.18em;
+      text-transform:uppercase;
+      margin:12px 0 24px 0;
     }
-    .button:hover {
-      background-color: #00a8b5;
-    }
-    .footer {
-      padding: 24px 40px;
-      background-color: #f8fafc;
-      border-top: 1px solid #dfe4ea;
-      font-size: 13px;
-      color: #6b7885;
-    }
-    .footer a {
-      color: #003d5c;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .footer a:hover {
-      color: #00a8b5;
-      text-decoration: underline;
-    }
+    .button:hover { background-color:#5b12ed; }
     .info-box {
-      background-color: #f0f9fa;
-      border-left: 3px solid #00a8b5;
-      padding: 16px 20px;
-      margin: 24px 0;
-      border-radius: 0 4px 4px 0;
+      border-left:2px solid #5b12ed;
+      padding:14px 18px;
+      margin:24px 0;
+      background-color:#f4f1f2;
+      font-size:13px;
+      line-height:1.55;
     }
-    .info-box p {
-      margin: 0;
-      font-size: 14px;
-      color: #003d5c;
-    }
-    .info-box p + p {
-      margin-top: 8px;
-    }
-    .divider {
-      height: 1px;
-      background-color: #dfe4ea;
-      margin: 32px 0;
-    }
+    .info-box p { margin:0; color:#1d1619; }
+    .info-box p + p { margin-top:6px; }
     .order-summary {
-      border: 1px solid #dfe4ea;
-      border-radius: 4px;
-      margin: 24px 0;
-      overflow: hidden;
+      border:1px solid #d6cdd1;
+      margin:24px 0;
+      font-size:13px;
     }
-    .order-summary table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .order-summary th,
-    .order-summary td {
-      padding: 14px 16px;
-      text-align: left;
-      border-bottom: 1px solid #dfe4ea;
-      font-size: 14px;
+    .order-summary table { width:100%; border-collapse:collapse; }
+    .order-summary th, .order-summary td {
+      padding:10px 14px;
+      text-align:left;
+      border-bottom:1px solid #d6cdd1;
     }
     .order-summary th {
-      background-color: #003d5c;
-      color: #ffffff;
-      font-weight: 600;
+      background-color:#1d1619;
+      color:#ffffff;
+      font-family:'SF Mono',Menlo,Consolas,monospace;
+      font-size:10px;
+      letter-spacing:0.14em;
+      text-transform:uppercase;
+      font-weight:600;
     }
-    .order-summary tr:last-child td {
-      border-bottom: none;
-    }
+    .order-summary tr:last-child td { border-bottom:none; }
     .order-summary .total td {
-      font-weight: 600;
-      background-color: #f0f9fa;
-      color: #003d5c;
+      font-weight:700;
+      background-color:#f4f1f2;
+      color:#1d1619;
     }
-    .link-fallback {
-      font-size: 12px;
-      color: #8a8a8a;
-      word-break: break-all;
-    }
-    .link-fallback a {
-      color: #003d5c;
+    code {
+      background-color:#f4f1f2;
+      padding:2px 6px;
+      font-family:'SF Mono',Menlo,Consolas,monospace;
+      font-size:12px;
+      color:#5b12ed;
     }
   </style>
-</head>
-<body>
-  <div class="container">
-    <div class="email-wrapper">
-      <div class="accent-bar">&nbsp;</div>
-      <div class="header">
-        <h1>${APP_NAME}</h1>
-        <p class="tagline">Équipements médicaux professionnels</p>
-      </div>
-      <div class="content">
-        ${content}
-      </div>
-      <div class="footer">
-        <p>&copy; ${new Date().getFullYear()} ${APP_NAME} — Tous droits réservés</p>
-        <p style="margin-top: 8px;">
-          <a href="${APP_URL}">Site web</a> &nbsp;&middot;&nbsp;
-          <a href="${APP_URL}/contact">Contact</a> &nbsp;&middot;&nbsp;
-          <a href="${APP_URL}/mentions-legales">Mentions légales</a>
-        </p>
-      </div>
-    </div>
-  </div>
 </body>
-</html>
-`;
+</html>`;
 }
 
 // ==================== SEND EMAIL WITH RETRY ====================
