@@ -241,7 +241,9 @@ export default function Header() {
               </div>
             )}
 
-            <LanguageSwitcher variant="compact" />
+            <div className="hidden md:block">
+              <LanguageSwitcher variant="compact" />
+            </div>
 
             <MobileMenu />
           </div>

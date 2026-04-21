@@ -13,6 +13,7 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import LanguageSwitcher from "@/components/layout/language-switcher";
 
 const PUBLIC_LINKS = [
   { href: "/", key: "home" as const },
@@ -146,6 +147,15 @@ export default function MobileMenu() {
               </Button>
             </div>
           )}
+        </div>
+
+        <div className="mt-6 border-t pt-6">
+          <p className="px-3 pb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {tCommon("language")}
+          </p>
+          <div className="px-3">
+            <LanguageSwitcher variant="default" />
+          </div>
         </div>
       </SheetContent>
     </Sheet>
