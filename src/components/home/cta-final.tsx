@@ -10,7 +10,7 @@ async function getCarouselProducts(): Promise<CarouselProduct[]> {
     const products = await prisma.product.findMany({
       where: { featured: true, status: "PUBLISHED" },
       orderBy: [{ featuredOrder: "asc" }, { createdAt: "desc" }],
-      take: 6,
+      take: 3,
       include: { category: true },
     });
 
