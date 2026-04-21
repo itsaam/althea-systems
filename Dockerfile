@@ -9,7 +9,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
-RUN --mount=type=cache,target=/root/.npm,sharing=locked \
+RUN  \
     NPM_CONFIG_PRODUCTION= npm ci --prefer-offline --no-audit --no-fund
 
 FROM base AS builder
@@ -17,7 +17,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN --mount=type=cache,target=/app/.next/cache,sharing=locked \
+RUN  \
     npm run build
 
 FROM base AS runner
