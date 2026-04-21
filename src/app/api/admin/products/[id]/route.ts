@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
+import { Prisma } from "@prisma/client";
+
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { productLogger, apiLogger, LogMessages } from "@/lib/logger/exports";
@@ -95,12 +97,12 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       return NextResponse.json({ error: "Produit non trouvé" }, { status: 404 });
     }
 
-    // Validation avec le schéma API
+    // Validation avec le schéma API (partiel pour supporter les updates ciblés)
     const { productApiSchema } = await import("@/lib/validators/product");
-    const validatedData = productApiSchema.parse(body);
+    const validatedData = productApiSchema.partial().parse(body);
 
     // Vérification unicité du slug (sauf si c'est le même)
-    if (validatedData.slug !== existingProduct.slug) {
+    if (validatedData.slug && validatedData.slug !== existingProduct.slug) {
       const slugExists = await prisma.product.findUnique({
         where: { slug: validatedData.slug },
       });
@@ -127,25 +129,38 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       }
     }
 
+    // Construction d'un update partiel : uniquement les champs fournis
+    const updateData: Prisma.ProductUpdateInput = {};
+    const fields = [
+      "name",
+      "slug",
+      "description",
+      "technicalSpecs",
+      "price",
+      "comparePrice",
+      "tva",
+      "sku",
+      "stock",
+      "priority",
+      "images",
+      "featured",
+      "status",
+    ] as const;
+    for (const key of fields) {
+      if (key in body && validatedData[key] !== undefined) {
+        (updateData as Record<string, unknown>)[key] = validatedData[key];
+      }
+    }
+    if ("categoryId" in body) {
+      updateData.category = validatedData.categoryId
+        ? { connect: { id: validatedData.categoryId } }
+        : { disconnect: true };
+    }
+
     // Mise à jour du produit
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        name: validatedData.name,
-        slug: validatedData.slug,
-        description: validatedData.description,
-        technicalSpecs: validatedData.technicalSpecs,
-        price: validatedData.price,
-        comparePrice: validatedData.comparePrice,
-        tva: validatedData.tva,
-        sku: validatedData.sku,
-        stock: validatedData.stock,
-        priority: validatedData.priority,
-        images: validatedData.images,
-        featured: validatedData.featured,
-        status: validatedData.status,
-        categoryId: validatedData.categoryId,
-      },
+      data: updateData,
       include: {
         category: {
           select: {
