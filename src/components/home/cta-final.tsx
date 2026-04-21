@@ -7,28 +7,12 @@ import CtaProductsCarousel, {
 
 async function getCarouselProducts(): Promise<CarouselProduct[]> {
   try {
-    const featured = await prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where: { featured: true, status: "PUBLISHED" },
       orderBy: [{ featuredOrder: "asc" }, { createdAt: "desc" }],
       take: 6,
       include: { category: true },
     });
-
-    let products = featured;
-
-    if (featured.length < 6) {
-      const excludeIds = featured.map((p) => p.id);
-      const fallback = await prisma.product.findMany({
-        where: {
-          status: "PUBLISHED",
-          ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
-        },
-        orderBy: { createdAt: "desc" },
-        take: 6 - featured.length,
-        include: { category: true },
-      });
-      products = [...featured, ...fallback];
-    }
 
     return products.map((p) => ({
       id: p.id,
