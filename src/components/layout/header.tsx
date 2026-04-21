@@ -249,10 +249,10 @@ export default function Header() {
 
         <div
           id="site-search"
-          className={`overflow-hidden transition-all duration-300 ease-out ${
-            searchOpen ? "max-h-16 pb-4" : "max-h-0"
+          className={`overflow-hidden border-t border-border/40 transition-all duration-300 ease-out ${
+            searchOpen ? "max-h-20 pt-3 pb-4" : "max-h-0 border-transparent"
           }`}
-          aria-hidden={!searchOpen}
+          inert={!searchOpen}
         >
           <SearchBar />
         </div>
