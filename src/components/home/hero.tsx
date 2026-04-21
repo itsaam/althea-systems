@@ -19,7 +19,7 @@ export default function Hero() {
   ];
   return (
     <section className="relative isolate grain overflow-hidden bg-background">
-      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-3.5rem)] max-w-[1400px] flex-col justify-between px-4 pb-20 pt-24 sm:px-6 lg:px-10 lg:pt-32">
+      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-3.5rem)] max-w-[1400px] flex-col justify-between px-4 pb-20 pt-10 sm:px-6 sm:pt-12 lg:px-10 lg:pt-16">
         {/* ── Main grid : title left / blueprint right ─────── */}
         <div className="grid grid-cols-1 items-end gap-16 lg:grid-cols-12 lg:gap-10">
           {/* Title */}
