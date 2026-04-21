@@ -1,104 +1,125 @@
 import type { Metadata } from "next";
+import LegalPage, {
+  LegalSection,
+  Section,
+} from "@/components/legal/legal-page";
 
 export const metadata: Metadata = {
-  title: "Politique de Confidentialité - Althea Systems",
+  title: "Politique de confidentialité — Althea Systems",
   description:
-    "Politique de confidentialité et protection des données personnelles conformément au RGPD",
+    "Politique de confidentialité et protection des données personnelles conformément au RGPD.",
+  alternates: { canonical: "/legal/privacy" },
 };
+
+const SECTIONS: LegalSection[] = [
+  { id: "introduction", title: "Introduction" },
+  { id: "responsable", title: "Responsable du traitement" },
+  { id: "donnees", title: "Données collectées" },
+  { id: "finalites", title: "Finalités du traitement" },
+  { id: "cookies", title: "Cookies" },
+  { id: "partage", title: "Partage des données" },
+  { id: "securite", title: "Sécurité" },
+  { id: "droits", title: "Vos droits (RGPD)" },
+  { id: "transferts", title: "Transferts internationaux" },
+  { id: "reclamation", title: "Réclamation" },
+  { id: "modifications", title: "Modifications" },
+];
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="container py-8 prose max-w-4xl mx-auto">
-      <h1>Politique de Confidentialité</h1>
-      <p className="text-muted-foreground">
-        Derniere mise a jour : 26 mars 2026
-      </p>
-
-      <section>
-        <h2>1. Introduction</h2>
+    <LegalPage
+      eyebrow="Protection des données"
+      title="Politique de confidentialité"
+      subtitle="Althea Systems s'engage à protéger la vie privée de ses utilisateurs. Ce document explique comment nous collectons, utilisons et protégeons vos données personnelles conformément au RGPD et à la loi Informatique et Libertés."
+      updatedAt="21 avril 2026"
+      sections={SECTIONS}
+    >
+      <Section id="introduction" title="1. Introduction">
         <p>
-          Althea Systems (&quot;nous&quot;, &quot;notre&quot;, &quot;nos&quot;)
-          s&apos;engage a proteger la vie privee de ses utilisateurs. Cette
-          politique de confidentialite explique comment nous collectons,
-          utilisons, stockons et protegeons vos donnees personnelles
-          conformement au Reglement General sur la Protection des Donnees (RGPD)
-          et a la loi Informatique et Libertes.
+          Althea Systems (« nous », « notre », « nos ») s&apos;engage à protéger
+          la vie privée de ses utilisateurs. Cette politique de confidentialité
+          explique comment nous collectons, utilisons, stockons et protégeons
+          vos données personnelles conformément au Règlement général sur la
+          protection des données (RGPD) et à la loi Informatique et Libertés.
         </p>
-      </section>
+      </Section>
 
-      <section>
-        <h2>2. Responsable du traitement</h2>
+      <Section id="responsable" title="2. Responsable du traitement">
         <ul>
           <li>
-            <strong>Raison sociale :</strong> Althea Systems
+            <strong>Raison sociale :</strong> Althea Systems SAS
           </li>
           <li>
-            <strong>Adresse :</strong> France
+            <strong>Siège social :</strong> 42 rue de la Santé, 69003 Lyon,
+            France
           </li>
           <li>
-            <strong>Contact DPO :</strong> dpo@vjuya.me
+            <strong>Contact DPO :</strong>{" "}
+            <a href="mailto:dpo@vjuya.me">dpo@vjuya.me</a>
           </li>
         </ul>
-      </section>
+      </Section>
 
-      <section>
-        <h2>3. Donnees collectees</h2>
-        <p>Nous collectons les categories de donnees suivantes :</p>
-        <h3>3.1 Donnees d&apos;identification</h3>
+      <Section id="donnees" title="3. Données collectées">
+        <p>Nous collectons les catégories de données suivantes :</p>
+
+        <h3>3.1 Données d&apos;identification</h3>
         <ul>
-          <li>Nom et prenom</li>
+          <li>Nom et prénom</li>
           <li>Adresse email</li>
-          <li>Numero de telephone</li>
+          <li>Numéro de téléphone</li>
           <li>Adresse postale (livraison et facturation)</li>
         </ul>
-        <h3>3.2 Donnees de connexion</h3>
+
+        <h3>3.2 Données de connexion</h3>
         <ul>
-          <li>Mot de passe (chiffre via bcrypt, jamais stocke en clair)</li>
+          <li>Mot de passe (chiffré via bcrypt, jamais stocké en clair)</li>
           <li>
-            Donnees d&apos;authentification a deux facteurs (2FA) si active
+            Données d&apos;authentification à deux facteurs (2FA) si active
           </li>
           <li>Sessions et jetons d&apos;authentification</li>
         </ul>
-        <h3>3.3 Donnees de commande</h3>
+
+        <h3>3.3 Données de commande</h3>
         <ul>
           <li>Historique des commandes</li>
-          <li>Informations de paiement (traitees par Stripe, non stockees)</li>
+          <li>Informations de paiement (traitées par Stripe, non stockées)</li>
           <li>Factures</li>
         </ul>
-        <h3>3.4 Donnees techniques</h3>
+
+        <h3>3.4 Données techniques</h3>
         <ul>
           <li>
-            Cookies de fonctionnement et de consentement (voir section cookies)
+            Cookies de fonctionnement et de consentement (voir section 5)
           </li>
-          <li>Logs anonymises (sans email ni adresse IP en clair)</li>
+          <li>Logs anonymisés (sans email ni adresse IP en clair)</li>
         </ul>
-      </section>
+      </Section>
 
-      <section>
-        <h2>4. Finalites du traitement</h2>
+      <Section id="finalites" title="4. Finalités du traitement">
         <table>
           <thead>
             <tr>
-              <th>Finalite</th>
-              <th>Base legale</th>
-              <th>Duree de conservation</th>
+              <th>Finalité</th>
+              <th>Base légale</th>
+              <th>Durée de conservation</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>Gestion des comptes utilisateurs</td>
-              <td>Execution du contrat</td>
-              <td>Duree du compte + 3 ans</td>
+              <td>Exécution du contrat</td>
+              <td>Durée du compte + 3 ans</td>
             </tr>
             <tr>
               <td>Traitement des commandes</td>
-              <td>Execution du contrat</td>
+              <td>Exécution du contrat</td>
               <td>10 ans (obligation comptable)</td>
             </tr>
             <tr>
-              <td>Securite et authentification</td>
-              <td>Interet legitime</td>
-              <td>Duree de la session</td>
+              <td>Sécurité et authentification</td>
+              <td>Intérêt légitime</td>
+              <td>Durée de la session</td>
             </tr>
             <tr>
               <td>Communication marketing</td>
@@ -106,169 +127,169 @@ export default function PrivacyPolicyPage() {
               <td>Jusqu&apos;au retrait du consentement</td>
             </tr>
             <tr>
-              <td>Obligations legales</td>
-              <td>Obligation legale</td>
-              <td>Duree prevue par la loi</td>
+              <td>Obligations légales</td>
+              <td>Obligation légale</td>
+              <td>Durée prévue par la loi</td>
             </tr>
           </tbody>
         </table>
-      </section>
+      </Section>
 
-      <section>
-        <h2>5. Cookies</h2>
+      <Section id="cookies" title="5. Cookies">
         <p>
-          Nous utilisons des cookies strictement necessaires au fonctionnement
-          du site. Avant de deposer tout cookie non essentiel, nous recueillons
+          Nous utilisons des cookies strictement nécessaires au fonctionnement
+          du site. Avant de déposer tout cookie non essentiel, nous recueillons
           votre consentement explicite via notre bandeau cookies.
         </p>
-        <h3>Types de cookies utilises</h3>
+        <h3>Types de cookies utilisés</h3>
         <ul>
           <li>
             <strong>Cookies essentiels :</strong> session d&apos;authentification,
-            panier, preferences de consentement
+            panier, préférences de consentement
           </li>
           <li>
             <strong>Cookies analytiques :</strong> uniquement avec votre
-            consentement, pour ameliorer nos services
+            consentement, pour améliorer nos services
           </li>
         </ul>
         <p>
-          Vous pouvez modifier vos preferences de cookies a tout moment via le
-          bandeau de consentement ou les parametres de votre navigateur.
+          Vous pouvez modifier vos préférences de cookies à tout moment via le
+          bandeau de consentement ou les paramètres de votre navigateur.
         </p>
-      </section>
+      </Section>
 
-      <section>
-        <h2>6. Partage des donnees</h2>
+      <Section id="partage" title="6. Partage des données">
         <p>
-          Vos donnees personnelles ne sont jamais vendues. Elles peuvent etre
-          partagees avec :
+          Vos données personnelles ne sont jamais vendues. Elles peuvent être
+          partagées avec :
         </p>
         <ul>
           <li>
-            <strong>Stripe :</strong> pour le traitement securise des paiements
+            <strong>Stripe :</strong> traitement sécurisé des paiements
           </li>
           <li>
-            <strong>Transporteurs :</strong> pour la livraison de vos commandes
-            (nom, adresse)
+            <strong>Transporteurs :</strong> livraison de vos commandes (nom,
+            adresse)
           </li>
           <li>
-            <strong>Hebergeur :</strong> Vercel / infrastructure cloud pour
-            l&apos;hebergement du site
+            <strong>Hébergeur :</strong> infrastructure cloud pour
+            l&apos;hébergement du site
+          </li>
+          <li>
+            <strong>Resend :</strong> envoi des emails transactionnels
           </li>
         </ul>
         <p>
           Tous nos sous-traitants sont soumis au RGPD ou offrent des garanties
-          adequates de protection des donnees.
+          adéquates de protection des données.
         </p>
-      </section>
+      </Section>
 
-      <section>
-        <h2>7. Securite des donnees</h2>
+      <Section id="securite" title="7. Sécurité des données">
         <p>Nous mettons en place les mesures suivantes :</p>
         <ul>
           <li>Chiffrement des mots de passe avec bcrypt (saltRounds 12)</li>
-          <li>Authentification a deux facteurs (TOTP) disponible</li>
-          <li>Communications chiffrees (HTTPS/TLS)</li>
+          <li>Authentification à deux facteurs (TOTP) disponible</li>
+          <li>Communications chiffrées (HTTPS / TLS)</li>
           <li>Protection contre XSS, CSRF et injections SQL</li>
           <li>Rate limiting sur les endpoints sensibles</li>
           <li>
-            Logs anonymises (aucune donnee personnelle en clair dans les logs)
+            Logs anonymisés (aucune donnée personnelle en clair dans les logs)
           </li>
-          <li>Headers de securite (Helmet, CSP)</li>
+          <li>Headers de sécurité (Helmet, CSP)</li>
         </ul>
-      </section>
+      </Section>
 
-      <section>
-        <h2>8. Vos droits (RGPD)</h2>
+      <Section id="droits" title="8. Vos droits (RGPD)">
         <p>
-          Conformement au RGPD et a la loi Informatique et Libertes, vous
+          Conformément au RGPD et à la loi Informatique et Libertés, vous
           disposez des droits suivants :
         </p>
         <ul>
           <li>
-            <strong>Droit d&apos;acces :</strong> obtenir une copie de vos
-            donnees personnelles
+            <strong>Droit d&apos;accès :</strong> obtenir une copie de vos
+            données personnelles
           </li>
           <li>
-            <strong>Droit de rectification :</strong> corriger vos donnees via
+            <strong>Droit de rectification :</strong> corriger vos données via
             votre espace compte
           </li>
           <li>
-            <strong>Droit a l&apos;effacement :</strong> demander la
-            suppression de votre compte et de toutes vos donnees (droit a
-            l&apos;oubli)
+            <strong>Droit à l&apos;effacement :</strong> demander la suppression
+            de votre compte et de toutes vos données (droit à l&apos;oubli)
           </li>
           <li>
-            <strong>Droit a la portabilite :</strong> exporter vos donnees
+            <strong>Droit à la portabilité :</strong> exporter vos données
             personnelles au format JSON
           </li>
           <li>
             <strong>Droit d&apos;opposition :</strong> vous opposer au
-            traitement de vos donnees
+            traitement de vos données
           </li>
           <li>
-            <strong>Droit a la limitation :</strong> restreindre le traitement
-            de vos donnees
+            <strong>Droit à la limitation :</strong> restreindre le traitement
+            de vos données
           </li>
         </ul>
         <p>
-          Pour exercer vos droits, contactez notre DPO a{" "}
-          <strong>dpo@vjuya.me</strong> ou utilisez les fonctionnalites
-          disponibles dans votre espace compte :
+          Pour exercer vos droits, contactez notre DPO à{" "}
+          <a href="mailto:dpo@vjuya.me">dpo@vjuya.me</a> ou utilisez les
+          fonctionnalités disponibles dans votre espace compte :
         </p>
         <ul>
           <li>
-            Export de donnees :{" "}
-            <code>GET /api/profile/export</code>
+            Export de données : <code>GET /api/profile/export</code>
           </li>
           <li>
-            Suppression de compte :{" "}
-            <code>DELETE /api/profile/delete</code>
+            Suppression de compte : <code>DELETE /api/profile/delete</code>
           </li>
         </ul>
-      </section>
+      </Section>
 
-      <section>
-        <h2>9. Transferts internationaux</h2>
+      <Section id="transferts" title="9. Transferts internationaux">
         <p>
-          Vos donnees sont principalement hebergees au sein de l&apos;Union
-          europeenne. En cas de transfert hors UE (services cloud), nous nous
-          assurons que des garanties adequates sont en place (clauses
-          contractuelles types, decisions d&apos;adequation).
+          Vos données sont principalement hébergées au sein de l&apos;Union
+          européenne. En cas de transfert hors UE (services cloud), nous nous
+          assurons que des garanties adéquates sont en place (clauses
+          contractuelles types, décisions d&apos;adéquation).
         </p>
-      </section>
+      </Section>
 
-      <section>
-        <h2>10. Reclamation</h2>
+      <Section id="reclamation" title="10. Réclamation">
         <p>
-          Si vous estimez que le traitement de vos donnees n&apos;est pas
-          conforme, vous pouvez introduire une reclamation aupres de la CNIL :
+          Si vous estimez que le traitement de vos données n&apos;est pas
+          conforme, vous pouvez introduire une réclamation auprès de la CNIL :
         </p>
         <ul>
           <li>
             <strong>CNIL :</strong> Commission Nationale de l&apos;Informatique
-            et des Libertes
+            et des Libertés
           </li>
           <li>
-            <strong>Site :</strong> www.cnil.fr
+            <strong>Site :</strong>{" "}
+            <a
+              href="https://www.cnil.fr"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              www.cnil.fr
+            </a>
           </li>
           <li>
             <strong>Adresse :</strong> 3 Place de Fontenoy, TSA 80715, 75334
             Paris Cedex 07
           </li>
         </ul>
-      </section>
+      </Section>
 
-      <section>
-        <h2>11. Modifications</h2>
+      <Section id="modifications" title="11. Modifications">
         <p>
-          Cette politique de confidentialite peut etre modifiee a tout moment.
-          Les modifications prennent effet des leur publication sur cette page.
+          Cette politique de confidentialité peut être modifiée à tout moment.
+          Les modifications prennent effet dès leur publication sur cette page.
           Nous vous informerons de tout changement substantiel par email ou
           notification sur le site.
         </p>
-      </section>
-    </div>
+      </Section>
+    </LegalPage>
   );
 }
