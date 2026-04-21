@@ -1,0 +1,54 @@
+version: 1
+
+services:
+  web:
+    build: .
+    port: 3000
+    expose: true
+    env:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_APP_NAME: "Althea (PR#${PR})"
+      NEXT_PUBLIC_APP_URL: ${PREVIEW_URL}
+
+      DATABASE_URL: postgresql://app:${DB_PASSWORD}@db:5432/althea?schema=public
+      REDIS_URL: redis://redis:6379
+
+      NEXTAUTH_URL: ${PREVIEW_URL}
+      NEXTAUTH_SECRET: ${DB_PASSWORD}
+
+      GOOGLE_CLIENT_ID: preview-dummy
+      GOOGLE_CLIENT_SECRET: preview-dummy
+      GITHUB_CLIENT_ID: preview-dummy
+      GITHUB_CLIENT_SECRET: preview-dummy
+
+      STRIPE_SECRET_KEY: sk_test_preview_dummy
+      STRIPE_WEBHOOK_SECRET: whsec_preview_dummy
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_preview_dummy
+
+      EMAILS_ENABLED: "false"
+      RESEND_API_KEY: re_preview_dummy
+      RESEND_FROM_EMAIL: preview@example.com
+
+      LOG_LEVEL: info
+      LOG_DIR: /tmp/logs
+
+    depends_on: [db, redis]
+
+  db:
+    image: postgres:16-alpine
+    env:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: althea
+    healthcheck:
+      cmd: pg_isready -U app -d althea
+      interval_seconds: 3
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      cmd: redis-cli ping
+      interval_seconds: 3
+      retries: 20
