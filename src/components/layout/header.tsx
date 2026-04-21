@@ -252,7 +252,7 @@ export default function Header() {
         <div
           id="site-search"
           className={`overflow-hidden border-t border-border/40 transition-all duration-300 ease-out ${
-            searchOpen ? "max-h-20 pt-3 pb-4" : "max-h-0 border-transparent"
+            searchOpen ? "max-h-32 pt-4 pb-5" : "max-h-0 border-transparent"
           }`}
           inert={!searchOpen}
         >
