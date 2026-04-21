@@ -71,10 +71,14 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
+  const baseUrl =
+    process.env.NEXTAUTH_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    request.nextUrl.origin;
 
   if (!token) {
     return NextResponse.redirect(
-      new URL("/verify-email?error=missing_token", request.url)
+      new URL("/verify-email?error=missing_token", baseUrl)
     );
   }
 
@@ -89,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     if (!verificationToken) {
       return NextResponse.redirect(
-        new URL("/verify-email?error=invalid_token", request.url)
+        new URL("/verify-email?error=invalid_token", baseUrl)
       );
     }
 
@@ -99,7 +103,7 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.redirect(
-        new URL("/verify-email?error=user_not_found", request.url)
+        new URL("/verify-email?error=user_not_found", baseUrl)
       );
     }
 
@@ -118,12 +122,12 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.redirect(
-      new URL("/verify-email?success=true", request.url)
+      new URL("/verify-email?success=true", baseUrl)
     );
   } catch (error) {
     console.error("Erreur verify-email GET:", error);
     return NextResponse.redirect(
-      new URL("/verify-email?error=server_error", request.url)
+      new URL("/verify-email?error=server_error", baseUrl)
     );
   }
 }
