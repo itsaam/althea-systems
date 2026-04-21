@@ -262,10 +262,14 @@ export default function CtaProductsCarousel({
         </div>
 
         {/* Horizontal track — centered vertically in the pinned viewport */}
-        <div className="relative flex flex-1 items-center">
+        <div className="relative flex flex-1 items-center justify-center">
           <div
             ref={trackRef}
-            className="flex items-center gap-5 pl-[6vw] pr-[6vw] md:gap-6 md:pl-[8vw] md:pr-[8vw] max-md:w-full max-md:snap-x max-md:snap-mandatory max-md:overflow-x-auto max-md:scroll-smooth"
+            className={`flex items-center gap-5 md:gap-6 max-md:w-full max-md:snap-x max-md:snap-mandatory max-md:overflow-x-auto max-md:scroll-smooth ${
+              total <= 3
+                ? "mx-auto justify-center px-[6vw] md:px-[8vw]"
+                : "pl-[6vw] pr-[6vw] md:pl-[8vw] md:pr-[8vw]"
+            }`}
             style={{ willChange: "transform" }}
           >
             {products.map((product, i) => (
