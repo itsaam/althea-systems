@@ -1,0 +1,14 @@
+{
+  "name": "dct-pdf-generator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node generate.mjs"
+  },
+  "dependencies": {
+    "marked": "^14.1.0",
+    "pdfjs-dist": "^3.11.174",
+    "puppeteer": "^23.0.0"
+  }
+}
