@@ -61,7 +61,6 @@ Répartition des contributions selon l'historique Git (au 07 mai 2026) — multi
 
 ---
 
-\newpage
 
 ## Table des matières
 
@@ -133,7 +132,6 @@ Répartition des contributions selon l'historique Git (au 07 mai 2026) — multi
 
 ---
 
-\newpage
 
 # 1. Présentation du projet
 
@@ -223,7 +221,6 @@ Le périmètre couvre quatre grands domaines :
 
 ---
 
-\newpage
 
 # 2. Architecture du système
 
@@ -663,7 +660,6 @@ Tailwind 4 introduit `@theme inline` qui supprime le besoin de `tailwind.config.
 
 ---
 
-\newpage
 
 # 3. Modèle de données
 
@@ -1124,7 +1120,6 @@ Lancement : `npm run db:seed`.
 
 ---
 
-\newpage
 
 # 4. Fonctionnalités implémentées
 
@@ -1633,7 +1628,6 @@ Client                      Admin                       Système
 
 ---
 
-\newpage
 
 # 5. Structure du code
 
@@ -2057,7 +2051,6 @@ export const GET = withApiLogger(async (req) => {
 
 ---
 
-\newpage
 
 # 6. Sécurité
 
@@ -2325,7 +2318,6 @@ Le pattern Proxy initial pour l'init lazy de Redis ne préservait pas le context
 
 ---
 
-\newpage
 
 # 7. Déploiement
 
@@ -2720,7 +2712,6 @@ Tags `v0.x.y` au format SemVer pour les jalons importants. Releases GitHub avec 
 
 ---
 
-\newpage
 
 # 8. Annexes
 

@@ -52,8 +52,8 @@ function stripFrontmatter(md) {
 }
 
 function transformPageBreaks(md) {
-  // \newpage → div.pagebreak
-  return md.replace(/^\\newpage\s*$/gm, '\n<div class="pagebreak"></div>\n');
+  // No-op: page breaks are driven by CSS (page-break-before on h1).
+  return md;
 }
 
 async function main() {
