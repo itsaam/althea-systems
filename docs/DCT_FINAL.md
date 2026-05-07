@@ -24,7 +24,7 @@ classification: "Pédagogique, Sup de Vinci, Bachelor 3 CPI"
 
 Ce document décrit la plateforme Althea Systems telle qu'elle tourne aujourd'hui en production. Il sert de référence à toute personne qui devra reprendre le code derrière nous : où trouver quoi, pourquoi on a tranché comme ça, comment redéployer.
 
-C'est le livrable final (VI.5) du projet fil rouge B3 CPI, RNCP 34581, à Sup de Vinci.
+C'est le livrable final (VI.5) du projet fil rouge Bachelor 3, Coordinateur de Projets Informatiques spécialisation Développement (RNCP 38478, niveau 6), à Sup de Vinci.
 
 ### Objectif
 
