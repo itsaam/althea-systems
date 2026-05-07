@@ -175,13 +175,6 @@
     page-break-inside: avoid;
     color: var(--shadow-grey-900);
   }
-  h2::before {
-    content: "§ ";
-    color: var(--electric-indigo);
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 12pt;
-    font-weight: 500;
-  }
 
   h3 {
     font-family: "Hanken Grotesk", sans-serif;
@@ -325,6 +318,40 @@
 
   /* Heading break protection */
   h1, h2, h3, h4 { break-after: avoid-page; }
+
+  /* === Table of contents === */
+  .toc {
+    column-count: 2;
+    column-gap: 8mm;
+    column-fill: balance;
+    margin: 4mm 0;
+    font-size: 9pt;
+    line-height: 1.4;
+  }
+  .toc a {
+    display: block;
+    text-decoration: none;
+    color: var(--shadow-grey-900);
+    padding: 0.6mm 0;
+    break-inside: avoid;
+  }
+  .toc a:hover { color: var(--electric-indigo); }
+  .toc-h1 {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    color: var(--electric-indigo) !important;
+    margin-top: 3mm;
+    border-top: 0.5px solid var(--shadow-grey-300);
+    padding-top: 2mm !important;
+  }
+  .toc-h1:first-child { margin-top: 0; border-top: 0; padding-top: 0 !important; }
+  .toc-h2 {
+    padding-left: 4mm !important;
+    color: var(--shadow-grey-800) !important;
+  }
 </style>
 </head>
 <body>

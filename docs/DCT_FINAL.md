@@ -56,71 +56,8 @@ Répartition des contributions selon l'historique Git (au 07 mai 2026), multiple
 
 ## Table des matières
 
-1. [Présentation du projet](#1-présentation-du-projet)
-   1. Contexte métier
-   2. Objectifs fonctionnels
-   3. Cibles et utilisateurs
-   4. Périmètre fonctionnel
-2. [Architecture du système](#2-architecture-du-système)
-   1. Vue d'ensemble
-   2. Stack technique complète
-   3. Architecture en couches
-   4. Diagramme d'architecture globale
-   5. Flux de données
-   6. Choix architecturaux et justifications
-3. [Modèle de données](#3-modèle-de-données)
-   1. Vue d'ensemble du schéma
-   2. Diagramme ERD complet
-   3. Description détaillée des entités
-   4. Énumérations
-   5. Relations et contraintes
-   6. Migrations Prisma
-4. [Fonctionnalités implémentées](#4-fonctionnalités-implémentées)
-   1. Vitrine publique
-   2. Espace client
-   3. Tunnel de commande
-   4. Back-office d'administration
-   5. Authentification
-   6. Internationalisation
-   7. Chatbot IA
-   8. Emails transactionnels
-   9. SEO
-   10. Cas d'usage détaillés
-5. [Structure du code](#5-structure-du-code)
-   1. Arborescence du projet
-   2. Organisation des dossiers
-   3. Conventions de nommage
-   4. Couche de services
-   5. Gestion des erreurs
-   6. Validation des entrées
-   7. Logging structuré
-   8. Tests
-6. [Sécurité](#6-sécurité)
-   1. Modèle de menaces
-   2. Authentification
-   3. Autorisation
-   4. Validation et sanitization
-   5. Headers de sécurité
-   6. Rate limiting
-   7. Sécurisation des paiements
-   8. RGPD
-   9. Audits de sécurité
-7. [Déploiement](#7-déploiement)
-   1. Architecture de déploiement
-   2. Conteneurisation Docker
-   3. Pipeline CI/CD
-   4. Variables d'environnement
-   5. Procédure de déploiement
-   6. Rollback
-   7. Backups
-   8. Monitoring
-   9. Versionning
-8. [Annexes](#8-annexes)
-   1. Catalogue des 72 endpoints API
-   2. Catalogue des composants
-   3. Variables d'environnement complètes
-   4. Glossaire
-   5. Ressources et références
+<!-- AUTO_TOC -->
+
 
 ---
 

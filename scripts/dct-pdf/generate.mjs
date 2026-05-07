@@ -24,8 +24,11 @@ marked.setOptions({
 });
 
 // Custom renderer: code blocks with `mermaid` language → keep as <pre><code class="language-mermaid">
+// Headings get stable, deterministic ids (sec-N for h1, sub-N-M for h2)
 const renderer = new marked.Renderer();
 const origCode = renderer.code.bind(renderer);
+let h1Counter = 0;
+let h2Counter = 0;
 renderer.code = function (code, infostring, escaped) {
   const lang = (infostring || '').trim().split(/\s+/)[0];
   if (lang === 'mermaid') {
@@ -33,12 +36,56 @@ renderer.code = function (code, infostring, escaped) {
   }
   return origCode(code, infostring, escaped);
 };
+renderer.heading = function (token) {
+  const level = token.depth;
+  const text = this.parser.parseInline(token.tokens);
+  let id;
+  if (level === 1) {
+    h1Counter++;
+    h2Counter = 0;
+    id = `sec-${h1Counter}`;
+  } else if (level === 2) {
+    h2Counter++;
+    id = h1Counter > 0 ? `sub-${h1Counter}-${h2Counter}` : `intro-${h2Counter}`;
+  } else {
+    id = `h${level}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+  return `<h${level} id="${id}">${text}</h${level}>\n`;
+};
 
 function escapeHtml(s) {
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+function buildToc(html) {
+  // Extract all h1 and h2 with their ids and text
+  const re = /<h([12])\s+id="([^"]+)">([\s\S]*?)<\/h\1>/g;
+  const items = [];
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const level = parseInt(m[1], 10);
+    const id = m[2];
+    const text = m[3].replace(/<[^>]+>/g, '').trim();
+    items.push({ level, id, text });
+  }
+  // Skip the very first h1 (preamble) and the "Table des matières" h2 itself
+  const filtered = items.filter((it, i) => {
+    if (i === 0) return false;
+    if (/table des mati/i.test(it.text)) return false;
+    return true;
+  });
+
+  // Build a 2-column compact list
+  let out = '<div class="toc">\n';
+  for (const it of filtered) {
+    const cls = it.level === 1 ? 'toc-h1' : 'toc-h2';
+    out += `  <a class="${cls}" href="#${it.id}">${it.text}</a>\n`;
+  }
+  out += '</div>\n';
+  return out;
 }
 
 function stripFrontmatter(md) {
@@ -63,7 +110,14 @@ async function main() {
   md = transformPageBreaks(md);
 
   log('Converting markdown to HTML…');
-  const bodyHtml = marked.parse(md, { renderer });
+  // Reset counters for deterministic ids
+  h1Counter = 0;
+  h2Counter = 0;
+  let bodyHtml = marked.parse(md, { renderer });
+
+  log('Building TOC…');
+  const tocHtml = buildToc(bodyHtml);
+  bodyHtml = bodyHtml.replace('<!-- AUTO_TOC -->', tocHtml);
 
   log('Loading template…');
   const tpl = await readFile(TPL_PATH, 'utf8');
