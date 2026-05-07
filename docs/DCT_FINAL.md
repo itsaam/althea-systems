@@ -9,44 +9,36 @@ authors:
   - "Kelvin Chauvel"
   - "Tristan San-Juan"
   - "Rayane Menkar"
-audience: "Équipe IT — maintenance, évolution, reproduction"
-classification: "Pédagogique — Sup de Vinci, Bachelor 3 CPI"
+audience: "Équipe IT, maintenance, évolution, reproduction"
+classification: "Pédagogique, Sup de Vinci, Bachelor 3 CPI"
 ---
 
 # Dossier de Conception Technique — Althea Systems
 
-**Version 2.0 — 07 mai 2026**
+**Version 2.0, 07 mai 2026**
 **Plateforme e-commerce B2B/B2C de matériel médical**
 
 ---
 
 ## Préambule
 
-Ce document est le **Dossier de Conception Technique (DCT)** de la plateforme **Althea Systems**. Il s'inscrit dans le cadre du livrable final du projet fil rouge Bachelor 3 — **Coordinateur de Projets Informatiques** (RNCP 34581) — Sup de Vinci.
+Ce document décrit la plateforme Althea Systems telle qu'elle tourne aujourd'hui en production. Il sert de référence à toute personne qui devra reprendre le code derrière nous : où trouver quoi, pourquoi on a tranché comme ça, comment redéployer.
+
+C'est le livrable final (VI.5) du projet fil rouge B3 CPI, RNCP 34581, à Sup de Vinci.
 
 ### Objectif
 
-Permettre à une équipe IT externe de **comprendre**, **maintenir**, **faire évoluer** et **reproduire** la plateforme Althea Systems à partir des seules informations contenues dans ce document et du code source versionné.
+Quelqu'un qui n'a jamais vu le projet doit pouvoir, avec ce PDF et le repo Git, faire tourner l'app, la modifier sans tout casser, et la redéployer.
 
-Le DCT couvre les six axes imposés par le cadre pédagogique :
-
-1. **Architecture du système** — schémas, technologies, choix structurants
-2. **Modèle de données** — structure de la base, diagramme ERD, énumérations
-3. **Fonctionnalités implémentées** — documentation précise et cas d'usage
-4. **Structure du code** — organisation, conventions, gestion des erreurs
-5. **Sécurité** — authentification, validation, headers, RGPD, PCI-DSS
-6. **Déploiement** — environnements, procédures, versionning, CI/CD
+Le document couvre les six axes demandés par l'école : architecture, modèle de données, fonctionnalités, structure du code, sécurité, déploiement.
 
 ### Périmètre
 
-Le présent document détaille **l'intégralité de l'application**, frontend et backend, ainsi que toute l'infrastructure de production. Il ne couvre ni le détail du document de cadrage (livrable VI.3 distinct), ni la dynamique d'équipe (livrable VI.6 individuel).
+Le document détaille toute l'application, front et back, et l'infrastructure de production. Le détail du cadrage initial est dans le DOCUMENT_CADRAGE.pdf (livrable VI.3). L'analyse personnelle de l'expérience projet (VI.6) est rendue à part.
 
-### Conventions d'écriture
+### Conventions
 
-- Les blocs de code et noms techniques sont en **`monospace`**.
-- Les chemins de fichier utilisent la racine projet : `src/...`, `prisma/...`, `docker/...`.
-- Les diagrammes utilisent la syntaxe **Mermaid** (rendus dans le PDF).
-- Les références internes sont des liens cliquables dans le PDF généré.
+Les noms de fichiers et bouts de code sont en `monospace`. Les chemins partent toujours de la racine du repo : `src/...`, `prisma/...`. Les diagrammes sont en Mermaid, rendus directement dans le PDF.
 
 ### Équipe projet et répartition
 
@@ -57,7 +49,7 @@ Le présent document détaille **l'intégralité de l'application**, frontend et
 | **Tristan San-Juan** | Développeur full-stack | Composants UI, intégration Stripe, formulaires |
 | **Rayane Menkar** | Développeur frontend | Pages publiques, composants partagés |
 
-Répartition des contributions selon l'historique Git (au 07 mai 2026) — multiples pseudos GitHub utilisés : Samy Abdelmalek (alias `vjuya`, `itsaam`, `May`) — 255 commits ; Kelvin Chauvel — 46 commits ; Tristan San-Juan (`Mitikx`) — 27 commits ; Rayane Menkar — 8 commits.
+Répartition des contributions selon l'historique Git (au 07 mai 2026), multiples pseudos GitHub utilisés : Samy Abdelmalek (alias `vjuya`, `itsaam`, `May`), 255 commits ; Kelvin Chauvel, 46 commits ; Tristan San-Juan (`Mitikx`), 27 commits ; Rayane Menkar, 8 commits.
 
 ---
 
@@ -137,16 +129,11 @@ Répartition des contributions selon l'historique Git (au 07 mai 2026) — multi
 
 ## 1.1 Contexte métier
 
-**Althea Systems** est une plateforme e-commerce dédiée à la **distribution de matériel médical professionnel** (consommables, instruments, équipements) pour cabinets médicaux, cliniques, pharmacies et établissements de santé.
+Althea Systems vend du matériel médical à des pros : cabinets, cliniques, pharmacies, établissements de santé. Consommables, instruments, équipements.
 
-Le marché du matériel médical en France représente environ **30 milliards d'euros annuels** (source : SNITEM, 2024) et reste majoritairement adressé par des canaux de vente traditionnels (commerciaux, catalogues papier, fax). La digitalisation du processus d'achat est un enjeu structurant pour les établissements de santé qui cherchent à :
+Le marché en France pèse environ 30 milliards d'euros par an (SNITEM, 2024) et passe encore beaucoup par des commerciaux et des catalogues papier. Les acheteurs côté santé veulent surtout réduire les coûts, raccourcir le délai entre la commande et la livraison, garder une trace propre des achats pour les audits, et centraliser quand ils gèrent plusieurs sites. Le canal digital répond à tout ça quand il est bien fait.
 
-- **Réduire les coûts** d'approvisionnement (négociation, comparaison)
-- **Accélérer** le processus commande → livraison
-- **Tracer** les achats pour la traçabilité réglementaire
-- **Centraliser** la gestion multi-sites
-
-Althea Systems répond à ce besoin en proposant un **catalogue digital structuré**, une **gestion de comptes professionnels** (TVA, factures conformes), un **tunnel d'achat sécurisé** et une **interface d'administration** pour le distributeur.
+Côté plateforme, on propose un catalogue navigable, des comptes pros avec TVA et factures conformes, un tunnel de paiement, et un back-office pour le distributeur.
 
 ## 1.2 Objectifs fonctionnels
 
@@ -226,27 +213,11 @@ Le périmètre couvre quatre grands domaines :
 
 ## 2.1 Vue d'ensemble
 
-Althea Systems repose sur une **architecture monolithique modulaire** construite autour de **Next.js 16 App Router**, qui colocalise le rendu serveur (SSR/RSC), les API REST et les composants React dans un même runtime Node.js 20.
+Tout tourne dans un seul service Next.js 16 (App Router) en Node.js 20. Le SSR, les Server Components, les API REST et les composants React vivent dans la même base de code. C'est un monolithe, mais découpé proprement par dossier.
 
-Cette approche a été retenue pour les raisons suivantes :
+On a fait ce choix pour trois raisons concrètes. D'abord le typage TypeScript est partagé d'un bout à l'autre, donc un changement de schéma Zod casse au build et pas en runtime. Ensuite les Server Components évitent le waterfall fetch classique du SPA. Et enfin un seul service à monitorer, une seule pipeline CI, c'est beaucoup moins de friction qu'un front + un back séparés.
 
-- **Cohérence du typage** entre frontend et backend (TypeScript de bout en bout, schémas Zod partagés)
-- **Performance** grâce au React Server Components qui élimine le waterfall fetch initial
-- **Simplicité opérationnelle** d'un seul service à déployer, une seule base de code à maintenir
-- **Isolation logique** par dossier (`(site)`, `(account)`, `admin`, `api`) qui préserve la lisibilité
-
-Le service Next.js est complété par trois dépendances d'infrastructure :
-
-- **PostgreSQL 16** comme base de données principale (relationnel, ACID, JSON natif)
-- **Redis 7** pour le cache, le rate limiting, les sessions volatiles et les secrets temporaires (2FA setup)
-- **Cloudflare R2** comme stockage objet S3-compatible pour les images produits et les PDF de factures
-
-Et quatre services SaaS externes :
-
-- **Stripe** pour l'encaissement carte bancaire et la gestion des moyens de paiement
-- **Resend** pour les emails transactionnels (confirmation, vérification, mot de passe oublié, facture)
-- **Google OAuth 2.0** et **GitHub OAuth** pour l'authentification fédérée
-- **OpenAI API** pour le chatbot d'assistance client (modèle `gpt-4o-mini` en streaming)
+À côté de Next.js on a trois briques d'infra : PostgreSQL 16 pour les données métier, Redis 7 pour le cache et le rate limiting, Cloudflare R2 pour les fichiers (images produits, PDF de factures). Et quatre services externes qu'on appelle en HTTPS : Stripe pour les paiements, Resend pour les emails, Google et GitHub pour l'OAuth, OpenAI pour le chatbot.
 
 ## 2.2 Stack technique complète
 
@@ -585,7 +556,7 @@ Le cahier des charges initial mentionnait MongoDB. Après analyse technique, le 
 | Maturité ORM | Prisma excellent | Prisma moins puissant côté Mongo |
 | Coût | Container léger | Atlas payant à grande échelle |
 
-Le modèle de données d'Althea est **fondamentalement relationnel** : un User a N Addresses, une Order a 1 Address et N OrderItems, chaque OrderItem référence un Product. PostgreSQL est l'outil naturel pour cela.
+Le modèle de données est relationnel partout : un User a N Addresses, un Order a 1 Address et N OrderItems, chaque OrderItem pointe sur un Product. Mettre ça dans Mongo c'était se compliquer la vie pour rien.
 
 MongoDB a été retiré du projet en décembre 2025 (commit `0319d87`).
 
@@ -656,7 +627,7 @@ Le seul inconvénient est l'absence de CDN edge mondial (mais Cloudflare devant 
 | Maintenance | Pas de fichier CSS séparé à synchroniser | Risque de duplication |
 | Charte centralisée | `@theme` inline dans `globals.css` | `ThemeProvider` |
 
-Tailwind 4 introduit `@theme inline` qui supprime le besoin de `tailwind.config.ts` — toutes les variables (couleurs, typographies, espacements) sont en CSS.
+Tailwind 4 introduit `@theme inline` qui supprime le besoin de `tailwind.config.ts`, toutes les variables (couleurs, typographies, espacements) sont en CSS.
 
 ---
 
@@ -674,7 +645,7 @@ La base de données PostgreSQL contient **15 modèles** et **9 énumérations**,
 | **Commerce** | `Address`, `Order`, `OrderItem`, `OrderStatusHistory`, `Invoice`, `CreditNote` |
 | **Communication** | `ContactMessage`, `ChatbotConversation`, `ChatbotMessage` |
 
-Toutes les clés primaires sont des **CUID** (Collision-Resistant Unique IDentifier) générés par Prisma — chaînes courtes, URL-safe, triables temporellement.
+Toutes les clés primaires sont des **CUID** (Collision-Resistant Unique IDentifier) générés par Prisma, chaînes courtes, URL-safe, triables temporellement.
 
 ## 3.2 Diagramme ERD complet
 
@@ -988,7 +959,7 @@ Commande client.
 
 ### 3.3.8 OrderItem
 
-Lignes de commande. **Snapshot** du produit au moment de l'achat (`name`, `price`) — protège contre les modifications ultérieures du produit.
+Lignes de commande. **Snapshot** du produit au moment de l'achat (`name`, `price`), protège contre les modifications ultérieures du produit.
 
 ### 3.3.9 OrderStatusHistory
 
@@ -1084,8 +1055,8 @@ User → Address, User → Order, Order → Address, Product → OrderItem, Orde
 
 ### Index optimisés
 
-- `Product[featured, featuredOrder]` — carrousel home
-- `BackupCode[userId, used]` — récupération 2FA
+- `Product[featured, featuredOrder]`, carrousel home
+- `BackupCode[userId, used]`, récupération 2FA
 - `ChatbotConversation[userId]`, `[status]`, `[createdAt]`
 - `ChatbotMessage[conversationId]`, `[createdAt]`
 
@@ -1110,7 +1081,7 @@ npx prisma migrate reset
 
 Le fichier `prisma/seed.ts` peuple la base de tests avec :
 
-- 1 compte admin (`admin@althea.com` / `Admin123!` — 2FA à configurer manuellement)
+- 1 compte admin (`admin@althea.com` / `Admin123!`, 2FA à configurer manuellement)
 - ~10 utilisateurs B2B fictifs
 - ~15 catégories (Imagerie, Diagnostic, Premiers secours, etc.)
 - ~80 produits avec images
@@ -1179,7 +1150,7 @@ Composée de cinq sections empilées :
   - Spécifications techniques WYSIWYG
   - Stock disponible
   - Bouton « Ajouter au panier » avec sélecteur quantité
-- **Produits similaires** (`/api/products/[id]/similar`) — même catégorie, hors produit courant
+- **Produits similaires** (`/api/products/[id]/similar`), même catégorie, hors produit courant
 - **JSON-LD `Product`** avec `MerchantReturnPolicy` et `OfferShippingDetails` pour le SEO
 
 ### 4.1.4 Recherche (`/search`)
@@ -1191,9 +1162,9 @@ Composée de cinq sections empilées :
 
 ### 4.1.5 Pages légales
 
-- `/legal/cgu` — Conditions Générales de Vente
-- `/legal/mentions-legales` — Mentions légales
-- `/legal/privacy` — Politique de confidentialité (RGPD)
+- `/legal/cgu`, Conditions Générales de Vente
+- `/legal/mentions-legales`, Mentions légales
+- `/legal/privacy`, Politique de confidentialité (RGPD)
 - Composant générique `LegalPage` avec sommaire + scrollspy (commit `2166fd3`)
 
 ### 4.1.6 Page contact (`/contact`)
@@ -1384,7 +1355,7 @@ Accessible sur `/admin/*` uniquement après :
 - Récupère token depuis URL
 - Vérifie validité Redis
 - Active le compte (`status: ACTIVE`, `emailVerified: now()`)
-- Redirection vers login (utilise `NEXTAUTH_URL` au lieu de `request.url` — commit `234d7c8`)
+- Redirection vers login (utilise `NEXTAUTH_URL` au lieu de `request.url`, commit `234d7c8`)
 
 ### 4.5.3 Connexion (`/login`)
 
@@ -1890,8 +1861,8 @@ Wrapper qui prend un type d'email + données, charge le template React correspon
 ### 5.4.6 `r2.ts` — Upload S3-compatible
 
 Fonctions :
-- `uploadImage(file, folder)` — sanitize nom de fichier (regex `/[^\w.-]/g`), génère clé unique, upload, retourne URL publique
-- `deleteImage(url)` — extrait clé de l'URL, supprime sur R2
+- `uploadImage(file, folder)`, sanitize nom de fichier (regex `/[^\w.-]/g`), génère clé unique, upload, retourne URL publique
+- `deleteImage(url)`, extrait clé de l'URL, supprime sur R2
 - Validation MIME (JPEG, PNG, WebP, GIF) et taille (5 Mo max)
 
 ### 5.4.7 `pdf.tsx` — Génération React-PDF
@@ -1998,7 +1969,7 @@ Tous les contenus WYSIWYG (descriptions produit, sous-titre carrousel) sont sani
 
 ### 5.7.1 Architecture Winston
 
-- **Console transport** (toujours actif) — sortie colorée
+- **Console transport** (toujours actif), sortie colorée
 - **File transports** désactivés en production conteneurisée (commit `8e7ec7f`) car le user `nextjs` (UID 1001) n'a pas les droits d'écriture sur `/app`
 - En dev : `logs/combined.log` + `logs/error.log` avec rotation 5 Mo, 5 fichiers max
 
@@ -2041,11 +2012,11 @@ export const GET = withApiLogger(async (req) => {
 ### 5.8.3 Tests E2E (Playwright)
 
 - Cinq spécifications dans `e2e/`
-  - `home.spec.ts` — chargement, sections, accessibilité
-  - `product-flow.spec.ts` — recherche → fiche produit → ajout panier
-  - `cart.spec.ts` — modification quantités, suppression
-  - `checkout.spec.ts` — saisie adresse, redirection Stripe
-  - `search.spec.ts` — recherche, filtres
+  - `home.spec.ts`, chargement, sections, accessibilité
+  - `product-flow.spec.ts`, recherche → fiche produit → ajout panier
+  - `cart.spec.ts`, modification quantités, suppression
+  - `checkout.spec.ts`, saisie adresse, redirection Stripe
+  - `search.spec.ts`, recherche, filtres
 - Configuration : `playwright.config.ts` (Chromium, Firefox, WebKit)
 - Lancement : `npm run test:e2e`
 
@@ -2093,7 +2064,7 @@ Le JWT contient : `id`, `email`, `role`, `firstName`, `lastName`, `image`, `twoF
 
 - Google OAuth 2.0
 - GitHub OAuth
-- `allowDangerousEmailAccountLinking: true` — permet à un même utilisateur de lier email/password + Google + GitHub sur le même compte (validation du même email)
+- `allowDangerousEmailAccountLinking: true`, permet à un même utilisateur de lier email/password + Google + GitHub sur le même compte (validation du même email)
 
 ### 6.2.4 Vérification email
 
@@ -2106,7 +2077,7 @@ Token unique stocké en Redis (TTL 24 h), envoyé par email à l'inscription. Co
 - Implémentation via `otplib` (TOTP RFC 6238)
 - Setup en 3 étapes (voir §4.5.6)
 - **10 backup codes** générés à l'activation, hashés en base, marqués utilisés après usage
-- Window de tolérance : 1 (accepte le code en cours, le précédent et le suivant — ±30s)
+- Window de tolérance : 1 (accepte le code en cours, le précédent et le suivant, ±30s)
 
 ### 6.2.6 Session lifecycle
 
@@ -2234,13 +2205,13 @@ Headers de réponse :
 
 Réponse 429 avec `retryAfter` en secondes.
 
-**Stratégie fail-open** : si Redis est injoignable, les requêtes passent (priorité disponibilité sur sécurité — choix justifié pour une plateforme commerce).
+**Stratégie fail-open** : si Redis est injoignable, les requêtes passent (priorité disponibilité sur sécurité, choix justifié pour une plateforme commerce).
 
 ## 6.7 Sécurisation des paiements
 
 ### 6.7.1 PCI-DSS
 
-Les données de carte bancaire **ne touchent jamais** notre serveur — Stripe Checkout est hébergé chez Stripe (PCI-DSS Level 1 certifié). Notre serveur reçoit uniquement :
+Les données de carte bancaire **ne touchent jamais** notre serveur, Stripe Checkout est hébergé chez Stripe (PCI-DSS Level 1 certifié). Notre serveur reçoit uniquement :
 - `paymentIntentId` (référence Stripe)
 - `last4`, `brand` (métadonnées non sensibles)
 
@@ -2298,7 +2269,7 @@ Les méthodes de paiement enregistrées sont stockées **uniquement** chez Strip
 
 ### 6.9.2 Audit GitHub
 
-- **CodeQL** : analyse statique hebdomadaire (lundi 9h UTC) — workflow `.github/workflows/security.yml`
+- **CodeQL** : analyse statique hebdomadaire (lundi 9h UTC), workflow `.github/workflows/security.yml`
 - **npm audit** : intégré au workflow CI
 
 ### 6.9.3 Patches sécurité notables
@@ -2609,7 +2580,7 @@ docker exec -i althea-postgres pg_restore -U althea -d althea_db --clean < backu
 ### 7.6.3 Procédure d'urgence
 
 1. **Détection** : alerte UptimeRobot ou Sentry (à venir)
-2. **Évaluation** : < 5 min — consulter logs Dokploy + Winston
+2. **Évaluation** : < 5 min, consulter logs Dokploy + Winston
 3. **Action** : redeploy version précédente Dokploy
 4. **Post-mortem** : document dans `docs/reports/`
 
@@ -2694,7 +2665,7 @@ Format imposé : `type(scope): description`
 | `ci` | Pipeline CI/CD |
 
 Exemples (vrais commits du projet) :
-- `feat(seo): audit SEO complet — brand ranking 'Althea Systems'`
+- `feat(seo): audit SEO complet, brand ranking 'Althea Systems'`
 - `fix(auth): redirection verify-email utilise NEXTAUTH_URL au lieu de request.url`
 - `refactor(pdf+admin): facture PDF brandée Althea + users badges neutres`
 - `chore(deps): patch 35 vulnérabilités via npm audit fix`
@@ -3001,23 +2972,21 @@ LOG_DIR=logs
 - [Mermaid](https://mermaid.js.org)
 
 ### Standards
-- RGPD — Règlement (UE) 2016/679
+- RGPD, Règlement (UE) 2016/679
 - PCI-DSS v4.0
 - RFC 6238 (TOTP)
 - RFC 7519 (JWT)
 
 ### Documents internes du projet
-- `docs/DOCUMENT_CADRAGE.pdf` — Document de cadrage (livrable VI.3)
-- `docs/RAPPORT_SOUTENANCE_SAMY.md` — Rapport technique soutenance
-- `docs/A11Y_AUDIT.md` — Audit accessibilité WCAG 2.1 AA
-- `docs/security-report.md` — Rapport audit sécurité
-- `docs/RESPONSIVE_AUDIT.md` — Audit responsive mobile-first
-- `docs/DECISIONS_ARCHITECTURALES_CDC.md` — Décisions architecturales motivées
-- `README.md` — Point d'entrée projet
-- `CONTRIBUTING.md` — Guide contribution
+- `docs/DOCUMENT_CADRAGE.pdf` : Document de cadrage (livrable VI.3)
+- `docs/RAPPORT_SOUTENANCE_SAMY.md` : Rapport technique soutenance
+- `docs/A11Y_AUDIT.md` : Audit accessibilité WCAG 2.1 AA
+- `docs/security-report.md` : Rapport audit sécurité
+- `docs/RESPONSIVE_AUDIT.md` : Audit responsive mobile-first
+- `docs/DECISIONS_ARCHITECTURALES_CDC.md` : Décisions architecturales motivées
+- `README.md` : Point d'entrée du repo
+- `CONTRIBUTING.md` : Guide de contribution
 
 ---
 
-**Fin du Dossier de Conception Technique — Althea Systems v2.0**
-
-*Document généré le 7 mai 2026 — 8 sections, 8 annexes, ~80 pages.*
+Fin du document. Althea Systems v2.0, le 7 mai 2026.
