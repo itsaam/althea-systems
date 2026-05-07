@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>DCT — Althea Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --shadow-grey-50:  #f7f7f6;
+    --shadow-grey-100: #ececea;
+    --shadow-grey-200: #d8d7d4;
+    --shadow-grey-300: #b8b6b1;
+    --shadow-grey-400: #8c8a85;
+    --shadow-grey-500: #6b6964;
+    --shadow-grey-700: #3a3936;
+    --shadow-grey-800: #25241f;
+    --shadow-grey-900: #14130f;
+    --electric-indigo: #4d3df7;
+    --electric-indigo-700: #3a2cd0;
+    --lavender-mist: #ecebfb;
+    --medium-slate: #7c6df0;
+    --paper: #fafaf8;
+    --rule: #1f1e1a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--shadow-grey-900);
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* === COVER PAGE === */
+  .cover {
+    width: 100%;
+    min-height: 297mm;
+    padding: 28mm 24mm;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+    background:
+      linear-gradient(180deg, transparent 0%, transparent 60%, var(--lavender-mist) 100%),
+      var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover-corner {
+    position: absolute;
+    top: 28mm;
+    right: 24mm;
+    width: 80mm;
+    height: 80mm;
+    pointer-events: none;
+  }
+  .cover-corner svg { width: 100%; height: 100%; opacity: 0.9; }
+
+  .cover-brand {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9pt;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--shadow-grey-700);
+    margin-bottom: 4mm;
+  }
+
+  .cover-wordmark {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-weight: 800;
+    font-size: 56pt;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    color: var(--shadow-grey-900);
+    margin: 0;
+  }
+  .cover-wordmark .dot { color: var(--electric-indigo); }
+
+  .cover-tagline {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--shadow-grey-500);
+    margin-top: 6mm;
+  }
+
+  .cover-rule {
+    height: 1px;
+    background: var(--rule);
+    margin: 18mm 0 12mm;
+    width: 60mm;
+  }
+
+  .cover-doctype {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10pt;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--shadow-grey-700);
+    margin-bottom: 6mm;
+  }
+
+  .cover-title {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-weight: 700;
+    font-size: 34pt;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--shadow-grey-900);
+    margin: 0 0 6mm;
+    max-width: 150mm;
+  }
+
+  .cover-subtitle {
+    font-family: "Newsreader", serif;
+    font-style: italic;
+    font-size: 15pt;
+    color: var(--shadow-grey-700);
+    line-height: 1.3;
+    margin: 0;
+    max-width: 140mm;
+  }
+
+  .cover-spacer { flex: 1; min-height: 30mm; }
+
+  .cover-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8mm;
+    border-top: 1px solid var(--shadow-grey-300);
+    padding-top: 8mm;
+  }
+
+  .cover-meta-block .label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 7.5pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--shadow-grey-500);
+    margin-bottom: 2mm;
+  }
+  .cover-meta-block .value {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 10.5pt;
+    color: var(--shadow-grey-900);
+    line-height: 1.4;
+  }
+  .cover-meta-block .value strong { font-weight: 600; }
+  .cover-meta-block .value em { font-style: italic; color: var(--shadow-grey-700); }
+
+  /* === BODY === */
+  .body {
+    padding: 0 4mm;
+  }
+
+  h1 {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-weight: 700;
+    font-size: 24pt;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 14mm 0 6mm;
+    page-break-before: always;
+    page-break-after: avoid;
+    color: var(--shadow-grey-900);
+    border-bottom: 2px solid var(--electric-indigo);
+    padding-bottom: 3mm;
+  }
+  /* The first H1 (preamble) — no forced break before */
+  .body > h1:first-of-type { page-break-before: auto; margin-top: 4mm; }
+
+  h2 {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-weight: 600;
+    font-size: 15pt;
+    letter-spacing: -0.015em;
+    margin: 10mm 0 4mm;
+    page-break-after: avoid;
+    color: var(--shadow-grey-900);
+  }
+  h2::before {
+    content: "§ ";
+    color: var(--electric-indigo);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12pt;
+    font-weight: 500;
+  }
+
+  h3 {
+    font-family: "Hanken Grotesk", sans-serif;
+    font-weight: 600;
+    font-size: 12pt;
+    margin: 7mm 0 3mm;
+    page-break-after: avoid;
+    color: var(--shadow-grey-800);
+  }
+
+  h4 {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 500;
+    font-size: 9.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 5mm 0 2mm;
+    page-break-after: avoid;
+    color: var(--shadow-grey-700);
+  }
+
+  p { margin: 0 0 3mm; orphans: 3; widows: 3; }
+
+  strong { font-weight: 600; color: var(--shadow-grey-900); }
+  em { font-style: italic; color: var(--shadow-grey-700); }
+
+  a {
+    color: var(--electric-indigo-700);
+    text-decoration: underline;
+    text-decoration-thickness: 0.5px;
+    text-underline-offset: 2px;
+  }
+
+  /* Inline code */
+  :not(pre) > code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 9pt;
+    background: var(--lavender-mist);
+    color: var(--shadow-grey-900);
+    padding: 1px 4px;
+    border-radius: 2px;
+    border: 0.5px solid rgba(77, 61, 247, 0.18);
+  }
+
+  /* Code blocks */
+  pre {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 7.5pt;
+    line-height: 1.5;
+    background: #f4f3ef;
+    border-left: 3px solid var(--electric-indigo);
+    padding: 4mm 5mm;
+    margin: 4mm 0;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    page-break-inside: auto;
+    color: var(--shadow-grey-900);
+  }
+  pre code {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    font-size: 7.5pt !important;
+    color: inherit;
+  }
+
+  /* Lists */
+  ul, ol { margin: 2mm 0 4mm; padding-left: 6mm; }
+  li { margin: 1mm 0; }
+  ul li::marker { color: var(--electric-indigo); }
+  ol li::marker { color: var(--shadow-grey-500); font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4mm 0;
+    font-size: 8.5pt;
+    page-break-inside: auto;
+  }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; }
+  th {
+    text-align: left;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--shadow-grey-700);
+    border-bottom: 1.5px solid var(--shadow-grey-900);
+    padding: 2.5mm 2mm;
+    background: var(--shadow-grey-50);
+    font-weight: 500;
+  }
+  td {
+    border-bottom: 0.5px solid var(--shadow-grey-200);
+    padding: 2mm;
+    vertical-align: top;
+    color: var(--shadow-grey-800);
+    word-break: break-word;
+  }
+  td code, th code {
+    font-size: 7.5pt;
+    word-break: break-all;
+  }
+  tbody tr:nth-child(even) { background: rgba(247, 247, 246, 0.45); }
+
+  /* Blockquote */
+  blockquote {
+    border-left: 3px solid var(--electric-indigo);
+    background: var(--lavender-mist);
+    padding: 3mm 5mm;
+    margin: 4mm 0;
+    font-style: italic;
+    color: var(--shadow-grey-700);
+  }
+
+  hr {
+    border: 0;
+    border-top: 0.5px solid var(--shadow-grey-300);
+    margin: 8mm 0;
+  }
+
+  /* Mermaid diagrams */
+  .mermaid {
+    margin: 6mm 0;
+    text-align: center;
+    page-break-inside: avoid;
+    font-family: "Hanken Grotesk", sans-serif;
+    font-size: 9pt;
+    background: #ffffff;
+    padding: 4mm;
+    border: 0.5px solid var(--shadow-grey-200);
+    border-radius: 2px;
+  }
+  .mermaid svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Page break helper */
+  .pagebreak { page-break-before: always; height: 0; }
+
+  /* Heading break protection */
+  h1, h2, h3, h4 { break-after: avoid-page; }
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<section class="cover">
+  <div class="cover-corner">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4d3df7">
+      <circle cx="100" cy="100" r="98" stroke-width="0.6" opacity="0.5"/>
+      <circle cx="100" cy="100" r="78" stroke-width="0.5" stroke-dasharray="2 3" opacity="0.5"/>
+      <circle cx="100" cy="100" r="58" stroke-width="0.5" opacity="0.4"/>
+      <circle cx="100" cy="100" r="38" stroke-width="0.5" stroke-dasharray="1 2" opacity="0.4"/>
+      <line x1="0" y1="100" x2="200" y2="100" stroke-width="0.4" opacity="0.3"/>
+      <line x1="100" y1="0" x2="100" y2="200" stroke-width="0.4" opacity="0.3"/>
+      <circle cx="100" cy="100" r="3" fill="#4d3df7" stroke="none"/>
+    </svg>
+  </div>
+
+  <div class="cover-brand">Althea&nbsp;·&nbsp;Medical&nbsp;·&nbsp;Systems</div>
+  <h1 class="cover-wordmark" style="page-break-before:auto;border:0;padding:0;margin:0;">althea<span class="dot">.</span></h1>
+  <div class="cover-tagline">Plateforme e-commerce de matériel médical</div>
+
+  <div class="cover-rule"></div>
+
+  <div class="cover-doctype">Dossier de Conception Technique — DCT</div>
+  <h2 class="cover-title" style="margin:0 0 6mm;page-break-after:auto;">Architecture, sécurité et déploiement d'une plateforme e-commerce médicale</h2>
+  <div style="display:none">.</div>
+  <p class="cover-subtitle">Document technique détaillé&nbsp;— frontend, backend, infrastructure, conformité.</p>
+
+  <div class="cover-spacer"></div>
+
+  <div class="cover-footer">
+    <div class="cover-meta-block">
+      <div class="label">Projet</div>
+      <div class="value"><strong>Althea Systems</strong><br/>Bachelor 3 — Coordinateur de Projets Informatiques<br/>RNCP 34581 · Sup de Vinci</div>
+    </div>
+    <div class="cover-meta-block">
+      <div class="label">Version &amp; date</div>
+      <div class="value"><strong>v2.0 — 7 mai 2026</strong><br/>Livrable VI.5 — Documentation finale</div>
+    </div>
+    <div class="cover-meta-block">
+      <div class="label">Auteurs</div>
+      <div class="value">Samy Abdelmalek <em>(chef de projet)</em><br/>Kelvin Chauvel · Tristan San-Juan · Rayane Menkar</div>
+    </div>
+    <div class="cover-meta-block">
+      <div class="label">Repository</div>
+      <div class="value"><code>github.com/itsaam/althea-systems</code><br/>Production · <code>althea.vjuya.me</code></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BODY (injected) ===== -->
+<main class="body">
+  <!--CONTENT-->
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    securityLevel: 'loose',
+    themeVariables: {
+      fontFamily: 'Hanken Grotesk, sans-serif',
+      fontSize: '13px',
+      primaryColor: '#ecebfb',
+      primaryTextColor: '#14130f',
+      primaryBorderColor: '#4d3df7',
+      lineColor: '#3a3936',
+      secondaryColor: '#f7f7f6',
+      tertiaryColor: '#fafaf8',
+      mainBkg: '#ecebfb',
+      secondBkg: '#f4f3ef',
+      tertiaryBkg: '#ffffff',
+      noteBkgColor: '#fff8d8',
+      noteTextColor: '#14130f',
+      noteBorderColor: '#4d3df7'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis', padding: 12, useMaxWidth: true },
+    sequence: { useMaxWidth: true, wrap: true, mirrorActors: false },
+    er: { useMaxWidth: true, layoutDirection: 'TB' }
+  });
+
+  (async () => {
+    const blocks = Array.from(document.querySelectorAll('pre > code.language-mermaid'));
+    let i = 0;
+    let errors = 0;
+    for (const node of blocks) {
+      const code = node.textContent || '';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mermaid';
+      wrapper.id = 'mermaid-' + (i++);
+      wrapper.textContent = code;
+      const pre = node.closest('pre');
+      pre.parentNode.replaceChild(wrapper, pre);
+    }
+
+    const diagrams = Array.from(document.querySelectorAll('.mermaid'));
+    for (const el of diagrams) {
+      try {
+        const id = 'mermaid-svg-' + Math.random().toString(36).slice(2, 9);
+        const { svg } = await mermaid.render(id, el.textContent || '');
+        el.innerHTML = svg;
+      } catch (e) {
+        errors++;
+        console.error('Mermaid render error on', el.id, ':', e && e.message ? e.message : e);
+        el.innerHTML = '<pre style="text-align:left;font-size:7.5pt;color:#888;background:#fafaf8;padding:4mm;">[Diagramme non rendu]</pre>';
+      }
+    }
+    console.log('[mermaid] rendered', diagrams.length - errors, 'of', diagrams.length, 'diagrams');
+    document.body.dataset.mermaidDone = 'true';
+  })();
+</script>
+
+</body>
+</html>
