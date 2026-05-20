@@ -1,1053 +1,651 @@
-<div align="center">
+# Althea Systems
 
-# 🏥 Althea Systems
+Plateforme e-commerce B2B de matériel médical — application Next.js 16 monolithique modulaire (frontend public + espace client + back-office + API), PostgreSQL + Redis, paiement Stripe, hébergement européen sur VPS Dokploy.
 
-**Plateforme e-commerce B2B professionnelle pour équipements médicaux**
-
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/althea-systems)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](package.json)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520.0.0-43853d)](https://nodejs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.7-000000)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19.2.0-61dafb)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)](https://www.typescriptlang.org)
+[![Prisma](https://img.shields.io/badge/Prisma-6.19-2d3748)](https://www.prisma.io)
+[![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8)](https://tailwindcss.com)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev)
-[![Prisma](https://img.shields.io/badge/Prisma-6-2D3748)](https://www.prisma.io)
 
-</div>
+> Projet fil rouge Bachelor 3 CPI — Sup de Vinci 2025-2026, titre RNCP34581. Équipe de 4 : Samy Abdelmalek, Tristan Sanjuan, Rayan Menkar, Kelvin Chauvel.
 
 ---
 
-## 📋 Table des Matières
+## Sommaire
 
-- [✨ Fonctionnalités](#-fonctionnalités)
-- [🚀 Quick Start](#-quick-start)
-- [🛠️ Stack Technique](#️-stack-technique)
-- [📁 Architecture](#-architecture)
-- [⚙️ Configuration](#️-configuration)
-- [🗄️ Base de Données](#️-base-de-données)
-- [🔐 Authentification](#-authentification)
-- [🎨 State Management](#-state-management)
-- [📝 Logging](#-logging)
-- [🔌 API](#-api)
-- [🐳 Docker](#-docker)
-- [🚢 Déploiement](#-déploiement)
-- [📜 Scripts](#-scripts)
-- [📚 Documentation](#-documentation)
-- [📄 Licence](#-licence)
-
----
-
-## ✨ Fonctionnalités
-
-### 🛒 Commerce B2B
-- Catalogue produits avec gestion stock temps réel
-- Panier intelligent avec persistance locale (Zustand)
-- Système de commandes et facturation automatisée
-- TVA multiple (5.5%, 10%, 20%) selon catégories
-- Gestion adresses de livraison et facturation
-
-### 🔐 Authentification Avancée
-- NextAuth avec JWT (durée 30 jours)
-- Multi-providers : Email/Password, Google OAuth, GitHub OAuth
-- 2FA obligatoire (TOTP) pour administrateurs
-- Vérification email à l'inscription
-- Protection routes par middleware
-
-### 👨‍💼 Administration
-- Dashboard admin protégé par 2FA
-- Gestion complète produits, catégories, utilisateurs
-- Suivi commandes et stocks en temps réel
-- Upload images vers Cloudflare R2
-- Logs centralisés avec Winston
-
-### 🚀 Performance
-- Cache Redis multi-niveaux
-- React Server Components par défaut
-- Image optimization Next.js
-- Rate limiting API
-- React 19 Compiler activé
+1. [Périmètre fonctionnel](#périmètre-fonctionnel)
+2. [Architecture](#architecture)
+3. [Modèle de données](#modèle-de-données)
+4. [Stack technique](#stack-technique)
+5. [Démarrage rapide](#démarrage-rapide)
+6. [Configuration](#configuration)
+7. [Structure du projet](#structure-du-projet)
+8. [Authentification](#authentification)
+9. [API](#api)
+10. [Logs](#logs)
+11. [Docker](#docker)
+12. [Déploiement](#déploiement)
+13. [Scripts](#scripts)
+14. [Documentation](#documentation)
+15. [Licence](#licence)
 
 ---
 
-## 🚀 Quick Start
+## Périmètre fonctionnel
+
+Périmètre détaillé : [`docs/backlog.md`](./docs/backlog.md) — 61 user stories réparties en 8 epics (43 Must, 17 Should, 1 Could).
+
+| Domaine | Contenu |
+|---|---|
+| **Authentification & sécurité** | Inscription email/password, OAuth Google et GitHub, vérification email obligatoire, 2FA TOTP obligatoire pour les admins, codes de secours, reset mot de passe |
+| **Catalogue** | Catégories arborescentes, fiches produit, stock temps réel, recherche full-text, filtres prix/dispo, mise en avant, carrousel éditorial |
+| **Panier & checkout** | Panier persistant (Zustand + localStorage), checkout 4 étapes, paiement Stripe (Checkout Session + webhook signé), email + facture PDF |
+| **Espace client** | Profil, carnet d'adresses, historique commandes, téléchargement facture et avoir PDF, changement mot de passe |
+| **Back-office admin** | Dashboard ventes, CRUD produits / catégories / utilisateurs / commandes, upload images R2, gestion factures et avoirs, carrousel d'accueil (Tiptap), export CSV/XLSX |
+| **Contact & chatbot** | Formulaire de contact (rate-limité), chatbot OpenAI persisté en base, gestion des conversations côté admin (active / escaladée / fermée) |
+| **Multilingue** | Français, anglais, arabe (RTL) via `next-intl`, préférence mémorisée |
+| **Accessibilité & perf** | WCAG 2.1 AA, navigation clavier, lecteur d'écran, cache Redis, images servies via CDN R2 (WebP/AVIF) |
+
+---
+
+## Architecture
+
+Application Next.js unique organisée en compartiments logiques (frontend public, back-office, API Routes) plutôt qu'en micro-services : un seul conteneur à déployer, coût d'hébergement maîtrisé (~30 €/mois), équipe de 4 personnes. Justification complète : [`docs/DOCUMENT_CADRAGE.md`](./docs/DOCUMENT_CADRAGE.md) §6.
+
+```mermaid
+graph TD
+    subgraph Clients["Clients (navigateur)"]
+        Mobile["Mobile<br/>iOS / Android"]
+        Desktop["Desktop<br/>Windows / macOS / Linux"]
+    end
+
+    CF["Cloudflare<br/>(DNS + protection)"]
+    Traefik["Traefik<br/>(reverse proxy + TLS)"]
+
+    subgraph VPS["VPS européen (Dokploy)"]
+        subgraph NextApp["Next.js (conteneur Docker)"]
+            Public["Frontend public<br/>SSR + ISR"]
+            Admin["Back-office admin<br/>SSR protégé"]
+            ApiRoutes["API Routes<br/>/api/*"]
+            NextAuth["NextAuth.js<br/>sessions + OAuth + TOTP"]
+        end
+        Postgres[("PostgreSQL 16<br/>données métier")]
+        Redis[("Redis 7<br/>cache + rate limit")]
+    end
+
+    subgraph External["Services externes"]
+        Stripe["Stripe<br/>paiement + webhook"]
+        R2["Cloudflare R2<br/>images produits"]
+        Resend["Resend<br/>emails transactionnels"]
+        Google["Google OAuth"]
+        GitHub["GitHub OAuth"]
+        OpenAI["OpenAI<br/>chatbot"]
+    end
+
+    subgraph CI["CI/CD"]
+        GHActions["GitHub Actions<br/>lint + test + build"]
+        GHRepo["GitHub Repo"]
+    end
+
+    Mobile -- HTTPS --> CF
+    Desktop -- HTTPS --> CF
+    CF --> Traefik
+    Traefik --> Public
+    Traefik --> Admin
+    Traefik --> ApiRoutes
+
+    Public -- "Prisma" --> Postgres
+    Admin -- "Prisma" --> Postgres
+    ApiRoutes -- "Prisma" --> Postgres
+    Public -- "cache" --> Redis
+    ApiRoutes -- "cache + rate limit" --> Redis
+    NextAuth --> Postgres
+
+    NextAuth -- OAuth2 --> Google
+    NextAuth -- OAuth2 --> GitHub
+
+    ApiRoutes -- "Checkout Session" --> Stripe
+    Stripe -- "webhook signé" --> ApiRoutes
+
+    Admin -- "upload signé" --> R2
+    Mobile -- "GET CDN" --> R2
+    Desktop -- "GET CDN" --> R2
+
+    ApiRoutes --> Resend
+    ApiRoutes <--> OpenAI
+
+    GHRepo --> GHActions
+    GHActions -- "webhook deploy" --> VPS
+
+    classDef client fill:#e0f2fe,stroke:#0369a1,color:#0c4a6e
+    classDef app fill:#fef3c7,stroke:#b45309,color:#78350f
+    classDef data fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef external fill:#fce7f3,stroke:#be185d,color:#831843
+    classDef ci fill:#ede9fe,stroke:#6d28d9,color:#4c1d95
+
+    class Mobile,Desktop client
+    class Public,Admin,ApiRoutes,NextAuth app
+    class Postgres,Redis data
+    class Stripe,R2,Resend,Google,GitHub,OpenAI external
+    class GHActions,GHRepo ci
+```
+
+Diagramme source et tableau des flux : [`docs/architecture-diagram.md`](./docs/architecture-diagram.md).
+
+### Tableau des flux critiques
+
+| Source | Destination | Type | Description |
+|---|---|---|---|
+| Navigateur | Cloudflare | HTTPS | DNS + protection anti-DDoS |
+| Cloudflare | Traefik | HTTPS | TLS terminé sur Traefik |
+| Traefik | Next.js | HTTP interne | Reverse proxy dans le réseau Docker |
+| Next.js | PostgreSQL | TCP (Prisma) | Données métier |
+| Next.js | Redis | TCP | Cache, rate limiting, sessions chiffrées |
+| Next.js | Stripe | HTTPS sortant | Création de Checkout Session |
+| Stripe | Next.js | HTTPS entrant (webhook signé) | `payment_intent.succeeded`, mise à jour commande |
+| Next.js | Cloudflare R2 | HTTPS (S3) | Upload signé depuis le back-office |
+| Navigateur | Cloudflare R2 | HTTPS (CDN) | Lecture directe des images produits |
+| Next.js | Resend | HTTPS REST | Emails transactionnels |
+| Next.js | OpenAI | HTTPS REST | Prompts du chatbot |
+| GitHub Actions | VPS | Webhook | Déclenchement du déploiement Dokploy |
+
+---
+
+## Modèle de données
+
+17 modèles Prisma regroupés en 5 domaines. Schéma source : [`prisma/schema.prisma`](./prisma/schema.prisma). Diagramme complet et décisions de modélisation : [`docs/erd.md`](./docs/erd.md).
+
+```mermaid
+erDiagram
+    User ||--o{ Account              : "compte OAuth"
+    User ||--o{ Session              : "session NextAuth"
+    User ||--o{ BackupCode           : "codes 2FA secours"
+    User ||--o{ Address              : "carnet d'adresses"
+    User ||--o{ Order                : "passe commande"
+    User ||--o{ ChatbotConversation  : "initie"
+
+    Category ||--o{ Category         : "sous-catégorie"
+    Category ||--o{ Product          : "regroupe"
+    Product  ||--o{ OrderItem        : "vendu dans"
+    Address  ||--o{ Order            : "livraison / facturation"
+
+    Order    ||--o{ OrderItem            : "contient"
+    Order    ||--o{ OrderStatusHistory   : "historise"
+    Order    ||--|| Invoice              : "facturée par"
+    Order    ||--o{ CreditNote           : "remboursée par"
+    Invoice  ||--o{ CreditNote           : "annule / corrige"
+
+    ChatbotConversation ||--o{ ChatbotMessage : "contient"
+```
+
+### Énumérations Prisma
+
+| Enum | Valeurs |
+|---|---|
+| `Role` | `USER`, `ADMIN` |
+| `UserStatus` | `PENDING`, `ACTIVE`, `INACTIVE` |
+| `ProductStatus` | `DRAFT`, `PUBLISHED` |
+| `TvaRate` | `TVA_20`, `TVA_10`, `TVA_5_5`, `TVA_0` |
+| `OrderStatus` | `PENDING`, `CONFIRMED`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED` |
+| `PaymentStatus` | `PENDING`, `PAID`, `FAILED`, `REFUNDED` |
+| `InvoiceStatus` | `PENDING`, `PAID`, `CANCELLED` |
+| `CreditNoteReason` | `CANCELLATION`, `REFUND`, `ERROR` |
+| `ChatbotRole` | `USER`, `ASSISTANT`, `SYSTEM` |
+| `ChatbotStatus` | `ACTIVE`, `ESCALATED`, `CLOSED` |
+
+### Décisions de modélisation
+
+- **Instantané des prix** : `OrderItem.price` et `OrderItem.name` sont dupliqués depuis `Product` — une commande reste cohérente même si le produit est modifié ou supprimé ensuite.
+- **Conservation de l'historique chatbot** : `onDelete: SetNull` sur `ChatbotConversation.userId` — la suppression d'un utilisateur conserve l'historique des échanges (traçabilité support, CDC §XV).
+- **Catégorie auto-référente** : `Category.parentId` autorise une arborescence (CDC §VI).
+- **TVA portée par le produit** : `Product.tva` est un enum, recalculée au moment de la commande.
+
+---
+
+## Stack technique
+
+### Frontend
+
+| Outil | Version | Rôle |
+|---|---|---|
+| Next.js | 16.0.7 | Framework React, App Router, RSC, Server Actions |
+| React | 19.2.0 | UI, React Compiler activé |
+| TypeScript | 5.x | Typage strict |
+| Tailwind CSS | 4.x | Styling utilitaire |
+| shadcn/ui | new-york | Composants accessibles (Radix sous-jacent) |
+| Tiptap | 3.x | Éditeur riche back-office (carrousel) |
+| Framer Motion + GSAP + Lenis | — | Animations |
+| Zustand | 5.0.9 | Stores client (cart, UI) |
+| React Hook Form + Zod | 7.71 / 4.1 | Formulaires et validation |
+| next-intl | 4.5 | i18n FR / EN / AR + RTL |
+| Recharts | 3.6 | Graphiques dashboard admin |
+| Sonner | 2.0 | Toasts |
+
+### Backend
+
+| Outil | Version | Rôle |
+|---|---|---|
+| Next.js API Routes | 16.0.7 | API REST |
+| Prisma | 6.19 | ORM + migrations |
+| NextAuth.js | 4.24 | Sessions JWT + OAuth + adapter Prisma |
+| ioredis | 5.8 | Client Redis (cache, rate limit, 2FA pending) |
+| Winston | 3.18 | Logging structuré |
+| bcryptjs | 3.x | Hash mots de passe |
+| otplib | 12.0 | TOTP (2FA) |
+| @react-pdf/renderer | 4.3 | Génération factures / avoirs PDF |
+| ExcelJS | 4.4 | Export CSV / XLSX |
+| Stripe SDK | 20.1 | Paiement |
+| Resend SDK | 6.5 | Emails transactionnels |
+| OpenAI SDK | 6.34 | Chatbot |
+| AWS SDK v3 (S3) | 3.946 | Client S3 vers Cloudflare R2 |
+
+### Données et services
+
+| Service | Rôle |
+|---|---|
+| PostgreSQL 16 | Base principale (users, products, orders, invoices…) |
+| Redis 7 | Cache pages catalogue, sessions 2FA, rate limiting |
+| Cloudflare R2 | Stockage S3-compatible (images produits), CDN intégré |
+| Stripe | Encaissement + webhooks signés |
+| Resend | Emails transactionnels (templates React Email) |
+| OpenAI | Chatbot client |
+
+### DevOps
+
+| Outil | Rôle |
+|---|---|
+| Docker + docker-compose | Conteneurisation locale (Postgres, Redis, Adminer, Redis Commander, MailHog) |
+| Dokploy | Orchestrateur PaaS auto-hébergé sur VPS |
+| Traefik | Reverse proxy + TLS automatique (Let's Encrypt) |
+| Cloudflare | DNS + WAF |
+| GitHub Actions | CI (lint, typecheck, tests, build) |
+| Vitest + Testing Library | Tests unitaires et d'intégration |
+| Playwright | Tests E2E |
+
+---
+
+## Démarrage rapide
 
 ```bash
 # 1. Cloner et installer
-git clone https://github.com/votre-username/althea-systems.git
+git clone <repo>
 cd althea-systems
 npm install
 
 # 2. Configurer l'environnement
 cp .env.example .env
-# Éditer .env avec vos valeurs
+# Éditer .env (voir section Configuration)
 
-# 3. Démarrer les services Docker
-cd docker && docker-compose --profile dev up -d && cd ..
+# 3. Lancer Postgres + Redis (+ Adminer, Redis Commander, MailHog)
+cd docker && docker compose --profile dev up -d && cd ..
 
-# 4. Initialiser la base de données
+# 4. Migrer + seeder la base
 npm run db:migrate
 npm run db:seed
 
-# 5. Lancer l'application
+# 5. Lancer l'app
 npm run dev
-# → http://localhost:3000
+# http://localhost:3000
 ```
 
-**Comptes de test (après seed) :**
-- Admin : `admin@althea.com` / `Admin123!` (2FA requis)
-- Client : `client@althea.com` / `Client123!`
+Comptes de seed :
+
+- Admin : `admin@althea.com` / `Admin123!` — 2FA à configurer à la première connexion.
+- Client : `client@althea.com` / `Client123!`.
 
 ---
 
-## 🛠️ Stack Technique
-
-### Frontend
-| Technologie | Version | Usage |
-|-------------|---------|-------|
-| **Next.js** | 16.0.7 | Framework React avec App Router |
-| **React** | 19.2.0 | Library UI avec React Compiler |
-| **TypeScript** | 5.x | Typage statique strict |
-| **Tailwind CSS** | 4.x | Styling utilitaire |
-| **shadcn/ui** | Latest | Composants UI (style "new-york") |
-| **Zustand** | 5.0.9 | State management (cart, UI, auth) |
-| **React Hook Form** | 7.67.0 | Gestion formulaires |
-| **Zod** | 4.1.13 | Validation schemas |
-| **Lucide React** | Latest | Icônes |
-| **Sonner** | 2.0.7 | Toast notifications |
-
-### Backend
-| Technologie | Version | Usage |
-|-------------|---------|-------|
-| **Next.js API Routes** | 16.0.7 | API REST |
-| **Prisma** | 6.19.0 | ORM base de données |
-| **NextAuth.js** | 4.24.13 | Authentification (JWT + OAuth) |
-| **Winston** | 3.18.3 | Logging structuré |
-| **Redis (ioredis)** | 5.8.2 | Cache + sessions |
-| **bcryptjs** | 3.x | Hashing passwords |
-| **otplib** | 12.0.1 | 2FA (TOTP) |
-
-### Bases de Données
-| Service | Usage |
-|---------|-------|
-| **PostgreSQL** | Base principale (users, products, orders) |
-| **Redis** | Cache, rate limiting, sessions 2FA |
-
-### Services Externes
-| Service | Usage |
-|---------|-------|
-| **Stripe** | Paiements |
-| **Cloudflare R2** | Stockage images + CDN |
-| **Resend** | Emails transactionnels |
-| **Google OAuth** | Connexion Google |
-| **GitHub OAuth** | Connexion GitHub |
-
-### DevOps
-| Outil | Usage |
-|-------|-------|
-| **Docker** | Containerisation |
-| **Dokploy** | Déploiement production |
-| **Nixpacks** | Build automatique |
-| **GitHub Actions** | CI/CD |
-
----
-
-## 📁 Architecture
-
-### Structure du Projet
-
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # 🔐 Pages authentification
-│   │   ├── login/         # Connexion (email, OAuth)
-│   │   ├── register/      # Inscription + vérification email
-│   │   └── verify-email/  # Page de vérification
-│   ├── (site)/            # 🌐 Pages publiques (SSR/SSG)
-│   │   ├── page.tsx       # Accueil
-│   │   ├── products/      # Catalogue produits
-│   │   ├── cart/          # Panier
-│   │   └── checkout/      # Tunnel de commande
-│   ├── (account)/         # 👤 Espace client (protégé)
-│   │   ├── profile/       # Profil utilisateur
-│   │   ├── orders/        # Historique commandes
-│   │   └── addresses/     # Adresses de livraison
-│   ├── admin/             # 🛡️ Back-office (ADMIN + 2FA)
-│   │   ├── dashboard/     # Statistiques
-│   │   ├── products/      # Gestion produits
-│   │   ├── orders/        # Gestion commandes
-│   │   └── users/         # Gestion utilisateurs
-│   └── api/               # 🔌 API Routes REST
-│       ├── auth/          # Authentification (register, 2FA)
-│       ├── products/      # CRUD produits
-│       ├── orders/        # Gestion commandes
-│       └── profile/       # Profil utilisateur
-│
-├── components/
-│   ├── ui/                # shadcn/ui (Button, Dialog, Input, etc.)
-│   ├── admin/             # Composants admin (tables, stats)
-│   ├── products/          # Composants produits (cards, filters)
-│   ├── layout/            # Header, Footer, Sidebar
-│   └── forms/             # Formulaires réutilisables
-│
-├── lib/
-│   ├── auth.ts            # NextAuth config (providers, callbacks)
-│   ├── prisma.ts          # Prisma client singleton
-│   ├── redis.ts           # Redis client + helpers cache
-│   ├── r2.ts              # Upload Cloudflare R2
-│   ├── logger/            # Winston logger (api, auth, product, etc.)
-│   │   ├── config.ts      # Configuration Winston
-│   │   ├── messages.ts    # Messages logs centralisés
-│   │   ├── api-wrapper.ts # HOC withApiLogger
-│   │   └── exports.ts     # Export loggers par section
-│   └── validators/        # Schemas Zod (product, user, order)
-│
-├── stores/                # Zustand state management
-│   ├── cart-store.ts      # Panier (persist localStorage)
-│   ├── ui-store.ts        # État UI (modals, sidebar)
-│   └── auth-store.ts      # État auth côté client
-│
-├── hooks/                 # React hooks personnalisés
-│   ├── use-auth.ts        # Hook authentification
-│   ├── use-cart.ts        # Hook panier
-│   ├── use-debounce.ts    # Debounce recherche
-│   └── use-toast.ts       # Toast notifications
-│
-├── types/                 # Types TypeScript
-│   ├── auth.d.ts          # Augmentation NextAuth
-│   ├── product.ts         # Types produits
-│   └── order.ts           # Types commandes
-│
-└── middleware.ts          # Protection routes + headers sécurité
-
-prisma/
-├── schema.prisma          # Schema Prisma (models, relations)
-├── seed.ts                # Seed données de test
-└── migrations/            # Migrations SQL
-
-docker/
-├── Dockerfile             # Build multi-stage Next.js
-└── docker-compose.yml     # Services dev (PostgreSQL, Redis, Adminer, etc.)
-```
-
-### Diagramme d'Architecture
-
-```mermaid
-graph TB
-    subgraph Client
-        Browser[🌐 Navigateur]
-    end
-
-    subgraph Application
-        NextJS[⚡ Next.js App Router]
-        API[🔌 API Routes]
-        Auth[🔐 NextAuth.js]
-        Cache[💾 Redis Cache]
-        Logger[📝 Winston Logger]
-    end
-
-    subgraph State["State Management"]
-        Zustand[🗂️ Zustand Stores]
-    end
-
-    subgraph Databases
-        PostgreSQL[(🐘 PostgreSQL)]
-        Redis[(⚡ Redis)]
-    end
-
-    subgraph External["Services Externes"]
-        Stripe[💳 Stripe]
-        R2[🖼️ Cloudflare R2]
-        OAuth[🔑 Google/GitHub OAuth]
-        Resend[📧 Resend]
-    end
-
-    Browser --> NextJS
-    NextJS --> Zustand
-    NextJS --> API
-    API --> Auth
-    API --> Logger
-    Auth --> PostgreSQL
-    Auth --> Redis
-    API --> Cache
-    Cache --> Redis
-    API --> PostgreSQL
-    API --> Stripe
-    API --> R2
-    API --> Resend
-    Auth --> OAuth
-```
-
-Pour les diagrammes complets (flux de données, ERD, séquences), voir [docs/DIAGRAMMES_TECHNIQUES.md](./docs/DIAGRAMMES_TECHNIQUES.md).
-
----
-
-## ⚙️ Configuration
+## Configuration
 
 ### Prérequis
 
-- **Node.js** >= 20.0.0
-- **npm** >= 10.x
-- **Docker** + **Docker Compose**
-- **PostgreSQL** 16+ (via Docker ou local)
-- **Redis** 7+ (via Docker ou local)
+- Node.js ≥ 20
+- npm ≥ 10
+- Docker + Docker Compose (ou Postgres 16 / Redis 7 locaux)
 
-### Installation Complète
+### Variables d'environnement
 
-```bash
-# 1. Cloner le projet
-git clone https://github.com/votre-username/althea-systems.git
-cd althea-systems
-
-# 2. Installer les dépendances
-npm install
-
-# 3. Configurer l'environnement
-cp .env.example .env
-# Éditer .env avec vos valeurs (voir ci-dessous)
-
-# 4. Démarrer les services Docker
-cd docker && docker-compose --profile dev up -d && cd ..
-
-# 5. Générer le client Prisma
-npx prisma generate
-
-# 6. Initialiser la base de données
-npm run db:migrate
-npm run db:seed
-
-# 7. Lancer le serveur de développement
-npm run dev
-```
-
-### Variables d'Environnement
-
-Créer un fichier `.env` à la racine :
+Fichier `.env` à la racine. Les clés sensibles **ne sont jamais commitées**.
 
 ```env
-# 🗄️ Base de données
+# Base de données
 DATABASE_URL="postgresql://althea:password@localhost:5432/althea"
 REDIS_URL="redis://localhost:6379"
 
-# 🔐 NextAuth
+# NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="votre-secret-min-32-caracteres-genere-avec-openssl"
+NEXTAUTH_SECRET="..."   # openssl rand -base64 32
 
-# 🔑 OAuth (optionnel)
-GOOGLE_CLIENT_ID="votre-google-client-id"
-GOOGLE_CLIENT_SECRET="votre-google-client-secret"
-GITHUB_CLIENT_ID="votre-github-client-id"
-GITHUB_CLIENT_SECRET="votre-github-client-secret"
+# OAuth (optionnel mais recommandé)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
 
-# 💳 Stripe
+# Stripe
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 
-# 🖼️ Cloudflare R2 (S3-compatible)
-R2_ACCESS_KEY_ID="votre-r2-access-key"
-R2_SECRET_ACCESS_KEY="votre-r2-secret-key"
+# Cloudflare R2 (S3-compatible)
+R2_ACCESS_KEY_ID=""
+R2_SECRET_ACCESS_KEY=""
 R2_BUCKET_NAME="althea-images"
 R2_PUBLIC_URL="https://pub-xxxxx.r2.dev"
 R2_ENDPOINT="https://xxxxx.r2.cloudflarestorage.com"
 
-# 📧 Email (Resend)
+# Email
 RESEND_API_KEY="re_..."
-```
 
-**Générer NEXTAUTH_SECRET :**
-```bash
-openssl rand -base64 32
+# Chatbot
+OPENAI_API_KEY="sk-..."
 ```
 
 ---
 
-## 🗄️ Base de Données
+## Structure du projet
 
-### PostgreSQL
-
-**Base principale** pour toutes les données métier :
-
-| Entité | Description |
-|--------|-------------|
-| **Users** | Utilisateurs (ADMIN, CLIENT, GUEST) + status (ACTIVE, SUSPENDED, PENDING) |
-| **Addresses** | Adresses livraison/facturation (n-n User) |
-| **Products** | Produits (stock, prix HT, TVA, images) |
-| **Categories** | Catégories produits (hiérarchie) |
-| **Orders** | Commandes (statut, paiement, livraison) |
-| **OrderItems** | Lignes de commande (product, quantity, price) |
-| **Invoices** | Factures générées (PDF) |
-| **Sessions** | Sessions NextAuth |
-| **VerificationTokens** | Tokens email + 2FA |
-
-**Enums Prisma :**
-- `Role` : ADMIN, CLIENT, GUEST
-- `UserStatus` : ACTIVE, SUSPENDED, PENDING
-- `ProductStatus` : AVAILABLE, OUT_OF_STOCK, DISCONTINUED
-- `OrderStatus` : PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
-- `PaymentStatus` : PENDING, PAID, FAILED, REFUNDED
-- `TvaRate` : TVA_5_5, TVA_10, TVA_20
-
-### Redis
-
-**Utilisation :**
-
-| Cas d'usage | Pattern de clé | TTL |
-|-------------|----------------|-----|
-| Cache produit | `product:{id}` | 3600s |
-| Cache catégorie | `category:{id}` | 7200s |
-| Session 2FA | `2fa:pending:{userId}` | 300s |
-| Rate limiting | `rate:{ip}:{route}` | 60s |
-| Cache API | `cache:{route}:{params}` | Variable |
-
-**Helpers disponibles :**
-```typescript
-import { getCache, setCache, deleteCache } from "@/lib/redis";
-
-// Lecture cache
-const product = await getCache<Product>(`product:${id}`);
-
-// Écriture cache (TTL optionnel)
-await setCache(`product:${id}`, product, 3600);
-
-// Suppression cache
-await deleteCache(`product:${id}`);
 ```
+src/
+├── app/                       # Next.js App Router
+│   ├── (auth)/                # Login, register, verify-email, reset password
+│   ├── (site)/                # Pages publiques : accueil, catalogue, fiche produit, panier, checkout, contact
+│   ├── (account)/             # Espace client : profil, adresses, commandes, factures
+│   ├── admin/                 # Back-office (Role=ADMIN + 2FA)
+│   ├── api/                   # API Routes REST
+│   ├── docs/                  # Swagger UI (next-swagger-doc)
+│   ├── layout.tsx             # Layout racine + providers
+│   └── globals.css
+│
+├── components/
+│   ├── ui/                    # shadcn/ui (Button, Dialog, Input, …)
+│   ├── admin/                 # Tables, stats, éditeur Tiptap
+│   ├── products/              # Cards, filtres, galerie
+│   ├── layout/                # Header, Footer, Sidebar
+│   └── forms/                 # Formulaires réutilisables
+│
+├── lib/
+│   ├── auth.ts                # NextAuth config (providers, callbacks, JWT)
+│   ├── prisma.ts              # Singleton Prisma
+│   ├── redis.ts               # Client Redis + helpers cache
+│   ├── r2.ts                  # Upload Cloudflare R2 (AWS SDK)
+│   ├── stripe.ts              # Client Stripe
+│   ├── resend.ts              # Client Resend
+│   ├── openai.ts              # Client OpenAI
+│   ├── logger/                # Winston (config, messages, withApiLogger)
+│   └── validators/            # Schémas Zod
+│
+├── stores/                    # Zustand (cart, ui)
+├── hooks/                     # Hooks personnalisés (useAuth, useCart, useDebounce…)
+├── types/                     # Types TS (augmentation NextAuth, dto…)
+├── i18n/                      # next-intl (messages FR/EN/AR)
+└── middleware.ts              # Protection routes + headers de sécurité
 
-### Schéma ERD
+prisma/
+├── schema.prisma              # 17 modèles, 10 enums
+├── seed.ts                    # Données de test
+└── migrations/
 
-Voir le diagramme complet : [docs/DIAGRAMMES_TECHNIQUES.md](./docs/DIAGRAMMES_TECHNIQUES.md#4-schema-de-la-base-de-donnees-erd)
+docker/
+├── Dockerfile                 # Multi-stage Next.js standalone
+└── docker-compose.yml         # postgres, redis, adminer, redis-commander, mailhog
+
+__tests__/                     # Vitest (unit + integration)
+e2e/                           # Playwright
+docs/                          # Document de cadrage, ERD, backlog, A11Y, etc.
+.claude/knowledge/             # Knowledge base interne (roadmap, archi, deploy, incidents)
+```
 
 ---
 
-## 🔐 Authentification
+## Authentification
 
-### Architecture NextAuth
+Implémentation NextAuth (`src/lib/auth.ts`), stratégie JWT (30 jours), adapter Prisma pour persister sessions et comptes OAuth.
 
-**Configuration** : `src/lib/auth.ts`
-- **Strategy** : JWT avec durée de 30 jours
-- **Adapter** : Prisma Adapter pour persistance sessions
-- **Callbacks** : Enrichissement JWT avec `role`, `status`, `twoFactorVerified`
+### Providers
 
-### Providers Supportés
+| Provider | Mode | Particularité |
+|---|---|---|
+| Credentials | Email + mot de passe | Email vérifié obligatoire avant activation |
+| Google | OAuth 2.0 | Connexion 1-clic |
+| GitHub | OAuth 2.0 | Connexion 1-clic |
 
-| Provider | Type | Description |
-|----------|------|-------------|
-| **Credentials** | Email/Password | Inscription + vérification email obligatoire |
-| **Google** | OAuth 2.0 | Connexion via compte Google |
-| **GitHub** | OAuth 2.0 | Connexion via compte GitHub |
+### 2FA (TOTP) — obligatoire pour les administrateurs
 
-### 2FA (Two-Factor Authentication)
+Flux : connexion classique → redirection `/admin` → vérification 2FA. Si non configuré, QR code (otplib + `qrcode.react`) à scanner avec Google Authenticator / 1Password / Authy. Vérification du code 6 chiffres puis session 2FA stockée dans Redis (TTL court).
 
-**Obligatoire pour les administrateurs** avant d'accéder à `/admin/*`
+Codes de secours à usage unique persistés dans `BackupCode` (hashés, marqués `used` après consommation).
 
-**Flow :**
-1. Connexion classique (email/OAuth)
-2. Redirection `/admin` → vérification 2FA
-3. Si non configuré : affichage QR code (TOTP)
-4. Si configuré : demande du code 6 chiffres
-5. Vérification via `otplib` + session Redis temporaire
-6. Accès autorisé après validation
+### Protection des routes (middleware)
 
-**Configuration** :
-```typescript
-import { authenticator } from "otplib";
+| Route | Règle |
+|---|---|
+| `/admin/*` | `session.user.role === "ADMIN"` ET `twoFactorVerified === true` |
+| `/account`, `/orders`, `/addresses`, `/profile` | session active |
+| `/login`, `/register` | redirection vers `/` si déjà connecté |
 
-// Génération secret
-const secret = authenticator.generateSecret();
+### Statuts utilisateurs
 
-// Génération URI pour QR code
-const otpauth = authenticator.keyuri(user.email, "Althea Systems", secret);
+| Status | Effet |
+|---|---|
+| `PENDING` | Email non vérifié — connexion bloquée |
+| `ACTIVE` | Compte opérationnel |
+| `INACTIVE` | Désactivé par un administrateur |
 
-// Vérification code
-const isValid = authenticator.verify({ token: code, secret });
-```
+---
 
-### Protection des Routes
+## API
 
-**Middleware** : `src/middleware.ts`
+Documentation détaillée endpoint par endpoint : [`docs/api.md`](./docs/api.md) (knowledge base) et Swagger UI live sur `/docs`.
 
-| Route | Protection |
-|-------|------------|
-| `/admin/*` | Role = ADMIN + 2FA vérifié |
-| `/profile`, `/orders`, `/addresses` | Utilisateur connecté |
-| `/login`, `/register` | Redirection si déjà connecté → `/` |
+### Endpoints principaux
 
-**Exemple vérification API :**
-```typescript
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+| Méthode | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | public | Inscription + envoi email de vérification |
+| `GET`  | `/api/auth/verify-email` | public | Confirmation email |
+| `POST` | `/api/auth/2fa/setup` | user | Génère secret TOTP + QR code |
+| `POST` | `/api/auth/2fa/verify` | user | Vérifie code TOTP |
+| `GET`  | `/api/products` | public | Liste paginée + filtres |
+| `GET`  | `/api/products/[id]` | public | Détail produit |
+| `POST` `PUT` `DELETE` | `/api/products[/id]` | admin | CRUD catalogue |
+| `GET`  | `/api/categories` | public | Catégories arborescentes |
+| `POST` | `/api/orders` | user | Création commande + Checkout Session Stripe |
+| `POST` | `/api/stripe/webhook` | Stripe (signature) | Validation paiement, MAJ commande |
+| `GET`  | `/api/orders/[id]/invoice.pdf` | user/admin | Téléchargement facture |
+| `GET`  | `/api/orders/[id]/credit-note.pdf` | user/admin | Téléchargement avoir |
+| `POST` | `/api/contact` | public (rate-limité) | Formulaire de contact |
+| `POST` | `/api/chatbot/message` | public/user | Envoi message au chatbot OpenAI |
+| `GET`  | `/api/admin/exports/orders.xlsx` | admin | Export Excel commandes |
 
-export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session) {
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+### Pattern HOC `withApiLogger`
+
+Toutes les routes API sont wrappées pour logger automatiquement requête, durée et statut.
+
+```ts
+import { withApiLogger, loggedSuccessResponse, loggedErrorResponse } from "@/lib/logger/exports";
+
+export const GET = withApiLogger(async (req) => {
+  try {
+    const products = await prisma.product.findMany({ where: { status: "PUBLISHED" } });
+    return loggedSuccessResponse({ products });
+  } catch (error) {
+    return loggedErrorResponse("Erreur récupération produits", 500);
   }
-  
-  if (session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
-  }
-  
-  // Traitement...
-}
+});
 ```
 
-### Statuts Utilisateurs
+### Codes d'erreur standardisés
 
-| Status | Description |
-|--------|-------------|
-| `PENDING` | Email non vérifié (connexion bloquée) |
-| `ACTIVE` | Compte actif |
-| `SUSPENDED` | Compte suspendu (admin peut réactiver) |
+| Code | Usage |
+|---|---|
+| 400 | Validation Zod échouée |
+| 401 | Pas de session |
+| 403 | Session OK, rôle insuffisant |
+| 404 | Ressource introuvable |
+| 429 | Rate limit dépassé |
+| 500 | Erreur serveur / BDD |
 
 ---
 
-## 🎨 State Management
+## Logs
 
-### Zustand Stores
+Winston, sortie console + `logs/combined.log` + `logs/error.log`, format JSON.
 
-**Localisation** : `src/stores/`
+Loggers par domaine (`src/lib/logger/exports.ts`) : `apiLogger`, `authLogger`, `productLogger`, `orderLogger`, `dbLogger`.
 
-Tous les stores utilisent la persistance `localStorage` pour conservation entre sessions.
+Messages centralisés (`src/lib/logger/messages.ts`) pour rester cohérent :
 
-#### Cart Store (`cart-store.ts`)
-
-**Gestion du panier client**
-
-```typescript
-import { useCartStore } from "@/stores/cart-store";
-
-const {
-  items,           // CartItem[]
-  addItem,         // (product: Product, quantity: number) => void
-  removeItem,      // (productId: string) => void
-  updateQuantity,  // (productId: string, quantity: number) => void
-  clearCart,       // () => void
-  totalItems,      // number
-  totalPrice,      // number
-} = useCartStore();
-```
-
-**Fonctionnalités :**
-- Ajout/suppression produits
-- Mise à jour quantités
-- Calcul prix total (TTC avec TVA)
-- Persistance localStorage
-- Hydratation SSR-safe
-
-#### UI Store (`ui-store.ts`)
-
-**Gestion état interface**
-
-```typescript
-import { useUIStore } from "@/stores/ui-store";
-
-const {
-  sidebarOpen,        // boolean
-  modalOpen,          // boolean
-  toggleSidebar,      // () => void
-  openModal,          // () => void
-  closeModal,         // () => void
-} = useUIStore();
-```
-
-#### Auth Store (`auth-store.ts`)
-
-**État authentification côté client**
-
-```typescript
-import { useAuthStore } from "@/stores/auth-store";
-
-const {
-  user,               // User | null
-  isAuthenticated,    // boolean
-  setUser,            // (user: User) => void
-  logout,             // () => void
-} = useAuthStore();
-```
-
-**Note** : Synchronisé avec NextAuth session côté serveur.
-
-### Hooks Personnalisés
-
-**Localisation** : `src/hooks/`
-
-| Hook | Usage |
-|------|-------|
-| `use-auth.ts` | Wrapper NextAuth `useSession` + helpers |
-| `use-cart.ts` | Logique métier panier (validation stock, etc.) |
-| `use-debounce.ts` | Debounce recherche/filtres (300ms) |
-| `use-toast.ts` | Wrapper Sonner pour notifications |
-
-**Exemple :**
-```typescript
-import { useAuth } from "@/hooks/use-auth";
-
-function ProfilePage() {
-  const { user, isLoading, isAdmin } = useAuth();
-  
-  if (isLoading) return <Spinner />;
-  if (!user) redirect("/login");
-  
-  return <div>Bonjour {user.name}</div>;
-}
-```
-
----
-
-## 📝 Logging
-
-### Winston Logger
-
-**Configuration** : `src/lib/logger/config.ts`
-
-Logging structuré avec **Winston** :
-- Fichiers : `logs/combined.log` (tous) + `logs/error.log` (erreurs uniquement)
-- Format : JSON avec timestamp, niveau, message, metadata
-- Rotation : Pas encore configurée (à venir)
-
-### Loggers par Section
-
-**Export** : `src/lib/logger/exports.ts`
-
-```typescript
-import {
-  apiLogger,      // API Routes
-  authLogger,     // Authentification
-  productLogger,  // Produits
-  orderLogger,    // Commandes
-  dbLogger,       // Base de données
-} from "@/lib/logger/exports";
-```
-
-### Messages Centralisés
-
-**Localisation** : `src/lib/logger/messages.ts`
-
-Tous les messages de logs sont centralisés dans `LogMessages` pour cohérence :
-
-```typescript
+```ts
 import { apiLogger, LogMessages } from "@/lib/logger/exports";
 
-// ✅ Bon
 apiLogger.info(LogMessages.api.requeteRecue("GET", "/api/products"));
 apiLogger.error(LogMessages.api.erreurServeur("Connection timeout"));
-
-// ❌ Éviter
-apiLogger.info("Requête GET reçue"); // Non standardisé
 ```
-
-**Catégories disponibles :**
-- `LogMessages.api.*` → API Routes
-- `LogMessages.auth.*` → Authentification
-- `LogMessages.product.*` → Produits
-- `LogMessages.order.*` → Commandes
-- `LogMessages.db.*` → Base de données
-
-### Pattern API Routes
-
-**HOC withApiLogger** : Wrapper automatique pour logging
-
-```typescript
-import { NextRequest } from "next/server";
-import {
-  withApiLogger,
-  loggedSuccessResponse,
-  loggedErrorResponse,
-} from "@/lib/logger/exports";
-
-export const GET = withApiLogger(async (req: NextRequest) => {
-  try {
-    const products = await prisma.product.findMany();
-    return loggedSuccessResponse({ products });
-  } catch (error) {
-    return loggedErrorResponse("Erreur récupération produits", 500);
-  }
-});
-```
-
-**Avantages :**
-- Logging automatique requête/réponse
-- Mesure temps d'exécution
-- Gestion erreurs standardisée
-- Metadata enrichie (IP, user-agent, etc.)
-
-### Commandes Logs
 
 ```bash
-# Visualiser logs en temps réel
-tail -f logs/combined.log
-
-# Filtrer erreurs uniquement
-tail -f logs/error.log
-
-# Nettoyer les logs
-npm run logs:clear
-
-# Tester le logger
-npm run test:logs
+tail -f logs/combined.log     # tous les logs
+tail -f logs/error.log        # erreurs uniquement
+npm run logs:clear            # vider les logs
+npm run test:logs             # test du logger
 ```
 
 ---
 
-## 🔌 API
+## Docker
 
-### Documentation Complète
+Stack locale dans [`docker/docker-compose.yml`](./docker/docker-compose.yml).
 
-📖 Voir [docs/API.md](./docs/API.md) pour la documentation exhaustive des endpoints.
+| Service | Port | Profile |
+|---|---|---|
+| postgres (Postgres 16) | 5432 | default |
+| redis (Redis 7) | 6379 | default |
+| adminer (UI Postgres) | 8080 | dev |
+| redis-commander (UI Redis) | 8081 | dev |
+| mailhog (SMTP de test) | 8025 | dev |
 
-### Endpoints Principaux
-
-#### Authentification
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| `POST` | `/api/auth/register` | Inscription utilisateur + email vérification | Public |
-| `POST` | `/api/auth/2fa/setup` | Configuration 2FA (TOTP) | User |
-| `POST` | `/api/auth/2fa/verify` | Vérification code 2FA | User |
-| `GET` | `/api/auth/verify-email?token=xxx` | Vérification email | Public |
-
-#### Produits
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| `GET` | `/api/products` | Liste produits (pagination, filtres) | Public |
-| `GET` | `/api/products/[id]` | Détail produit | Public |
-| `POST` | `/api/products` | Créer produit | Admin |
-| `PUT` | `/api/products/[id]` | Modifier produit | Admin |
-| `DELETE` | `/api/products/[id]` | Supprimer produit | Admin |
-
-#### Commandes
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| `GET` | `/api/orders` | Liste commandes (filtre user) | User |
-| `GET` | `/api/orders/[id]` | Détail commande | User/Admin |
-| `POST` | `/api/orders` | Créer commande | User |
-| `PUT` | `/api/orders/[id]/status` | Modifier statut | Admin |
-
-#### Profil
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| `GET` | `/api/profile` | Profil utilisateur | User |
-| `PUT` | `/api/profile` | Modifier profil | User |
-| `GET` | `/api/profile/addresses` | Adresses utilisateur | User |
-| `POST` | `/api/profile/addresses` | Ajouter adresse | User |
-
-### Pattern API Routes
-
-**Structure type** :
-
-```typescript
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { withApiLogger, loggedSuccessResponse, loggedErrorResponse } from "@/lib/logger/exports";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { productSchema } from "@/lib/validators/product";
-
-// GET - Liste
-export const GET = withApiLogger(async (req: NextRequest) => {
-  try {
-    const products = await prisma.product.findMany({
-      where: { status: "AVAILABLE" },
-    });
-    return loggedSuccessResponse({ products });
-  } catch (error) {
-    return loggedErrorResponse("Erreur récupération produits", 500);
-  }
-});
-
-// POST - Création (protégé ADMIN)
-export const POST = withApiLogger(async (req: NextRequest) => {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
-  }
-  
-  try {
-    const body = await req.json();
-    const validated = productSchema.parse(body);
-    
-    const product = await prisma.product.create({ data: validated });
-    return loggedSuccessResponse({ product }, 201);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
-    }
-    return loggedErrorResponse("Erreur création produit", 500);
-  }
-});
+```bash
+cd docker
+docker compose up -d                       # base
+docker compose --profile dev up -d         # + outils dev
+docker compose logs -f postgres            # logs
+docker compose down                        # arrêt
+docker compose down -v                     # arrêt + suppression volumes (perte de données)
 ```
 
-### Validation Zod
+Interfaces dev :
 
-**Localisation** : `src/lib/validators/`
+- Adminer — `http://localhost:8080` (serveur `postgres`, user `althea`, pass `password`, db `althea`)
+- Redis Commander — `http://localhost:8081`
+- MailHog — `http://localhost:8025`
 
-Tous les inputs API sont validés avec **Zod** :
-
-```typescript
-import { z } from "zod";
-
-export const productSchema = z.object({
-  name: z.string().min(1, "Nom requis"),
-  price: z.number().positive("Prix invalide"),
-  stock: z.number().int().nonnegative("Stock invalide"),
-  categoryId: z.string().uuid("ID catégorie invalide"),
-});
-
-export type ProductInput = z.infer<typeof productSchema>;
-```
-
-### Gestion Erreurs
-
-| Code | Description | Usage |
-|------|-------------|-------|
-| `400` | Bad Request | Validation Zod échouée |
-| `401` | Unauthorized | Pas de session |
-| `403` | Forbidden | Session OK mais rôle insuffisant |
-| `404` | Not Found | Ressource introuvable |
-| `429` | Too Many Requests | Rate limiting dépassé |
-| `500` | Internal Server Error | Erreur serveur/BDD |
+L'image de production est construite par **Nixpacks** au moment du déploiement Dokploy (Next.js standalone, image finale < 500 MB).
 
 ---
 
-## 🐳 Docker
+## Déploiement
 
-### Services Disponibles
+Production hébergée sur un VPS européen (~10 €/mois), orchestré par **Dokploy** (PaaS auto-hébergé), reverse-proxy **Traefik** avec TLS automatique (Let's Encrypt), DNS et WAF **Cloudflare**. Procédure complète : [`docs/deploy.md`](./.claude/knowledge/deploy.md).
 
-**Localisation** : `docker/docker-compose.yml`
+Pipeline :
 
-| Service | Port | Description | Profile |
-|---------|------|-------------|---------|
-| **postgres** | 5432 | PostgreSQL 16 | default |
-| **redis** | 6379 | Redis 7 | default |
-| **adminer** | 8080 | UI PostgreSQL | dev |
-| **redis-commander** | 8081 | UI Redis | dev |
+1. Push sur `main`.
+2. GitHub Actions — lint, typecheck, build, tests.
+3. Webhook Dokploy déclenche un build Nixpacks.
+4. Migration Prisma au démarrage (`npm run start` exécute `prisma migrate deploy` puis `next start`).
+5. Bascule du conteneur avec zero-downtime.
 
-### Commandes Docker
+Domaine : `althea.vjuya.me`.
 
-```bash
-# Démarrer services de base (PostgreSQL + Redis)
-cd docker && docker-compose up -d
+Checklist pré-déploiement :
 
-# Démarrer avec outils dev (+ Adminer, Redis Commander, MailHog)
-cd docker && docker-compose --profile dev up -d
-
-# Arrêter services
-cd docker && docker-compose down
-
-# Reset complet (⚠️ supprime volumes = perte données)
-cd docker && docker-compose down -v
-
-# Voir les logs
-cd docker && docker-compose logs -f postgres
-cd docker && docker-compose logs -f redis
-
-# Rebuild image
-cd docker && docker-compose build --no-cache
-```
-
-### Accès Interfaces Dev
-
-| Interface | URL | Identifiants |
-|-----------|-----|--------------|
-| **Adminer** | http://localhost:8080 | Serveur: `postgres`<br>User: `althea`<br>Pass: `password`<br>DB: `althea` |
-| **Redis Commander** | http://localhost:8081 | Aucun |
-| **MailHog** | http://localhost:8025 | Aucun |
-
-### Dockerfile Production
-
-**Multi-stage build** pour optimisation :
-
-```dockerfile
-# Stage 1: Dependencies
-FROM node:20-alpine AS deps
-# ... installation dependencies
-
-# Stage 2: Builder
-FROM node:20-alpine AS builder
-# ... build Next.js + Prisma
-
-# Stage 3: Runner (image finale)
-FROM node:20-alpine AS runner
-# ... copie artifacts + démarrage
-```
-
-**Optimisations :**
-- Utilisation `.dockerignore`
-- Standalone output Next.js
-- Layer caching optimal
-- Image finale < 500MB
+- [ ] Variables d'environnement renseignées dans Dokploy (`STRIPE_SECRET_KEY=sk_live_…`, `R2_PUBLIC_URL=https://cdn.althea…`, etc.)
+- [ ] Webhook Stripe configuré et `STRIPE_WEBHOOK_SECRET` à jour
+- [ ] DNS A/CNAME alignés sur le VPS, Cloudflare en mode proxy
+- [ ] Backup Postgres planifié côté Dokploy
+- [ ] Monitoring / alerting opérationnel
 
 ---
 
-## 🚢 Déploiement
+## Scripts
 
-### Production (Dokploy + Nixpacks)
-
-**Plateforme** : Dokploy (auto-hébergé)
-
-**Pipeline CI/CD** :
-1. Push branche `main`
-2. GitHub Actions → Lint + TypeCheck + Build
-3. Déclenchement Dokploy webhook
-4. Build automatique via **Nixpacks**
-5. Déploiement production avec zero-downtime
-
-**Configuration** :
-- Build : `npm run build` (génère `.next/standalone`)
-- Databases : PostgreSQL + Redis hébergés sur Dokploy
-- Variables d'environnement : Injectées via Dokploy dashboard
-- SSL : Automatique via Let's Encrypt
-
-### GitHub Actions CI
-
-**Fichier** : `.github/workflows/ci.yml`
-
-**Jobs** :
-```yaml
-1. Lint (ESLint)
-2. TypeCheck (tsc --noEmit)
-3. Prisma Validate (schema.prisma)
-4. Build (npm run build)
-```
-
-**Trigger** : Push sur `main` + Pull Requests
-
-### Variables Production
-
-```env
-# ⚠️ À configurer dans Dokploy
-NODE_ENV=production
-DATABASE_URL=postgresql://...        # URL production
-REDIS_URL=redis://...                # Redis production
-NEXTAUTH_URL=https://althea.com      # Domaine production
-NEXTAUTH_SECRET=...                  # Secret 64+ chars
-STRIPE_SECRET_KEY=sk_live_...        # Clés LIVE Stripe
-R2_PUBLIC_URL=https://cdn.althea.com # CDN production
-```
-
-### Checklist Déploiement
-
-- [ ] Variables d'environnement configurées
-- [ ] Migrations Prisma appliquées
-- [ ] Seed données initiales (si nouveau)
-- [ ] Stripe webhooks configurés
-- [ ] DNS configuré (A/CNAME records)
-- [ ] SSL actif (Let's Encrypt)
-- [ ] Monitoring configuré (Sentry/LogTail)
-- [ ] Backup BDD automatisé
-
----
-
-## 📜 Scripts
-
-### Développement
+### Application
 
 ```bash
-npm run dev              # Serveur dev (http://localhost:3000)
-npm run build            # Build production (prisma generate + next build)
-npm run start            # Démarrer serveur production
-npm run lint             # ESLint (auto-fix avec --fix)
-npx tsc --noEmit         # Vérification TypeScript (pas dans package.json)
+npm run dev               # serveur de dev
+npm run build             # prisma generate + next build
+npm run start             # prisma migrate deploy + next start (prod)
+npm run lint              # ESLint
+npx tsc --noEmit          # vérification TypeScript
 ```
 
-### Base de Données
+### Base de données
 
 ```bash
-npm run db:migrate       # Créer/appliquer migrations
-npm run db:push          # Push schema sans migration (dev uniquement)
-npm run db:seed          # Seed données de test
-npm run db:studio        # Ouvrir Prisma Studio (GUI)
-npm run db:reset         # Reset complet + migrations + seed
+npm run db:migrate        # créer/appliquer une migration (dev)
+npm run db:push           # push schema sans migration (prototypage)
+npm run db:seed           # données de test
+npm run db:studio         # Prisma Studio (http://localhost:5555)
+npm run db:reset          # reset complet + migrations + seed
 ```
 
-**Prisma Studio** : Interface graphique pour explorer/modifier la BDD
-→ `http://localhost:5555`
-
-### Logging
+### Tests
 
 ```bash
-npm run test:logs        # Tester le logger Winston
-npm run logs:clear       # Supprimer logs/*.log
-
-# Visualisation temps réel
-tail -f logs/combined.log
-tail -f logs/error.log
+npm run test                    # Vitest (watch)
+npm run test:integration        # tests d'intégration uniquement
+npm run test:coverage           # couverture
+npm run test:e2e                # Playwright
+npm run test:e2e:ui             # Playwright en mode UI
 ```
 
-### Utilitaires
+### Sécurité et logs
 
 ```bash
-npm install              # Installer dépendances + postinstall (prisma generate)
-npm run postinstall      # Générer client Prisma (auto après install)
-
-# Mise à jour dépendances
-npx npm-check-updates -u # Mise à jour package.json
-npm install              # Installer nouvelles versions
+npm run security:audit          # audit (scripts/security-audit.ts)
+npm run test:logs               # test du logger Winston
+npm run logs:clear              # vider logs/*.log
 ```
 
 ---
 
-## 📚 Documentation
+## Documentation
 
-### Documents Techniques
+### Documents projet (`docs/`)
 
 | Document | Description |
-|----------|-------------|
-| **[API.md](./docs/API.md)** | Documentation complète des endpoints API REST |
-| **[DIAGRAMMES_TECHNIQUES.md](./docs/DIAGRAMMES_TECHNIQUES.md)** | Architecture, flux, ERD, séquences |
-| **[ROADMAP.md](./docs/ROADMAP.md)** | Roadmap de développement et suivi des features |
-| **[DECISIONS_ARCHITECTURALES_CDC.md](./docs/DECISIONS_ARCHITECTURALES_CDC.md)** | Décisions architecturales et conformité cahier des charges |
-| **[RAPPORT_SOUTENANCE_SAMY.md](./docs/RAPPORT_SOUTENANCE_SAMY.md)** | Rapport technique Auth & Infrastructure |
-| **[AGENTS.md](./AGENTS.md)** | Guide pour agents IA (conventions, patterns) |
+|---|---|
+| [`DOCUMENT_CADRAGE.md`](./docs/DOCUMENT_CADRAGE.md) | Document de cadrage complet (besoin, périmètre, archi, outils, planning, risques) |
+| [`DOCUMENT_CADRAGE.pdf`](./docs/DOCUMENT_CADRAGE.pdf) | Version PDF du document de cadrage |
+| [`architecture-diagram.md`](./docs/architecture-diagram.md) | Diagramme d'architecture détaillé + tableau des flux |
+| [`erd.md`](./docs/erd.md) | Diagramme entité-relation + décisions de modélisation |
+| [`backlog.md`](./docs/backlog.md) | Backlog produit complet (8 epics, 61 user stories) |
+| [`DCT.md`](./docs/DCT.md) | Dossier de Conception Technique |
+| [`A11Y_AUDIT.md`](./docs/A11Y_AUDIT.md) | Audit accessibilité WCAG 2.1 AA |
+| [`RESPONSIVE_AUDIT.md`](./docs/RESPONSIVE_AUDIT.md) | Audit responsive |
+| [`security-report.md`](./docs/security-report.md) | Rapport audit sécurité |
+| [`RAPPORT_SOUTENANCE_SAMY.md`](./docs/RAPPORT_SOUTENANCE_SAMY.md) | Rapport technique individuel — Auth & Infrastructure |
+| [`INSTALLATION.md`](./docs/INSTALLATION.md) | Guide d'installation détaillé |
+| [`CHANGELOG.md`](./CHANGELOG.md) | Historique des changements |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Conventions de contribution |
 
-### Standards de Code
+### Knowledge base interne (`.claude/knowledge/`)
 
-**TypeScript** :
-- Mode strict activé
-- Éviter `any` → utiliser `unknown` + type guards
-- Imports type-only : `import type { ... }`
-
-**React** :
-- Server Components par défaut (sauf hooks/events → `"use client"`)
-- shadcn/ui pour composants UI (style "new-york")
-- Nommage fichiers : kebab-case (`product-card.tsx`)
-
-**API Routes** :
-- Validation Zod obligatoire
-- Logging avec `withApiLogger`
-- Gestion erreurs standardisée
-- Rate limiting sur routes sensibles
-
-**Prisma** :
-- Singleton client (`@/lib/prisma`)
-- Transactions pour opérations multiples
-- Cache Redis pour lectures fréquentes
+| Fichier | Description |
+|---|---|
+| [`roadmap.md`](./.claude/knowledge/roadmap.md) | Roadmap par phase (Auth → Admin → Front → Checkout → …) |
+| [`architecture.md`](./.claude/knowledge/architecture.md) | Décisions architecturales détaillées |
+| [`api.md`](./.claude/knowledge/api.md) | Référence API exhaustive |
+| [`deploy.md`](./.claude/knowledge/deploy.md) | Procédure de déploiement |
+| [`incidents.md`](./.claude/knowledge/incidents.md) | Historique des bugs et fixes |
 
 ---
 
-## 📄 Licence
+## Licence
 
-**MIT License**
+MIT — voir [`LICENSE`](./LICENSE).
 
-Copyright (c) 2026 Althea Systems
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-
-<div align="center">
-
-**Construit avec ❤️ par l'équipe Althea Systems**
-
-[Documentation](./docs) • [API Reference](./docs/API.md) • [Contributing](./CONTRIBUTING.md)
-
-</div>
+Copyright (c) 2026 — Samy Abdelmalek, Tristan Sanjuan, Rayan Menkar, Kelvin Chauvel.
