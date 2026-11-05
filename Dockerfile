@@ -2,7 +2,7 @@
 # Root Dockerfile — replaces docker/Dockerfile so Dokploy auto-detects it
 # and skips Nixpacks. Uses BuildKit cache mounts for npm + Next.js cache.
 
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat

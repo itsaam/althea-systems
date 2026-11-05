@@ -9,7 +9,7 @@ Althea Systems est une plateforme e-commerce B2B de materiel medical construite 
 | Couche | Technologie | Version | Role |
 |--------|------------|---------|------|
 | Framework | Next.js | 16.x | SSR, App Router, API Routes |
-| Runtime | Node.js | 20.x | Execution serveur |
+| Runtime | Node.js | 24.x | Execution serveur |
 | Langage | TypeScript | 5.x | Typage statique |
 | ORM | Prisma | 6.19.x | Acces donnees, migrations |
 | BDD | PostgreSQL | 16.x | Stockage principal |

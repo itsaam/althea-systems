@@ -4,7 +4,7 @@
 
 | Outil | Version minimale | Verification |
 |-------|-----------------|--------------|
-| Node.js | 20.x | `node -v` |
+| Node.js | 24.x | `node -v` |
 | npm | 10.x | `npm -v` |
 | PostgreSQL | 16.x | `psql --version` |
 | Redis | 7.x | `redis-cli --version` |
@@ -22,7 +22,7 @@ cd althea-systems
 ### 2. Installer les dependances
 
 ```bash
-nvm use           # Utilise Node.js 20 via .nvmrc
+nvm use           # Utilise Node.js 24 via .nvmrc
 npm ci            # Installation deterministe
 ```
 
